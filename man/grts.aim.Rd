@@ -6,7 +6,7 @@
 \usage{
 grts.aim(design.object, design.name = "Design name",
   src.frame = "sp.object", sp.object = NULL, in.shape = NULL,
-  stratum.field = "STRATUM")
+  stratum.field = "STRATUM", seed.number = NULL)
 }
 \arguments{
 \item{design.object}{A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.}
@@ -18,6 +18,8 @@ grts.aim(design.object, design.name = "Design name",
 \item{in.shape}{If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in.shape}. Defaults to \code{NULL}.}
 
 \item{stratum.field}{A character string representing the name of the variable in either \code{sp.object} or \code{in.shape} containing the strata names matching those in \code{design.object}. Defaults to \code{"STRATUM"}.}
+
+\item{seed.number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
 }
 \value{
 A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
