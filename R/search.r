@@ -50,7 +50,7 @@ find.name <- function(obj,
 #' @param bookend.values Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.
 #' @return A vector of unique values.
 #' @export
-#'
+
 search <- function(df = NULL,
                    values,
                    name = "",
