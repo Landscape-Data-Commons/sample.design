@@ -50,7 +50,7 @@ find.name <- function(obj,
 #' @param bookend.values Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.
 #' @return A vector of unique values.
 #' @export
-search <- function(df,
+search <- function(df = NULL,
                    values,
                    name = "",
                    use.grepl = F,
@@ -59,6 +59,9 @@ search <- function(df,
                    bookend.name = F,
                    bookend.values = F
 ){
+  if (is.null(df)) {
+    stop("Missing a data frame as df.")
+  }
   ## Get the data frame from df if it's an SPDF
   if (grepl(class(df), pattern = "(^Spatial).{1,100}(DataFrame$)")) {
     df <- df@data

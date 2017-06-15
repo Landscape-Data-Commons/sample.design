@@ -4,8 +4,9 @@
 \alias{search}
 \title{Find values in a data frame column/variable that match a list or vector}
 \usage{
-search(df, values, name = "", use.grepl = F, ignore.case.name = F,
-  ignore.case.values = F, bookend.name = F, bookend.values = F)
+search(df = NULL, values, name = "", use.grepl = F,
+  ignore.case.name = F, ignore.case.values = F, bookend.name = F,
+  bookend.values = F)
 }
 \arguments{
 \item{df}{The data frame to search through}

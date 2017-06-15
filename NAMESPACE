@@ -2,6 +2,9 @@
 
 export(allocate.panels)
 export(area.add)
-export(df.search)
+export(attribute.shapefile)
+export(find.name)
 export(grts.aim)
 export(read.lut)
+export(reallocate)
+export(search)
