@@ -4,22 +4,22 @@
 \alias{search}
 \title{Find values in a data frame column/variable that match a list or vector}
 \usage{
-search(df = NULL, values, name = "", use.grepl = F,
-  ignore.case.name = F, ignore.case.values = F, bookend.name = F,
-  bookend.values = F)
+search(df = NULL, values, namestring = "", use.grepl = F,
+  ignore.case.namestring = F, ignore.case.values = F,
+  bookend.namestring = F, bookend.values = F)
 }
 \arguments{
 \item{df}{The data frame to search through}
 
 \item{values}{A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = T} or \code{ignore.case.values = T}. If \code{grepl()} is used then these values are used to create a regular expression.}
 
-\item{name}{A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.}
+\item{namestring}{A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.}
 
 \item{use.grepl}{Logical. If \code{T} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{F}.}
 
-\item{ignore.case.name}{Logical. If \code{T} then finding the column/variable name will be case insensitive. Defaults to \code{F}.}
+\item{ignore.case.namestring}{Logical. If \code{T} then finding the column/variable name will be case insensitive. Defaults to \code{F}.}
 
-\item{bookend.name}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} whean searching using \code{name}. Defaults to \code{F}.}
+\item{bookend.namestring}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} whean searching using \code{name}. Defaults to \code{F}.}
 
 \item{bookend.values}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.}
 
