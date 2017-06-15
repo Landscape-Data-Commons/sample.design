@@ -42,7 +42,7 @@ find.name <- function(obj,
 #' @description Return all unique values from a column/variable in a data frame which match values in a list or vector.
 #' @param df The data frame to search through
 #' @param name A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.
-#' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code(use.grepl = T) or \code(ignore.case.values = T). If \code{grepl()} is used then these values are used to create a regular expression.
+#' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = T} or \code{ignore.case.values = T}. If \code{grepl()} is used then these values are used to create a regular expression.
 #' @param use.grepl Logical. If \code{T} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{F}.
 #' @param ignore.case.name Logical. If \code{T} then finding the column/variable name will be case insensitive. Defaults to \code{F}.
 #' @param ignore.case.value Logical. If \code{T} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{F}.
@@ -50,6 +50,7 @@ find.name <- function(obj,
 #' @param bookend.values Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.
 #' @return A vector of unique values.
 #' @export
+#'
 search <- function(df = NULL,
                    values,
                    name = "",

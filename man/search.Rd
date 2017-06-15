@@ -11,7 +11,7 @@ search(df = NULL, values, name = "", use.grepl = F,
 \arguments{
 \item{df}{The data frame to search through}
 
-\item{values}{A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code(use.grepl = T) or \code(ignore.case.values = T). If \code{grepl()} is used then these values are used to create a regular expression.}
+\item{values}{A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = T} or \code{ignore.case.values = T}. If \code{grepl()} is used then these values are used to create a regular expression.}
 
 \item{name}{A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.}
 
