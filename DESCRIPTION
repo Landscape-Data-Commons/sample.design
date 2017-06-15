@@ -1,0 +1,17 @@
+Package: sample.design
+Type: Package
+Title: Generate Sample Designs for Assessment, Inventory, and Monitoring Projects
+Version: 0.1.0
+Author: person("Nelson", "Stauffer", email = "nelson.stauffer@ars.usda.gov", role = c("aut", "cre"))
+Description: Creates spatially balanced sample designs using a generalized random tesselation stratified either from imported feature classes or the BLM/JER AIM master sample points.
+Depends: R (>= 3.1.0)
+License: MIT License
+LazyData: TRUE
+RoxygenNote: 6.0.1
+Encoding: UTF-8
+Imports:
+  tidyverse,
+  raster,
+  rgdal,
+  spsurvey,
+  spdplyr
