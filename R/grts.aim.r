@@ -6,15 +6,20 @@
 #' @param sp.object If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum.field} which contains values matching the strata names in \code{design.object}. Defaults to \code{NULL}.
 #' @param in.shape If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in.shape}. Defaults to \code{NULL}.
 #' @param stratum.field A character string representing the name of the variable in either \code{sp.object} or \code{in.shape} containing the strata names matching those in \code{design.object}. Defaults to \code{"STRATUM"}.
+#' @param seed.number An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.
 #' @return A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
 #' @export
-grts.aim <- function(design.object, ## The output from allocate.panels()
-                        design.name = "Design name", ## The name of the project
-                        src.frame = "sp.object",
-                        sp.object = NULL,
-                        in.shape = NULL,
-                        stratum.field = "STRATUM" ## Name of the field in the points data frame that contains the stratum assignments
+grts.aim <- function(design.object,
+                     design.name = "Design name",
+                     src.frame = "sp.object",
+                     sp.object = NULL,
+                     in.shape = NULL,
+                     stratum.field = "STRATUM",
+                     seed.number = NULL
 ){
+  if (!is.null(seed.number)) {
+    set.seed(seed.number)
+  }
   if (!is.null(sp.object)) {
     src.frame <- "sp.object"
     if (!(stratum.field %in% names(sp.object))) {
