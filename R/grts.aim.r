@@ -31,6 +31,12 @@ grts.aim <- function(design.object,
   } else {
     stop("Provide either an SPDF as sp.object or a filepath to a shapefile as in.shape.")
   }
+  if (src.frame == "sp.object" & is.null(sp.object)) {
+    stop("Please provide an SPDF as sp.object.")
+  }
+  if (src.frame == "shapefile" & is.null(in.shape)) {
+    stop("Please provide a filepath to a shapefile as in.shape.")
+  }
 
   ## Invoke spsurvey::grts() first
   sample.sites <- spsurvey::grts(design = design.object,
