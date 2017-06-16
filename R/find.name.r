@@ -28,10 +28,10 @@ find.name <- function(obj,
 
   ## Make sure that the fieldname exists
   if (length(fieldname) < 1) {
-    stop("The fieldname does not exist in the data frame. Did you intend to set ignore.case.fieldname = T?")
+    stop(paste0("No name matching the regular expression '", if (bookend) {paste("^", name, "$")} else {name}, "' exists in the object with ignore.case.name = ", ignore.case.name, " and bookend = ", bookend, "."))
   }
   if (length(fieldname) > 1 & !multiple) {
-    message("The fieldname matched more than one variable/column:")
+    message(paste0("The regular expression '", if (bookend) {paste("^", name, "$")} else {name}, "' with ignore.case.name = ", ignore.case.name, " and bookend = ", bookend, " matched more than one name:"))
     stop(paste(fieldname, collapse = ", "))
   }
 
