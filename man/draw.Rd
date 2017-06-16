@@ -26,7 +26,7 @@ draw(design.name = "design", strata.spdf = NULL,
 
 \item{design.object}{An optional specially-constructed list to use instead of an automatically-generated design object. This will be passed to \code{spsurvey::grts()} as the argument \code{design} and must exactly follow the structure required for that. If this is not provided, a design object will be automatically constructed with points allocated proportionally by stratum size.}
 
-\item{panel.names}{A character vector of the names to assign to the panels for automatically generating a proprtional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c(One", "Two", "Three", "Four", "Five")}.}
+\item{panel.names}{A character vector of the names to assign to the panels for automatically generating a proprtional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c("One", "Two", "Three", "Four", "Five")}.}
 
 \item{panel.sample.size}{A numeric vector of the number of base points to be drawn in each panel for automatically generating a proprtional-allocation design object. This must be the same length and in the same order as \code{panel.names} UNLESS all panels have the same number of base points in which case \code{panel.sample.size} optionally may be a single numeric value despite \code{panel.names} containing more than one value. Defaults to \code{c(50)}.}
 
