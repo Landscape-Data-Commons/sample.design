@@ -4,8 +4,7 @@
 \alias{attribute.shapefile}
 \title{Attributing a spatial data frame using another spatial data frame}
 \usage{
-attribute.shapefile(spdf1, spdf2, attributefield = NULL, newfield = NULL,
-  projection = CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
+attribute.shapefile(spdf1, spdf2, attributefield = NULL, newfield = NULL)
 }
 \arguments{
 \item{spdf1}{A SpatialPoints/PolygonsDataFrame containing the geometry to add an attribute to}
@@ -15,8 +14,6 @@ attribute.shapefile(spdf1, spdf2, attributefield = NULL, newfield = NULL,
 \item{attributefield}{The name of the field in \code{spdf2} as a string containing the values to add to \code{spdf1}}
 
 \item{newfield}{The name of the field in \code{spdf1} as a string to add the values from \code{spdf2$attributefield} to. If NULL, the field will use \code{attributefield}. Defaults to NULL.}
-
-\item{projection}{An \code{sp::CRS()} argument to apply in the event that \code{spdf1} and \code{spdf2} have different projections. Defaults to \code{CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs")}}
 }
 \value{
 The original SPDF spdf1 with the new field containing the values inherited from spdf2.
