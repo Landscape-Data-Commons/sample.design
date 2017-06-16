@@ -5,7 +5,6 @@
 #' @param spdf2 A SpatialPoints/PolygonsDataFrame containing the geometry to add an attribute from
 #' @param attributefield The name of the field in \code{spdf2} as a string containing the values to add to \code{spdf1}
 #' @param newfield The name of the field in \code{spdf1} as a string to add the values from \code{spdf2$attributefield} to. If NULL, the field will use \code{attributefield}. Defaults to NULL.
-#' @param projection An \code{sp::CRS()} argument to apply in the event that \code{spdf1} and \code{spdf2} have different projections. Defaults to \code{CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs")}
 #' @return The original SPDF spdf1 with the new field containing the values inherited from spdf2.
 #' @examples
 #' attribute.shapefile()
@@ -14,8 +13,7 @@
 attribute.shapefile <- function(spdf1,
                                 spdf2,
                                 attributefield = NULL,
-                                newfield = NULL,
-                                projection = CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs")
+                                newfield = NULL
 ){
   if (is.null(attributefield) | !(attributefield %in% names(spdf2@data))) {
     stop("attributefield must be a field name found in spdf2")
@@ -30,11 +28,9 @@ attribute.shapefile <- function(spdf1,
 
   if (spdf1@proj4string@projargs != spdf2@proj4string@projargs) {
     ## Make sure that the points also adhere to the same projection
-    spdf1 <- spdf1 %>% sp::spTransform(projection)
-    spdf2 <- spdf2 %>% sp::spTransform(projection)
-  } else {
-    projection <- spdf1@proj4string
+    spdf2 <- spdf2 %>% sp::spTransform(spdf1@proj4string)
   }
+  projection <- spdf1@proj4string
 
   ## Initialize list for attributed SPDFs
   attributed.dfs <- list()
