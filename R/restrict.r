@@ -26,6 +26,8 @@
 #'          filter.field.spdf1 = "COUNTY",
 #'          filter.values.spdf1 = "Teton")
 #' restrict(spdf1 = wyoming.spdf,
+#'          spdf2 = grand.tetons.np.spdf)
+#' restrict(spdf1 = wyoming.spdf,
 #'          spdf2 = grand.tetons.np.spdf,
 #'          filter.field.spdf1 = "COUNTY",
 #'          filter.values.spdf1 = "Teton",
@@ -33,11 +35,16 @@
 #'          inherit.field = "OWNERSHIP")
 #' restrict(spdf1 = wyoming.spdf,
 #'          spdf2 = national.ownership,
+#'          filter.field.spdf2 = "OWNERSHIP",
+#'          filter.values.spdf2 = "(Bureau of Land Management)|(BLM)",
+#'          bookend.values.spdf2 = T)
+#' restrict(spdf1 = wyoming.spdf,
+#'          spdf2 = national.ownership,
 #'          filter.field.spdf1 = "COUNTY",
 #'          filter.values.spdf1 = "Teton",
 #'          filter.field.spdf2 = "OWNERSHIP",
 #'          filter.values.spdf2 = "(Bureau of Land Management)|(BLM)",
-#'          bookend.values.spdf2 = T)
+#'          use.grep.values.spdf2 = T)
 #' @export
 
 restrict <- function(spdf1 = NULL,
