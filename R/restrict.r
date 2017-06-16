@@ -187,10 +187,51 @@ restrict <- function(spdf1 = NULL,
   }
 
   if (is.null(spdf2)) {
-    output <- attribute.shapefile(spdf1 = spdf1,
-                                  spdf2 = spdf2,
-                                  newfield = if (inherit) {inherit.field} else {NULL},
-                                  attributefield = if (inherit) {inherit.field} else {NULL})
+    if (class(spdf1) == class(spdf2)) {
+      ## Get the intersection as a SpatialPolygons
+      current.drop <- rgeos::get_RGEOS_dropSlivers()
+      current.warn <- rgeos::get_RGEOS_warnSlivers()
+      current.tol <- rgeos::get_RGEOS_polyThreshold()
+      rgeos::set_RGEOS_dropSlivers(T)
+      rgeos::set_RGEOS_warnSlivers(T)
+      rgeos::set_RGEOS_polyThreshold(0.01)
+      intersection <- rgeos::gIntersection(spgeom1 = spdf1,
+                                           spgeom2 = spdf2,
+                                           drop_lower_td = T)
+      rgeos::set_RGEOS_dropSlivers(current.drop)
+      rgeos::set_RGEOS_warnSlivers(current.warn)
+      rgeos::set_RGEOS_polyThreshold(current.tol)
+
+      ## Now we need to build the data frame that goes back into this. It's a pain
+      ## Get the rownames from the polygons. This will consist of the two row names from spdf1 and spdf2 separated by a " "
+      intersection.rownames <- strsplit(row.names(intersection), split = " ")
+
+      ## Create an empty data frame that we can add the constructed rows to
+      intersection.dataframe <- data.frame()
+
+      ## For each of the intersection polygons, create a row with the attributes from the source polygons
+      for (row in 1:length(intersection.rownames)) {
+        intersection.dataframe <- rbind(intersection.dataframe,
+                                        cbind(
+                                          spdf1@data[intersection.rownames[[row]][1],],
+                                          spdf2@data[intersection.rownames[[row]][2],]
+                                        ))
+      }
+      rownames(intersection.dataframe) <- row.names(intersection)
+
+      ## Create the output SPDF
+      output <- sp::SpatialPolygonsDataFrame(Sr = intersection,
+                                             data = intersection.dataframe)
+
+      ## Return only the spdf1 fields and the inherit field, for consistency
+      output@data <- output@data[, names(output@data)[names(output@data) %in% c(names(spdf1@data), inherit.field)]]
+    } else {
+      ## Attribute spdf1 with spdf2
+      output <- attribute.shapefile(spdf1 = spdf1,
+                                    spdf2 = spdf2,
+                                    newfield = if (inherit) {inherit.field} else {NULL},
+                                    attributefield = if (inherit) {inherit.field} else {NULL})
+    }
   } else {
     output <- spdf1
   }
