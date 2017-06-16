@@ -50,7 +50,13 @@ grts.aim <- function(design.object,
   )
 
   ## Assign projection info to the sample sites SPDF
-  proj4string(sample.sites) <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
+  if (is.null(sp.object)) {
+    proj4string(sample.sites) <- sp.object@proj4string
+  } else {
+    proj4string(sample.sites) <- rgdal::readOGR(dsn = stringr::str_replace(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$", replacement = ""),
+                                                layer = stringr::str_extract(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$")) %>% .@proj4string
+    # proj4string(sample.sites) <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
+  }
   ## Reproject the sample sites to Geographic DD NAD83
   sample.sites <- spTransform(sample.sites, CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
   ## update the X and Y coordinate values
