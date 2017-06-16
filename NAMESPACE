@@ -3,6 +3,7 @@
 export(allocate.panels)
 export(area.add)
 export(attribute.shapefile)
+export(draw)
 export(find.name)
 export(grts.aim)
 export(read.lut)
