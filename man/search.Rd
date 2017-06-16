@@ -19,11 +19,11 @@ search(df = NULL, values, namestring = "", use.grepl = F,
 
 \item{ignore.case.namestring}{Logical. If \code{T} then finding the column/variable name will be case insensitive. Defaults to \code{F}.}
 
-\item{bookend.namestring}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} whean searching using \code{name}. Defaults to \code{F}.}
+\item{ignore.case.values}{Logical. If \code{T} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{F}.}
+
+\item{bookend.namestring}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{name}. Defaults to \code{F}.}
 
 \item{bookend.values}{Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.}
-
-\item{ignore.case.value}{Logical. If \code{T} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{F}.}
 }
 \value{
 A vector of unique values.
