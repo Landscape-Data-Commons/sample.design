@@ -36,14 +36,14 @@
 #' restrict(spdf1 = wyoming.spdf,
 #'          spdf2 = national.ownership,
 #'          filter.field.spdf2 = "OWNERSHIP",
-#'          filter.values.spdf2 = "(Bureau of Land Management)|(BLM)",
-#'          bookend.values.spdf2 = T)
+#'          filter.values.spdf2 = c("Bureau of Land Management", "BLM"))
 #' restrict(spdf1 = wyoming.spdf,
 #'          spdf2 = national.ownership,
 #'          filter.field.spdf1 = "COUNTY",
 #'          filter.values.spdf1 = "Teton",
 #'          filter.field.spdf2 = "OWNERSHIP",
-#'          filter.values.spdf2 = "(Bureau of Land Management)|(BLM)",
+#'          # Because I can't confidently spell "bureau"
+#'          filter.values.spdf2 = "Bur[(e)|(a)|(u)]{2,5} of Land Management",
 #'          use.grep.values.spdf2 = T)
 #' @export
 
