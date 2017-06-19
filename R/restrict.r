@@ -210,7 +210,7 @@ restrict <- function(spdf1 = NULL,
       intersection.dataframe <- data.frame()
 
       ## For each of the intersection polygons, create a row with the attributes from the source polygons
-      for (row in 1:length(intersection.rownames)) {
+      for (row in seq_along(intersection.rownames)) {
         intersection.dataframe <- rbind(intersection.dataframe,
                                         cbind(
                                           spdf1@data[intersection.rownames[[row]][1],],
