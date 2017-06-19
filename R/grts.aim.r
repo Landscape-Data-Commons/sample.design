@@ -51,17 +51,17 @@ grts.aim <- function(design.object,
 
   ## Assign projection info to the sample sites SPDF
   if (is.null(sp.object)) {
-    proj4string(sample.sites) <- sp.object@proj4string
+    sp::proj4string(sample.sites) <- sp.object@proj4string
   } else {
-    proj4string(sample.sites) <- rgdal::readOGR(dsn = stringr::str_replace(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$", replacement = ""),
-                                                layer = stringr::str_extract(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$")) %>% .@proj4string
+    sp::proj4string(sample.sites) <- rgdal::readOGR(dsn = stringr::str_replace(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$", replacement = ""),
+                                                    layer = stringr::str_extract(in.shape, pattern = "/([a-Z]|[0-9]){1,256}$")) %>% .@proj4string
     # proj4string(sample.sites) <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
   }
   ## Reproject the sample sites to Geographic DD NAD83
-  sample.sites <- spTransform(sample.sites, CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
+  sample.sites <- sp::spTransform(sample.sites, sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
   ## update the X and Y coordinate values
-  sample.sites$xcoord <- coordinates(sample.sites)[, 1]
-  sample.sites$ycoord <- coordinates(sample.sites)[, 2]
+  sample.sites$xcoord <- sp::coordinates(sample.sites)[, 1]
+  sample.sites$ycoord <- sp::coordinates(sample.sites)[, 2]
 
   ## Dropping the extra fields from the master sample, just keeping the ones specific to the draw plus the master sample ID
   fields.relevant <- c("siteID", "stratum", "panel", "wgt", "xcoord", "ycoord")
@@ -70,7 +70,8 @@ grts.aim <- function(design.object,
 
   ## Last step is to rename the oversample panels so that they're broken up into the years instead of being an oversample chunk
   panel.names <- unique(sample.sites@data$PANEL[!(sample.sites@data$PANEL %in% "OverSamp")])
-  oversample.df <- sample.sites@data[sample.sites@data$PANEL == "OverSamp",] %>% group_by(STRATUM) %>% summarize(oversample.pts.per.panel = floor(n()/length(panel.names)), total.oversample.drawn = n())
+  oversample.df <- sample.sites@data[sample.sites@data$PANEL == "OverSamp",] %>% dplyr::group_by(STRATUM) %>% dplyr::summarize(oversample.pts.per.panel = floor(n()/length(panel.names)),
+                                                                                                                               total.oversample.drawn = n())
   oversample.panels <- list()
   for (s in oversample.df$STRATUM) {
     oversample.count.per.panel <- oversample.df$oversample.pts.per.panel[oversample.df$STRATUM == s]
