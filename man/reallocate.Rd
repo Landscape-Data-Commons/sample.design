@@ -36,7 +36,7 @@ reallocate(design.object = list(), stratum = character(),
 
 \item{recalc.oversample}{Logical. If \code{T} then the oversample point counts will be recalculated for the specified stratum and panels. Defaults to \code{F}.}
 
-\item{oversample.proportion}{A numeric value representing the proportion of base points that should be drawns as oversample points per panel within the specified stratum. Only used if \code{recalc.oversample} is \code{T}. Defaults to \code{0.25}.}
+\item{oversample.proportion}{A numeric value representing the proportion of base points that should be drawn as oversample points per panel within the specified stratum. Only used if \code{recalc.oversample} is \code{T}. Defaults to \code{0.25}.}
 
 \item{oversample.min}{A numeric value representing the minimum number of points per stratum per panel. Only used if \code{recalc.oversample} is \code{T} and it is larger than the value calculated using \code{oversample.proportion}. Defaults to \code{3}.}
 }

@@ -26,15 +26,15 @@ draw(design.name = "design", strata.spdf = NULL,
 
 \item{design.object}{An optional specially-constructed list to use instead of an automatically-generated design object. This will be passed to \code{spsurvey::grts()} as the argument \code{design} and must exactly follow the structure required for that. If this is not provided, a design object will be automatically constructed with points allocated proportionally by stratum size.}
 
-\item{panel.names}{A character vector of the names to assign to the panels for automatically generating a proprtional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c("One", "Two", "Three", "Four", "Five")}.}
+\item{panel.names}{A character vector of the names to assign to the panels for automatically generating a proportional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c("One", "Two", "Three", "Four", "Five")}.}
 
-\item{panel.sample.size}{A numeric vector of the number of base points to be drawn in each panel for automatically generating a proprtional-allocation design object. This must be the same length and in the same order as \code{panel.names} UNLESS all panels have the same number of base points in which case \code{panel.sample.size} optionally may be a single numeric value despite \code{panel.names} containing more than one value. Defaults to \code{c(50)}.}
+\item{panel.sample.size}{A numeric vector of the number of base points to be drawn in each panel for automatically generating a proportional-allocation design object. This must be the same length and in the same order as \code{panel.names} UNLESS all panels have the same number of base points in which case \code{panel.sample.size} optionally may be a single numeric value despite \code{panel.names} containing more than one value. Defaults to \code{c(50)}.}
 
-\item{points.min}{A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size for automatically generating a proprtional-allocation design object. Defaults to \code{3}.}
+\item{points.min}{A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size for automatically generating a proportional-allocation design object. Defaults to \code{3}.}
 
-\item{oversample.proportion}{A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel.sample.size * min.oversample.proportion} for automatically generating a proprtional-allocation design object. Defaults to \code{0.25}.}
+\item{oversample.proportion}{A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel.sample.size * min.oversample.proportion} for automatically generating a proportional-allocation design object. Defaults to \code{0.25}.}
 
-\item{oversample.min}{A numeric value representing the minimum number of oversample points to allocate per stratum per panel for automatically generating a proprtional-allocation design object. This is only used if it is greater than \code{panel.sample.size * min.oversample.proportion}. Defaults to \code{3}.}
+\item{oversample.min}{A numeric value representing the minimum number of oversample points to allocate per stratum per panel for automatically generating a proportional-allocation design object. This is only used if it is greater than \code{panel.sample.size * min.oversample.proportion}. Defaults to \code{3}.}
 
 \item{seed.number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
 }

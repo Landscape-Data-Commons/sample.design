@@ -12,7 +12,7 @@
 #' @param base.point.change An optional numeric value representing net change in base point count for the stratum and panels specified, e.g. 3 or -4. Defaults to \code{NULL}.
 #' @param base.point.set An optional numeric value representing absolute the base point count to replace the current value for the stratum and panels specified. This will override \code{base.point.change} if both are provided. Defaults to \code{NULL}.
 #' @param recalc.oversample Logical. If \code{T} then the oversample point counts will be recalculated for the specified stratum and panels. Defaults to \code{F}.
-#' @param oversample.proportion A numeric value representing the proportion of base points that should be drawns as oversample points per panel within the specified stratum. Only used if \code{recalc.oversample} is \code{T}. Defaults to \code{0.25}.
+#' @param oversample.proportion A numeric value representing the proportion of base points that should be drawn as oversample points per panel within the specified stratum. Only used if \code{recalc.oversample} is \code{T}. Defaults to \code{0.25}.
 #' @param oversample.min A numeric value representing the minimum number of points per stratum per panel. Only used if \code{recalc.oversample} is \code{T} and it is larger than the value calculated using \code{oversample.proportion}. Defaults to \code{3}.
 #' @return The input \code{design.object} with the relevant base and oversample point values modified.
 #' @export
