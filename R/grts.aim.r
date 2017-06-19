@@ -27,7 +27,7 @@ grts.aim <- function(design.object,
     }
   } else if (!is.null(in.shape)) {
     src.frame <- "shapefile"
-    in.shape <- inshape %>% stringr::str_replace(pattern = "\\.(shp)|(shp)$", replacement = "")
+    in.shape <- in.shape %>% stringr::str_replace(pattern = "\\.(shp)|(shp)$", replacement = "")
   } else {
     stop("Provide either an SPDF as sp.object or a filepath to a shapefile as in.shape.")
   }
