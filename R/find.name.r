@@ -1,16 +1,16 @@
 #' Find names in an object matching a pattern
 #' @param obj The named object (a data frame, Spatial Data Frame, list, etc.) to search for matching names.
 #' @param name A string to search the names of \code{obj} using. This will be used as a regular expression in \code{grepl()}.
-#' @param ignore.case Logical. Passed to \code{grepl()} to decide if the regular expression should be case insensitive. Defaults to \code{F}.
-#' @param bookend Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression. Defaults to \code{T}.
-#' @param multiple Logical. If \code{T} then the function can return a vector of multiple names instead of just one. If \code{F} then it will produce an error if multiple matches are found. Defaults to \code{F}.
+#' @param ignore.case Logical. Passed to \code{grepl()} to decide if the regular expression should be case insensitive. Defaults to \code{FALSE}.
+#' @param bookend Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression. Defaults to \code{TRUE}.
+#' @param multiple Logical. If \code{TRUE} then the function can return a vector of multiple names instead of just one. If \code{FALSE} then it will produce an error if multiple matches are found. Defaults to \code{FALSE}.
 #' @return A vector of character strings.
 #' @export
 find.name <- function(obj,
                       name = "",
-                      ignore.case.name = F,
+                      ignore.case.name = FALSE,
                       bookend,
-                      multiple = F
+                      multiple = FALSE
 ){
   ## Get the data frame if it's an SPDF
   if (grepl(class(obj), pattern = "(^Spatial).{1,100}(DataFrame$)")) {

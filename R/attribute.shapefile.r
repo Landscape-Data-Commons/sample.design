@@ -23,7 +23,7 @@ attribute.shapefile <- function(spdf1,
     newfield <- attributefield
   }
 
-  remove.coords <- F
+  remove.coords <- FALSE
   coord.names <- colnames(spdf1@coords)
 
   if (spdf1@proj4string@projargs != spdf2@proj4string@projargs) {
@@ -46,7 +46,7 @@ attribute.shapefile <- function(spdf1,
     current.spdf@data[, newfield] <- over.result[, attributefield]
     if (!(coord.names[1] %in% names(current.spdf@data)) & !(coord.names[2] %in% names(current.spdf@data))){
       current.spdf@data <- cbind(current.spdf@data, current.spdf@coords)
-      remove.coords <- T
+      remove.coords <- TRUE
     }
     ## Make sure that the polygons have unique IDs
     if (class(current.spdf) == "SpatialPolygonsDataFrame") {

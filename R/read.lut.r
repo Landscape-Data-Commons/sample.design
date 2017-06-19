@@ -28,9 +28,9 @@ read.lut <- function(filepath = NULL,
     filepath <- paste0(filepath, "/", filename)
   }
 
-  if (grepl(x = filepath, pattern = "\\.csv$", ignore.case = T)) {
-    lut.raw <- read.csv(filepath, stringsAsFactors = F)
-  } else if (grepl(x = filepath, pattern = "\\.xlsx$", ignore.case = T)) {
+  if (grepl(x = filepath, pattern = "\\.csv$", ignore.case = TRUE)) {
+    lut.raw <- read.csv(filepath, stringsAsFactors = FALSE)
+  } else if (grepl(x = filepath, pattern = "\\.xlsx$", ignore.case = TRUE)) {
     lut.raw <- readxl::read_excel(path = filepath,
                                   sheet = sheet)
   } else {

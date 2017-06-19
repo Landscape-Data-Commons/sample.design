@@ -2,22 +2,22 @@
 #' @description Return all unique values from a column/variable in a data frame which match values in a list or vector.
 #' @param df The data frame to search through
 #' @param namestring A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.
-#' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = T} or \code{ignore.case.values = T}. If \code{grepl()} is used then these values are used to create a regular expression.
-#' @param use.grepl Logical. If \code{T} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{F}.
-#' @param ignore.case.namestring Logical. If \code{T} then finding the column/variable name will be case insensitive. Defaults to \code{F}.
-#' @param ignore.case.values Logical. If \code{T} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{F}.
-#' @param bookend.namestring Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{name}. Defaults to \code{F}.
-#' @param bookend.values Logical. If \code{T} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{F}.
+#' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = TRUE} or \code{ignore.case.values = TRUE}. If \code{grepl()} is used then these values are used to create a regular expression.
+#' @param use.grepl Logical. If \code{TRUE} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.
+#' @param ignore.case.namestring Logical. If \code{TRUE} then finding the column/variable name will be case insensitive. Defaults to \code{FALSE}.
+#' @param ignore.case.values Logical. If \code{TRUE} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.
+#' @param bookend.namestring Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{name}. Defaults to \code{FALSE}.
+#' @param bookend.values Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{FALSE}.
 #' @return A vector of unique values.
 #' @export
 search <- function(df = NULL,
                    values,
                    namestring = "",
-                   use.grepl = F,
-                   ignore.case.namestring = F,
-                   ignore.case.values = F,
-                   bookend.namestring = F,
-                   bookend.values = F
+                   use.grepl = FALSE,
+                   ignore.case.namestring = FALSE,
+                   ignore.case.values = FALSE,
+                   bookend.namestring = FALSE,
+                   bookend.values = FALSE
 ){
   if (is.null(df)) {
     stop("Missing a data frame as df.")
@@ -34,7 +34,7 @@ search <- function(df = NULL,
                          name = namestring,
                          ignore.case = ignore.case.namestring,
                          bookend = bookend.namestring,
-                         multiple = F)
+                         multiple = FALSE)
 
   ## If grepl() is needed
   if (use.grepl | ignore.case.values) {

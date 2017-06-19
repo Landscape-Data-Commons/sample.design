@@ -127,9 +127,9 @@ draw <- function(design.name = "design",
       if (stratum.field %in% names(population.spdf)) {
         population.spdf <- restrict(spdf1 = points.spdf,
                                     spdf2 = population,
-                                    inherit = T,
+                                    inherit = TRUE,
                                     inherit.field = stratum.field,
-                                    bookend.inherit.field = T)
+                                    bookend.inherit.field = TRUE)
       # If the points already have the stratum field, just restrict by population.spdf
       } else if (stratum.field %in% names(points.spdf@data)) {
         population.spdf <- restrict(spdf1 = points.spdf,
