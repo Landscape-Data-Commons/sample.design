@@ -24,11 +24,11 @@ attribute.shapefile <- function(spdf1,
   }
 
   remove.coords <- F
-  coord.names <- spdf1@coords %>% colnames()
+  coord.names <- colnames(spdf1@coords)
 
   if (spdf1@proj4string@projargs != spdf2@proj4string@projargs) {
     ## Make sure that the points also adhere to the same projection
-    spdf2 <- spdf2 %>% sp::spTransform(spdf1@proj4string)
+    spdf2 <- sp::spTransform(spdf2, CRSobj = spdf1@proj4string)
   }
   projection <- spdf1@proj4string
 

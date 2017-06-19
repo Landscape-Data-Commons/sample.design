@@ -26,7 +26,7 @@ allocate.panels <- function(spdf,
 
   ## Sanitization
   if (class(spdf) == "SpatialPolygonsDataFrame") {
-    df <- spdf %>% area.add() %>% dplyr::mutate(AREA = AREA.HA) %>% .@data
+    df <- dplyr::mutate(area.add(spdf)@data, AREA = AREA.HA)
   }
 
   if (class(spdf) == "SpatialPointsDataFrame") {
@@ -44,9 +44,9 @@ allocate.panels <- function(spdf,
 
   ## Create a data frame of strata and "area"
   if ("AREA" %in% names(df)) {
-    workingframe <- df %>% dplyr::group_by(STRATUM) %>% dplyr::summarize(AREA = sum(AREA))
+    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = sum(AREA))
   } else (
-    workingframe <- df %>% dplyr::group_by(STRATUM) %>% dplyr::summarize(AREA = n())
+    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = n())
   )
 
   ## Prep the working frame for the mutates

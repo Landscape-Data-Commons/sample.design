@@ -27,7 +27,7 @@ grts.aim <- function(design.object,
     }
   } else if (!is.null(in.shape)) {
     src.frame <- "shapefile"
-    in.shape <- in.shape %>% stringr::str_replace(pattern = "\\.(shp)|(shp)$", replacement = "")
+    in.shape <- stringr::str_replace(string = in.shape, pattern = "\\.(shp)|(shp)$", replacement = "")
   } else {
     stop("Provide either an SPDF as sp.object or a filepath to a shapefile as in.shape.")
   }
@@ -96,7 +96,7 @@ grts.aim <- function(design.object,
   }
 
   ## Rename the plots with the strata
-  sample.sites@data$PLOTID <- paste0(sample.sites@data$STRATUM, sample.sites@data$PLOTID %>% stringr::str_extract(pattern = "-[0-9]{1,4}$"))
+  sample.sites@data$PLOTID <- paste0(sample.sites@data$STRATUM, stringr::str_extract(string = sample.sites@data$PLOTID, pattern = "-[0-9]{1,4}$"))
 
   return(sample.sites)
 }
