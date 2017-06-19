@@ -18,7 +18,7 @@ area.add <- function(spdf, ## SpatialPolygonsDataFrame to add area values to
 ){
   original.proj <- spdf@proj4string
   ## Make sure the SPDF is in Albers equal area projection
-  spdf <- sp::spTransform(x = spdf, CRSobj = CRS("+proj=aea"))
+  spdf <- sp::spTransform(x = spdf, CRSobj = sp::CRS("+proj=aea"))
 
   ## Add the area in hectares, stripping the IDs from gArea() output
   spdf@data$AREA.HA <- rgeos::gArea(spdf, byid = byid) * 0.0001 %>% unname()
