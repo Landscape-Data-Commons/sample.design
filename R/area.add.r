@@ -8,10 +8,10 @@
 #' @return The original Spatial Polygons Data Frame with an additional field for each area unit calculated.
 #' @keywords area
 #' @examples
-#' area.add()
+#' add.area()
 #' @export
 
-area.add <- function(spdf, ## SpatialPolygonsDataFrame to add area values to
+add.area <- function(spdf, ## SpatialPolygonsDataFrame to add area values to
                      area.ha = TRUE, ## Add area in hectares?
                      area.sqkm = TRUE, ## Add area in square kilometers?
                      byid = TRUE ## Do it for the whole SPDF or on a per-polygon basis? Generally don't want to toggle this
