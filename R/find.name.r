@@ -23,15 +23,34 @@ find.name <- function(obj,
 
   ## Get the fieldname as it occurs in the data frame
   fieldname <- names(obj)[grepl(x = names(obj),
-                                pattern = if (bookend) {paste("^", name, "$")} else {name},
+                                pattern = if (bookend) {
+                                  paste("^", name, "$")
+                                  } else {
+                                    name
+                                  },
                                 ignore.case = ignore.case.name)]
 
   ## Make sure that the fieldname exists
   if (length(fieldname) < 1) {
-    stop(paste0("No name matching the regular expression '", if (bookend) {paste("^", name, "$")} else {name}, "' exists in the object with ignore.case.name = ", ignore.case.name, " and bookend = ", bookend, "."))
+    stop(paste0("No name matching the regular expression '",
+                if (bookend) {
+                  paste("^", name, "$")
+                  } else {
+                    name
+                  },
+                "' exists in the object with ignore.case.name = ", ignore.case.name,
+                " and bookend = ", bookend, "."))
   }
   if (length(fieldname) > 1 & !multiple) {
-    message(paste0("The regular expression '", if (bookend) {paste("^", name, "$")} else {name}, "' with ignore.case.name = ", ignore.case.name, " and bookend = ", bookend, " matched more than one name:"))
+    message(paste0("The regular expression '",
+                   if (bookend) {
+                     paste("^", name, "$")
+                   } else {
+                     name
+                   },
+                   "' with ignore.case.name = ", ignore.case.name,
+                   " and bookend = ", bookend,
+                   " matched more than one name:"))
     stop(paste(fieldname, collapse = ", "))
   }
 

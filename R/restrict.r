@@ -229,8 +229,16 @@ restrict <- function(spdf1 = NULL,
       ## Attribute spdf1 with spdf2
       output <- attribute.shapefile(spdf1 = spdf1,
                                     spdf2 = spdf2,
-                                    newfield = if (inherit) {inherit.field} else {NULL},
-                                    attributefield = if (inherit) {inherit.field} else {NULL})
+                                    newfield = if (inherit) {
+                                      inherit.field
+                                      } else {
+                                        NULL
+                                      },
+                                    attributefield = if (inherit) {
+                                      inherit.field
+                                      } else {
+                                        NULL
+                                      })
     }
   } else {
     output <- spdf1
