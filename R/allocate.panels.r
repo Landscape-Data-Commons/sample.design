@@ -131,8 +131,6 @@ read.panels <- function(dataframe,
 
                      # Return the list for this stratum
                      return(list(panel = panel, seltype = "Equal", over = over))
-                   }{
-
                    },
                    dataframe = dataframe,
                    stratum.field = stratum.field,
