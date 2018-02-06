@@ -117,7 +117,7 @@ read.panels <- function(dataframe,
                                        panel.names)
 
                      # E pull the oversample value or calculate it
-                     if (is.null(oversample.field)) {
+                     if (!is.null(oversample.field)) {
                        over <- dataframe.current[[oversample.field]]
                      } else {
                        # For each panel, get the number of oversample points, then sum the vector
