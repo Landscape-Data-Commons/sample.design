@@ -146,6 +146,7 @@ read.panels <- function(dataframe,
 }
 
 #' Convert a GRTS design list to a data frame
+#' @param design A list in the format for use in \code{spsurvey::grts()}.
 #' @export
 design.dataframe <- function(design){
   strata <- names(design)
