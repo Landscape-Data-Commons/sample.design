@@ -51,25 +51,22 @@ allocate.panels <- function(spdf,
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = n())
   )
 
-  ## Prep the working frame for the mutates
-  workingframe$min <- points_min
-  workingframe$remainder <- panel_sample_size - nrow(workingframe)*points_min
-  workingframe$oversample_proportion <- oversample_proportion
-  workingframe$oversample_min <- oversample_min
-  workingframe$panel.number <- panel.number
-  print(workingframe)
+  # After the minimum points are allocated, how many remain to be allocated?
+  remainder <- panel_sample_size - nrow(workingframe)*points_min
+  # How many panels are there?
+  panel_count <- length(panel_names)
 
   ## Create all the support values then the list that goes into the design object for each stratum
-  workingframe <- workingframe %>% dplyr::mutate(PROPORTION = AREA/sum(AREA)) %>%
-    dplyr::mutate(PER.PANEL.BASE = round(PROPORTION*remainder) + min) %>%
-    dplyr::mutate(PER.PANEL.OVERSAMPLE = pmax(PER.PANEL.BASE*oversample_proportion, oversample_min) %>% ceiling()) %>%
-    dplyr::mutate(TOTAL.OVERSAMPLE = panel.number*PER.PANEL.OVERSAMPLE)
+  workingframe[["PROPORTION"]] <- workingframe$AREA/sum(workingframe$AREA)
+  workingframe[["PER.PANEL.BASE"]] <- round(workingframe * remainder) + points_min
+  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe$PER.PANEL.BASE * oversample_proportion, oversample_min))
+  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe$PER.PANEL.OVERSAMPLE * panel_count
 
   ## Create the output design object list.
   output <- lapply(workingframe$STRATUM,
                    function(X, workingframe, panel_names) {
                      list(panel = rep(workingframe$PER.PANEL.BASE[workingframe$STRATUM == X],
-                                      times = workingframe$panel.number[workingframe$STRATUM == X]) %>%
+                                      times = workingframe$panel_count[workingframe$STRATUM == X]) %>%
                             setNames(panel_names),
                           seltype = "Equal",
                           over = workingframe$TOTAL.OVERSAMPLE[workingframe$STRATUM == X])
