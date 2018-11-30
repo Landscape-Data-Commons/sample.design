@@ -104,6 +104,12 @@ read.panels <- function(dataframe,
 
   # For each stratum, make the design list specifying number of sample points per panel and the oversample count
   design <- lapply(X = dataframe[[stratum_field]],
+                   dataframe = dataframe,
+                   stratum_field = stratum_field,
+                   panel_names = panel_names,
+                   oversample_field = oversample_field,
+                   oversample_proportion = oversample_proportion,
+                   oversample_min = oversample_min,
                    FUN =   function(X,
                                     dataframe,
                                     stratum_field,
@@ -142,13 +148,7 @@ read.panels <- function(dataframe,
 
                      # Return the list for this stratum
                      return(list(panel = panel, seltype = "Equal", over = over))
-                   },
-                   dataframe = dataframe,
-                   stratum_field = stratum_field,
-                   panel_names = panel_names,
-                   oversample_field = oversample_field,
-                   oversample_proportion = oversample_proportion,
-                   oversample_min = oversample_min)
+                   })
 
   # Name the lists for each stratum with the stratum name
   design <- setNames(design, dataframe[[stratum_field]])
