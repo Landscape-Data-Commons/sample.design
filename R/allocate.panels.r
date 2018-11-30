@@ -125,7 +125,9 @@ read.panels <- function(dataframe,
                                             replacement = "")
                      names(dataframe)[names_damaged_indices] <- names_repaired
                      # Create a vector of panel names from the variable names if there isn't one yet
+                     # This assumes that there are no variables other than stratum, oversample, and panels!!!
                      if (is.null(panel_names)) {
+                       message("No panel_names vector was provided. Guessing panel names from data frame variables.")
                        panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
                      }
                      # Get just the relevant variables in the current data frame for the stratum
