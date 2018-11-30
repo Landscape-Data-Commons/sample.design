@@ -52,7 +52,6 @@ allocate.panels <- function(spdf,
   )
 
   ## Prep the working frame for the mutates
-  workingframe <- stratum.sizes
   workingframe$min <- points_min
   workingframe$remainder <- panel_sample_size - nrow(workingframe)*points_min
   workingframe$oversample_proportion <- oversample_proportion
