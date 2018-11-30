@@ -166,15 +166,22 @@ read_panels <- function(dataframe,
 #' @param design A list in the format taken by \code{spsurvey::grts()}.
 #' @export
 design_dataframe <- function(design){
+  # Grab the strata names
   strata <- names(design)
 
-  lapply(X = strata,
-         FUN = function(X, design){
-           df <- data.frame(stratum = X,
-                            panel = names(design[[X]][["panel"]]), count = unname(design[[X]][["panel"]]))
-           df.wide <- tidyr::spread(data = df,
-                                    key = panel,
-                                    value = count)
-           df.wide$oversample <- design[[X]][["over"]]
-         }, design = design)
+  # Work through the strata, extracting the information and converting it into a data frame
+  output <- lapply(X = strata,
+                   design = design,
+                   FUN = function(X, design){
+                     # Make a tidy data frame
+                     df <- data.frame(stratum = X,
+                                      panel = names(design[[X]][["panel"]]),
+                                      count = unname(design[[X]][["panel"]]))
+                     # Spread it into a wide format because users expect the variables to correspond to panels
+                     df.wide <- tidyr::spread(data = df,
+                                              key = panel,
+                                              value = count)
+                     df.wide$oversample <- design[[X]][["over"]]
+                   })
+  return(output)
 }
