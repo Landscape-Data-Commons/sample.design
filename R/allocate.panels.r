@@ -40,7 +40,7 @@ allocate.panels <- function(spdf,
   }
 
   ## Remove all points or areas without strata assigned
-  df <- dplyr::filter(df, !is.na(STRATUM))
+  df <- df[!is.na(df$STRATUM),]
 
   ## Create a data frame of strata and "area"
   if ("AREA" %in% names(df)) {
