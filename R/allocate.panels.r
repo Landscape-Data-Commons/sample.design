@@ -26,7 +26,8 @@ allocate.panels <- function(spdf,
 
   ## Sanitization
   if (class(spdf) == "SpatialPolygonsDataFrame") {
-    df <- dplyr::mutate(add.area(spdf)@data, AREA = AREA.HA)
+    df <- sample.design::add.area(spdf)@data
+    df[["AREA"]] <- df[["AREA.HA"]]
   }
 
   if (class(spdf) == "SpatialPointsDataFrame") {
