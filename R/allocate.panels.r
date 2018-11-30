@@ -41,18 +41,20 @@ allocate.panels <- function(spdf,
   }
 
   ## Remove all points or areas without strata assigned
-  df <- df[!is.na(df$STRATUM),]
+  df <- df[!is.na(df$STRATUM), ]
 
   ## Create a data frame of strata and "area"
   ## The presence/absence of df$AREA is tied to whether these were polys or points
   if ("AREA" %in% names(df)) {
-    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = sum(AREA))
+    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
+                                     AREA = sum(AREA))
   } else (
-    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = n())
+    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
+                                     AREA = n())
   )
 
   # After the minimum points are allocated, how many remain to be allocated?
-  remainder <- panel_sample_size - nrow(workingframe)*points_min
+  remainder <- panel_sample_size - nrow(workingframe) * points_min
   # How many panels are there?
   panel_count <- length(panel_names)
 
