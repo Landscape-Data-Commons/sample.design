@@ -2,26 +2,26 @@
 #'
 #' @description Creates a structured list that meets the requirements for a design object for \code{spsurvey::grts()} distributing points proportionally to strata based on their relative areas/abundances.
 #' @param spdf SpatialPointsDataFrame or data frame containing the possible sampling points being used or a SpatialPolygonsDataFrame of polygons describing the strata boundaries.
-#' @param stratum.field A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.
-#' @param panel.names A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c("Year1", "Year2", "Year3", "Year4", "Year5")}.
-#' @param panel.sample.size A numeric vector of the number of base points to be drawn in each panel. This must be the same length and in the same order as \code{panel.names} UNLESS all panels have the same number of base points in which case \code{panel.sample.size} optionally may be a single numeric value despite \code{panel.names} containing more than one value. Defaults to \code{c(50)}.
-#' @param points.min A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size. Defaults to \code{3}.
-#' @param oversample.proportion A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel.sample.size * min.oversample.proportion}. Defaults to \code{0.25}.
-#' @param oversample.min A numeric value representing the minimum number of oversample points to allocate per stratum per panel. This is only used if it is greater than \code{panel.sample.size * min.oversample.proportion}. Defaults to \code{3}.
+#' @param stratum_field A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.
+#' @param panel_names A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("Year1", "Year2", "Year3", "Year4", "Year5")}.
+#' @param panel_sample_size A numeric vector of the number of base points to be drawn in each panel. This must be the same length and in the same order as \code{panel_names} UNLESS all panels have the same number of base points in which case \code{panel_sample_size} optionally may be a single numeric value despite \code{panel_names} containing more than one value. Defaults to \code{c(50)}.
+#' @param points_min A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size. Defaults to \code{3}.
+#' @param oversample_proportion A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel_sample_size * min.oversample_proportion}. Defaults to \code{0.25}.
+#' @param oversample_min A numeric value representing the minimum number of oversample points to allocate per stratum per panel. This is only used if it is greater than \code{panel_sample_size * min.oversample_proportion}. Defaults to \code{3}.
 #' @return A named list of named lists conforming to the requirements for the design object for \code{spsurvey::grts()}.
 #' @export
 
 allocate.panels <- function(spdf,
-                            stratum.field = "stratum",
-                            panel.names = c("Year1", "Year2", "Year3", "Year4", "Year5"),
-                            panel.sample.size = 50,
-                            points.min = 3,
-                            oversample.proportion = 0.25,
-                            oversample.min = 3
+                            stratum_field = "stratum",
+                            panel_names = c("Year1", "Year2", "Year3", "Year4", "Year5"),
+                            panel_sample_size = 50,
+                            points_min = 3,
+                            oversample_proportion = 0.25,
+                            oversample_min = 3
 ){
   ## Error checking
-  if (length(panel.sample.size) != (length(panel.names)) & length(panel.sample.size) != 1) {
-    stop("Error: panel.sample.size either needs to be a single numeric value or a vector of numeric values with a length equal to panel.number")
+  if (length(panel_sample_size) != (length(panel_names)) & length(panel_sample_size) != 1) {
+    stop("Error: panel_sample_size either needs to be a single numeric value or a vector of numeric values with a length equal to panel.number")
   }
 
   ## Sanitization
@@ -33,10 +33,10 @@ allocate.panels <- function(spdf,
     df <- spdf@data
   }
 
-  if (!(stratum.field %in% names(df))) {
+  if (!(stratum_field %in% names(df))) {
     stop("Error: Couldn't find the specified stratum field in the supplied points or polygons. Check spelling and case.")
   } else {
-    df$STRATUM <- df[, stratum.field]
+    df$STRATUM <- df[, stratum_field]
   }
 
   ## Remove all points or areas without strata assigned
@@ -51,30 +51,30 @@ allocate.panels <- function(spdf,
 
   ## Prep the working frame for the mutates
   workingframe <- stratum.sizes
-  workingframe$min <- points.min
-  workingframe$remainder <- panel.sample.size - nrow(workingframe)*points.min
-  workingframe$oversample.proportion <- oversample.proportion
-  workingframe$oversample.min <- oversample.min
+  workingframe$min <- points_min
+  workingframe$remainder <- panel_sample_size - nrow(workingframe)*points_min
+  workingframe$oversample_proportion <- oversample_proportion
+  workingframe$oversample_min <- oversample_min
   workingframe$panel.number <- panel.number
   print(workingframe)
 
   ## Create all the support values then the list that goes into the design object for each stratum
   workingframe <- workingframe %>% dplyr::mutate(PROPORTION = AREA/sum(AREA)) %>%
     dplyr::mutate(PER.PANEL.BASE = round(PROPORTION*remainder) + min) %>%
-    dplyr::mutate(PER.PANEL.OVERSAMPLE = pmax(PER.PANEL.BASE*oversample.proportion, oversample.min) %>% ceiling()) %>%
+    dplyr::mutate(PER.PANEL.OVERSAMPLE = pmax(PER.PANEL.BASE*oversample_proportion, oversample_min) %>% ceiling()) %>%
     dplyr::mutate(TOTAL.OVERSAMPLE = panel.number*PER.PANEL.OVERSAMPLE)
 
   ## Create the output design object list.
   output <- lapply(workingframe$STRATUM,
-                   function(X, workingframe, panel.names) {
+                   function(X, workingframe, panel_names) {
                      list(panel = rep(workingframe$PER.PANEL.BASE[workingframe$STRATUM == X],
                                       times = workingframe$panel.number[workingframe$STRATUM == X]) %>%
-                            setNames(panel.names),
+                            setNames(panel_names),
                           seltype = "Equal",
                           over = workingframe$TOTAL.OVERSAMPLE[workingframe$STRATUM == X])
                    },
                    workingframe = workingframe,
-                   panel.names = panel.names) %>%
+                   panel_names = panel_names) %>%
     setNames(workingframe$STRATUM)
 
   return(output)
@@ -82,39 +82,43 @@ allocate.panels <- function(spdf,
 
 #' Use a data frame of strata and point counts to build a design object for \code{spsurvey::grts()}
 #' @param dataframe Data frame. This must have at least a variable for the strata identities and one variable for each panel, e.g. "Stratum", "Year1", "Year2", "Year3", where each row is a stratum and the number of points desired in each panel for that stratum.
-#' @param stratum.field Character string. This must exactly match the name of the variable in \code{dataframe} that contains the stratum identities. Defaults to \code{"stratum"}.
-#' @param panel.names Optional vector of character strings. Necessary if the data frame given in \code{dataframe} has additional fields beyond the ones for the strata, panels, and oversample. This character vector specifies which variables correspond to panels and must match those names exactly.
-#' @param oversample.field Optional character string. If used, this must exactly match the name of the variable in \code{dataframe} that contains the TOTAL number of oversample points desired for the stratum in the design. If not provided or specified as \code{NULL}, oversample point counts will be calculated using \code{oversample.proportion} and \code{oversample.min}. Defaults to \code{NULL}.
-#' @param oversample.proportion Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample.field}, this must be between 0 and 1, representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel point count * min.oversample.proportion}. Defaults to \code{0.25}.
-#' @param oversample.min Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample.field}, this must be a positive integer, representing the minimum number of oversample points to allocate per stratum per panel. This is only used if it is greater than \code{ppanel point count * min.oversample.proportion}. Defaults to \code{3}.
+#' @param stratum_field Character string. This must exactly match the name of the variable in \code{dataframe} that contains the stratum identities. Defaults to \code{"stratum"}.
+#' @param panel_names Optional vector of character strings. Necessary if the data frame given in \code{dataframe} has additional fields beyond the ones for the strata, panels, and oversample. This character vector specifies which variables correspond to panels and must match those names exactly.
+#' @param oversample.field Optional character string. If used, this must exactly match the name of the variable in \code{dataframe} that contains the TOTAL number of oversample points desired for the stratum in the design. If not provided or specified as \code{NULL}, oversample point counts will be calculated using \code{oversample_proportion} and \code{oversample_min}. Defaults to \code{NULL}.
+#' @param oversample_proportion Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample.field}, this must be between 0 and 1, representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel point count * min.oversample_proportion}. Defaults to \code{0.25}.
+#' @param oversample_min Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample.field}, this must be a positive integer, representing the minimum number of oversample points to allocate per stratum per panel. This is only used if it is greater than \code{ppanel point count * min.oversample_proportion}. Defaults to \code{3}.
 #' @export
 read.panels <- function(dataframe,
-                        stratum.field = "stratum",
-                        panel.names = NULL,
+                        stratum_field = "stratum",
+                        panel_names = NULL,
                         oversample.field = NULL,
-                        oversample.proportion = 0.25,
-                        oversample.min = 3) {
+                        oversample_proportion = 0.25,
+                        oversample_min = 3) {
 
   # For each stratum, make the design list specifying number of sample points per panel and the oversample count
-  design <- lapply(X = dataframe[[stratum.field]],
+  design <- lapply(X = dataframe[[stratum_field]],
                    FUN =   function(X,
                                     dataframe,
-                                    stratum.field,
-                                    panel.names,
+                                    stratum_field,
+                                    panel_names,
                                     oversample.field,
-                                    oversample.proportion,
-                                    oversample.min){
+                                    oversample_proportion,
+                                    oversample_min){
+                     # In case your data frame is from a .csv from an excel workbook that added an X to variable names that were entirely numeric
+                     names(dataframe)[grepl(names(dataframe), pattern = "^X\\d{1,999}$")] <- gsub(names(dataframe)[grepl(names(dataframe), pattern = "^X\\d{1,999}$")],
+                                                                                                  pattern = "^X",
+                                                                                                  replacement = "")
                      # Create a vector of panel names from the variable names if there isn't one yet
-                     if (is.null(panel.names)) {
-                       panel.names <- names(dataframe)[!(names(dataframe) %in% c(stratum.field, oversample.field))]
+                     if (is.null(panel_names)) {
+                       panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample.field))]
                      }
                      # Get just the relevant variables in the current data frame for the stratum
-                     dataframe.current <- dataframe[dataframe[[stratum.field]] == X, names(dataframe)[names(dataframe) %in% c(stratum.field, panel.names, oversample.field)]]
+                     dataframe.current <- dataframe[dataframe[[stratum_field]] == X, names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample.field)]]
                      # Pull the panel values and create a named vector from them
-                     panel <- setNames(unlist(lapply(X = panel.names,
+                     panel <- setNames(unlist(lapply(X = panel_names,
                                                      FUN = function(X, df){return(df[,X])},
                                                      df = dataframe.current)),
-                                       panel.names)
+                                       panel_names)
 
                      # E pull the oversample value or calculate it
                      if (!is.null(oversample.field)) {
@@ -122,25 +126,25 @@ read.panels <- function(dataframe,
                      } else {
                        # For each panel, get the number of oversample points, then sum the vector
                        over <- sum(unlist(lapply(X = panel,
-                                                 FUN = function(X, oversample.proportion, oversample.min){
-                                                   return(max(round(X * oversample.proportion), oversample.min))
+                                                 FUN = function(X, oversample_proportion, oversample_min){
+                                                   return(max(round(X * oversample_proportion), oversample_min))
                                                  },
-                                                 oversample.proportion = oversample.proportion,
-                                                 oversample.min = oversample.min)))
+                                                 oversample_proportion = oversample_proportion,
+                                                 oversample_min = oversample_min)))
                      }
 
                      # Return the list for this stratum
                      return(list(panel = panel, seltype = "Equal", over = over))
                    },
                    dataframe = dataframe,
-                   stratum.field = stratum.field,
-                   panel.names = panel.names,
+                   stratum_field = stratum_field,
+                   panel_names = panel_names,
                    oversample.field = oversample.field,
-                   oversample.proportion = oversample.proportion,
-                   oversample.min = oversample.min)
+                   oversample_proportion = oversample_proportion,
+                   oversample_min = oversample_min)
 
   # Name the lists for each stratum with the stratum name
-  design <- setNames(design, dataframe[[stratum.field]])
+  design <- setNames(design, dataframe[[stratum_field]])
 
   return(design)
 }
