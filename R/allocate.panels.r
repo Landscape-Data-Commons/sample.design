@@ -11,7 +11,7 @@
 #' @return A named list of named lists conforming to the requirements for the design object for \code{spsurvey::grts()}.
 #' @export
 
-allocate.panels <- function(spdf,
+allocate_panels <- function(spdf,
                             stratum_field = "stratum",
                             panel_names = c("Year1", "Year2", "Year3", "Year4", "Year5"),
                             panel_sample_size = 50,
@@ -95,7 +95,7 @@ allocate.panels <- function(spdf,
 #' @param oversample_proportion Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample_field}, this must be between 0 and 1, representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel point count * min.oversample_proportion}. Defaults to \code{0.25}.
 #' @param oversample_min Optional numeric value. If not providing an oversample point count in a variable specified by \code{oversample_field}, this must be a positive integer, representing the minimum number of oversample points to allocate per stratum per panel. This is only used if it is greater than \code{ppanel point count * min.oversample_proportion}. Defaults to \code{3}.
 #' @export
-read.panels <- function(dataframe,
+read_panels <- function(dataframe,
                         stratum_field = "stratum",
                         panel_names = NULL,
                         oversample_field = NULL,
@@ -165,7 +165,7 @@ read.panels <- function(dataframe,
 #' Convert a GRTS design list to a data frame
 #' @param design A list in the format for use in \code{spsurvey::grts()}.
 #' @export
-design.dataframe <- function(design){
+design_dataframe <- function(design){
   strata <- names(design)
 
   lapply(X = strata,
