@@ -148,8 +148,8 @@ read.panels <- function(dataframe,
                                                  FUN = function(X, oversample_proportion, oversample_min){
                                                    return(max(round(X * oversample_proportion), oversample_min))
                                                  },
-                                                 oversample_proportion = oversample_proportion,
-                                                 oversample_min = oversample_min))
+                                          oversample_proportion = oversample_proportion,
+                                          oversample_min = oversample_min,
                      }
 
                      # Return the list for this stratum
