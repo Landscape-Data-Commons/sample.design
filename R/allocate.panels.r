@@ -118,9 +118,12 @@ read.panels <- function(dataframe,
                                     oversample_proportion,
                                     oversample_min){
                      # In case your data frame is from a .csv from an excel workbook that added an X to variable names that were entirely numeric
-                     names(dataframe)[grepl(names(dataframe), pattern = "^X\\d+$")] <- gsub(names(dataframe)[grepl(names(dataframe), pattern = "^X\\d+$")],
-                                                                                                  pattern = "^X",
-                                                                                                  replacement = "")
+                     names_damaged_indices <- grepl(names(dataframe), pattern = "^X\\d+$")
+                     names_damaged <- names(dataframe)[names_damaged_indices]
+                     names_repaired <- gsub(names_damaged,
+                                            pattern = "^X",
+                                            replacement = "")
+                     names(dataframe)[names_damaged_indices] <- names_repaired
                      # Create a vector of panel names from the variable names if there isn't one yet
                      if (is.null(panel_names)) {
                        panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
