@@ -21,7 +21,7 @@ allocate.panels <- function(spdf,
 ){
   ## Error checking
   if (length(panel_sample_size) != (length(panel_names)) & length(panel_sample_size) != 1) {
-    stop("Error: panel_sample_size either needs to be a single numeric value or a vector of numeric values with a length equal to panel.number")
+    stop("Error: panel_sample_size either needs to be a single numeric value or a vector of numeric values with a length equal to the number of panels.")
   }
 
   ## Sanitization
