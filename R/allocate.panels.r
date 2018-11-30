@@ -131,7 +131,8 @@ read.panels <- function(dataframe,
                        panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
                      }
                      # Get just the relevant variables in the current data frame for the stratum
-                     df_current <- dataframe[dataframe[[stratum_field]] == X, names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]]
+                     variables_relevant <- names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]
+                     df_current <- dataframe[dataframe[[stratum_field]] == X, variables_relevant]
                      # Pull the panel values and create a named vector from them
                      panel <- setNames(sapply(X = panel_names,
                                                      FUN = function(X, df){return(df[,X])},
