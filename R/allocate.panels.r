@@ -44,6 +44,7 @@ allocate.panels <- function(spdf,
   df <- df[!is.na(df$STRATUM),]
 
   ## Create a data frame of strata and "area"
+  ## The presence/absence of df$AREA is tied to whether these were polys or points
   if ("AREA" %in% names(df)) {
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM), AREA = sum(AREA))
   } else (
