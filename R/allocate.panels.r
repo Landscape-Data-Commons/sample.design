@@ -131,16 +131,16 @@ read.panels <- function(dataframe,
                        panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
                      }
                      # Get just the relevant variables in the current data frame for the stratum
-                     dataframe.current <- dataframe[dataframe[[stratum_field]] == X, names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]]
+                     df_current <- dataframe[dataframe[[stratum_field]] == X, names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]]
                      # Pull the panel values and create a named vector from them
                      panel <- setNames(unlist(lapply(X = panel_names,
                                                      FUN = function(X, df){return(df[,X])},
-                                                     df = dataframe.current)),
+                                                     df = df_current)),
                                        panel_names)
 
                      # E pull the oversample value or calculate it
                      if (!is.null(oversample_field)) {
-                       over <- dataframe.current[[oversample_field]]
+                       over <- df_current[[oversample_field]]
                      } else {
                        # For each panel, get the number of oversample points, then sum the vector
                        over <- sum(unlist(lapply(X = panel,
