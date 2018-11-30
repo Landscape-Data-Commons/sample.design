@@ -65,17 +65,24 @@ allocate.panels <- function(spdf,
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe$PER.PANEL.OVERSAMPLE * panel_count
 
   ## Create the output design object list.
-  output <- lapply(workingframe$STRATUM,
-                   function(X, workingframe, panel_names) {
-                     list(panel = rep(workingframe$PER.PANEL.BASE[workingframe$STRATUM == X],
-                                      times = workingframe$panel_count[workingframe$STRATUM == X]) %>%
-                            setNames(panel_names),
+  output <- lapply(split(workingframe, workingframe$STRATUM),
+                   panel_names = panel_names,
+                   panel_count = panel_count,
+                   function(X, panel_names, panel_count) {
+                     # Just for clarity because X isn't obvious
+                     df <- X
+                     # Make the list. It's made of a named vector of panel sizes in base point count
+                     list(panel = setNames(rep(df[1, "PER.PANEL.BASE"],
+                                               times = panel_count),
+                                           panel_names),
+                          # The selection type (always equal here)
                           seltype = "Equal",
-                          over = workingframe$TOTAL.OVERSAMPLE[workingframe$STRATUM == X])
-                   },
-                   workingframe = workingframe,
-                   panel_names = panel_names) %>%
-    setNames(workingframe$STRATUM)
+                          # And total oversample points
+                          over = df[1, "TOTAL.OVERSAMPLE"])
+                   })
+
+  # The list needs to be named by stratum
+  output <- setNames(workingframe$STRATUM)
 
   return(output)
 }
