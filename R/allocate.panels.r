@@ -112,7 +112,7 @@ read.panels <- function(dataframe,
                                     oversample_proportion,
                                     oversample_min){
                      # In case your data frame is from a .csv from an excel workbook that added an X to variable names that were entirely numeric
-                     names(dataframe)[grepl(names(dataframe), pattern = "^X\\d{1,999}$")] <- gsub(names(dataframe)[grepl(names(dataframe), pattern = "^X\\d{1,999}$")],
+                     names(dataframe)[grepl(names(dataframe), pattern = "^X\\d+$")] <- gsub(names(dataframe)[grepl(names(dataframe), pattern = "^X\\d+$")],
                                                                                                   pattern = "^X",
                                                                                                   replacement = "")
                      # Create a vector of panel names from the variable names if there isn't one yet
