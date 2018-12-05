@@ -68,32 +68,8 @@ grts.aim <- function(design_object,
   sample_sites@data <- sample_sites@data[, fields_relevant]
   names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
 
-  ## Last step is to rename the oversample panels so that they're broken up into the years instead of being an oversample chunk
-  panel.names <- unique(sample_sites@data$PANEL[!(sample_sites@data$PANEL %in% "OverSamp")])
-  oversample.df <- sample_sites@data[sample_sites@data$PANEL == "OverSamp",] %>% dplyr::group_by(STRATUM) %>% dplyr::summarize(oversample.pts.per.panel = floor(n()/length(panel.names)),
-                                                                                                                               total.oversample.drawn = n())
-  oversample.panels <- list()
-  for (s in oversample.df$STRATUM) {
-    oversample.count.per.panel <- oversample.df$oversample.pts.per.panel[oversample.df$STRATUM == s]
-    oversample.drawn <- oversample.df$total.oversample.drawn[oversample.df$STRATUM == s]
-    oversample.panels.current <- c()
-    for (n in panel.names) {
-      oversample.panels.current <- c(oversample.panels.current,
-                                     rep(x = paste("OverSample", n),
-                                         times = oversample.count.per.panel))
-    }
-    ## If there was a difference introduced by rounding, here's the place to put the extra points into the last panel
-    if (length(oversample.panels.current) < oversample.drawn) {
-      oversample.panels.current <- c(oversample.panels.current,
-                                     rep(x = paste("OverSample", last(panel.names)),
-                                         times = oversample.drawn - length(oversample.panels.current)))
-    }
-    oversample.panels[[s]] <- oversample.panels.current
-  }
-
-  for (s in names(oversample.panels)) {
-    sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp" & sample_sites@data$STRATUM == s] <- oversample.panels[[s]]
-  }
+  # Change "OverSamp" to "OverSample"
+  sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"] <- "OverSample"
 
   ## Rename the plots with the strata
   sample_sites@data$PLOTID <- paste0(sample_sites@data$STRATUM, stringr::str_extract(string = sample_sites@data$PLOTID, pattern = "-[0-9]{1,4}$"))
