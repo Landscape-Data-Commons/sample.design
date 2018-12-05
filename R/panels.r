@@ -61,8 +61,8 @@ allocate_panels <- function(spdf,
   ## Create all the support values then the list that goes into the design object for each stratum
   workingframe[["PROPORTION"]] <- workingframe$AREA / sum(workingframe$AREA)
   workingframe[["PER.PANEL.BASE"]] <- round(workingframe * remainder) + points_min
-  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe$PER.PANEL.BASE * oversample_proportion, oversample_min))
-  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe$PER.PANEL.OVERSAMPLE * panel_count
+  workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
+  workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
 
   ## Create the output design object list.
   output <- lapply(split(workingframe, workingframe$STRATUM),
