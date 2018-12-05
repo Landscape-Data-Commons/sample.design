@@ -17,7 +17,7 @@ find_name <- function(obj,
     obj <- obj@data
   }
 
-  if(is.null(names(obj))) {
+  if (is.null(names(obj))) {
     stop("The provided object has no names.")
   }
 
@@ -38,7 +38,8 @@ find_name <- function(obj,
                   } else {
                     name
                   },
-                "' exists in the object with ignore_case_name = ", ignore_case_name,
+                "' exists in the object with ignore_case_name = ",
+                ignore_case_name,
                 " and bookend = ", bookend, "."))
   }
   if (length(fieldname) > 1 & !multiple) {

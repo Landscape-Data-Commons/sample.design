@@ -66,16 +66,16 @@ draw <- function(design_name = "design",
   if (!(stratum_field %in% names(strata_lut)) & !is.null(strata_lut)) {
     stop("A variable must exist in strata_lut matching stratum_field.")
   }
-  if(is.character(strata_lut_field) & !(strata_lut_field %in% names(strata_lut))) {
+  if (is.character(strata_lut_field) & !(strata_lut_field %in% names(strata_lut))) {
     if (is.null(strata_lut)) {
       message(paste0("There is no strata_lut, so the value ", strata_lut_field, " as strata_lut_field will be ignored"))
     } else {
       stop("The string strata_lut_field must exactly match the name of a variable in strata_lut.")
     }
   }
-  if(is.character(strata_lut_field) & !(strata_lut_field %in% c(names(strata_spdf),
-                                                                names(sampleframe_spdf),
-                                                                names(points_spdf)))) {
+  if (is.character(strata_lut_field) & !(strata_lut_field %in% c(names(strata_spdf),
+                                                                 names(sampleframe_spdf),
+                                                                 names(points_spdf)))) {
     stop("The string strata_lut_field must exactly match the name of a variable in at least one of the provided SPDFs.")
   }
 
@@ -126,7 +126,7 @@ draw <- function(design_name = "design",
         # Otherwise we've made it to here without strata, so we have to abort
         stop("If no strata or sample frame SPDFs are provided, then points_spdf must contain a variable exactly matching stratum_field or a variable exactly matching strata_lut_field.")
       }
-    # Otherwise, if population_spdf already exists
+      # Otherwise, if population_spdf already exists
     } else {
       # If population_spdf already has the stratum field, restrict by it and inherit that attribute
       if (stratum_field %in% names(population_spdf)) {
@@ -135,13 +135,13 @@ draw <- function(design_name = "design",
                                     inherit = TRUE,
                                     inherit_field = stratum_field,
                                     bookend_inherit_field = TRUE)
-      # If the points already have the stratum field, just restrict by population_spdf
+        # If the points already have the stratum field, just restrict by population_spdf
       } else if (stratum_field %in% names(points_spdf@data)) {
         population_spdf <- restrict(spdf1 = points_spdf,
                                     spdf2 = population)
-      # If there's STILL no stratum field, abort. I don't think this is possible with the error checking in place?
+        # If there's STILL no stratum field, abort. I don't think this is possible with the error checking in place?
       } else {
-        stop("Somehow between all procided SPDFs and lookup table, no strata were assigned. This is an ambiguous error for now, sorry!")
+        stop("Somehow between all provided SPDFs and lookup table, no strata were assigned. This is an ambiguous error for now, sorry!")
       }
     }
 

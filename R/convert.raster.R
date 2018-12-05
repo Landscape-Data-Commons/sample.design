@@ -3,7 +3,7 @@
 #' @param frame_spdf Spatial polygons or spatial polygons data frame. The frame to clip the raster to.
 #' @param buffer.meters Numeric. Number of meters to buffer the frame by before masking the raster. Make sure this is slightly larger than the raster cell size to make sure that no cells are lost before vectorization and clipping to the actual frame.
 #' @export
-raster.spdf <- function(raster,
+raster_spdf <- function(raster,
                         frame_spdf,
                         buffer.meters = 100){
   # Reproject and buffer the frame
