@@ -6,9 +6,9 @@
 #' @param multiple Logical. If \code{TRUE} then the function can return a vector of multiple names instead of just one. If \code{FALSE} then it will produce an error if multiple matches are found. Defaults to \code{FALSE}.
 #' @return A vector of character strings.
 #' @export
-find.name <- function(obj,
+find_name <- function(obj,
                       name = "",
-                      ignore.case.name = FALSE,
+                      ignore_case_name = FALSE,
                       bookend,
                       multiple = FALSE
 ){
@@ -28,7 +28,7 @@ find.name <- function(obj,
                                   } else {
                                     name
                                   },
-                                ignore.case = ignore.case.name)]
+                                ignore.case = ignore_case_name)]
 
   ## Make sure that the fieldname exists
   if (length(fieldname) < 1) {
@@ -38,7 +38,7 @@ find.name <- function(obj,
                   } else {
                     name
                   },
-                "' exists in the object with ignore.case.name = ", ignore.case.name,
+                "' exists in the object with ignore_case_name = ", ignore_case_name,
                 " and bookend = ", bookend, "."))
   }
   if (length(fieldname) > 1 & !multiple) {
@@ -48,7 +48,7 @@ find.name <- function(obj,
                    } else {
                      name
                    },
-                   "' with ignore.case.name = ", ignore.case.name,
+                   "' with ignore_case_name = ", ignore_case_name,
                    " and bookend = ", bookend,
                    " matched more than one name:"))
     stop(paste(fieldname, collapse = ", "))
