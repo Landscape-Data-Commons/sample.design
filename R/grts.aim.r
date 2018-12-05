@@ -28,7 +28,7 @@ grts.aim <- function(design_object,
     }
   } else if (!is.null(in_shape)) {
     src_frame <- "shapefile"
-    in_shape <- stringr::str_replace(string = in_shape, pattern = "\\.(shp)|(shp)$", replacement = "")
+    in_shape <- gsub(in_shape, pattern = "\\.(shp)|(shp)$", replacement = "")
   } else {
     stop("Provide either an SPDF as sp_object or a filepath to a shapefile as in_shape.")
   }
@@ -54,8 +54,11 @@ grts.aim <- function(design_object,
   if (is.null(sp_object)) {
     sp::proj4string(sample_sites) <- sp_object@proj4string
   } else {
-    sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = stringr::str_replace(in_shape, pattern = "/([a-Z]|[0-9]){1,256}$", replacement = ""),
-                                                    layer = stringr::str_extract(in_shape, pattern = "/([a-Z]|[0-9]){1,256}$")) %>% .@proj4strin
+    sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = gsub(in_shape,
+                                                               pattern = "/([a-Z]|[0-9]){1,256}$",
+                                                               replacement = ""),
+                                                    layer = gsub(in_shape,
+                                                                 pattern = "/([a-Z]|[0-9]){1,256}$"))@proj4string
   }
   ## Reproject the sample sites to Geographic DD NAD83
   sample_sites <- sp::spTransform(sample_sites, sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
