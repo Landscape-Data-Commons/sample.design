@@ -2,48 +2,48 @@
 % Please edit documentation in R/reallocate.r
 \name{reallocate}
 \alias{reallocate}
-\title{Reallocate points in an existing design object.}
+\title{Reallocate points in an existing design_object.}
 \usage{
-reallocate(design.object = list(), stratum = character(),
-  grep.stratum = FALSE, ignore.case.stratum = FALSE,
-  bookend.stratum = FALSE, panels = c("Year1", "Year2", "Year3", "Year4",
-  "Year5"), grep.panels = FALSE, ignore.case.panels = FALSE,
-  bookend.panels = FALSE, base.point.change = NULL, base.point.set = NULL,
-  recalc.oversample = FALSE, oversample.proportion = 0.25,
-  oversample.min = 3)
+reallocate(design_object = list(), stratum = character(),
+  grep_stratum = FALSE, ignore_case_stratum = FALSE,
+  bookend_stratum = FALSE, panels = c("Year1", "Year2", "Year3",
+  "Year4", "Year5"), grep_panels = FALSE, ignore_case_panels = FALSE,
+  bookend_panels = FALSE, base_point_change = NULL,
+  base_point_set = NULL, recalc_oversample = FALSE,
+  oversample_proportion = 0.25, oversample_min = 3)
 }
 \arguments{
-\item{design.object}{A list structured according to the requirements of \code{spsurvey::grts()}. May be the output from \code{allocate.panels()}.}
+\item{design_object}{A list structured according to the requirements of \code{spsurvey::grts()}. May be the output from \code{allocate.panels()}.}
 
-\item{stratum}{A character string specifying the name of the stratum to change in \code{design.object}. If \code{grep.stratum} is \code{TRUE}, then this will be treated as a regular expression.}
+\item{stratum}{A character string specifying the name of the stratum to change in \code{design_object}. If \code{grep_stratum} is \code{TRUE}, then this will be treated as a regular expression.}
 
-\item{grep.stratum}{Logical. If \code{TRUE} then the value in \code{stratum} will be used as a regular expression to match the names of strata in \code{design.object}. Defaults to \code{FALSE}.}
+\item{grep_stratum}{Logical. If \code{TRUE} then the value in \code{stratum} will be used as a regular expression to match the names of strata in \code{design_object}. Defaults to \code{FALSE}.}
 
-\item{ignore.case.stratum}{Logical. If \code{TRUE} and \code{grep.stratum} is \code{TRUE} then the \code{grepl()} will be case insensitive. Defaults to \code{FALSE}.}
+\item{ignore_case_stratum}{Logical. If \code{TRUE} and \code{grep_stratum} is \code{TRUE} then the \code{grepl()} will be case insensitive. Defaults to \code{FALSE}.}
 
-\item{bookend.stratum}{Logical. If \code{TRUE} and \code{grep.stratum} is \code{TRUE} then the regular expression passed to \code{grepl()} will start with \code{"^"} and end with \code{"$"} to prevent partial matches with the value in \code{stratum}. Defaults to \code{FALSE}.}
+\item{bookend_stratum}{Logical. If \code{TRUE} and \code{grep_stratum} is \code{TRUE} then the regular expression passed to \code{grepl()} will start with \code{"^"} and end with \code{"$"} to prevent partial matches with the value in \code{stratum}. Defaults to \code{FALSE}.}
 
-\item{panels}{A character string or vector of character strings specifying the panels in the design object to alter. If \code{grep.panels} is \code{TRUE}, then these will be treated as regular expressions.}
+\item{panels}{A character string or vector of character strings specifying the panels in the design_object to alter. If \code{grep_panels} is \code{TRUE}, then these will be treated as regular expressions.}
 
-\item{grep.panels}{Logical. If \code{TRUE} then the values in \code{panels} will be used as regular expressions to match the names of panels in \code{design.object}. Defaults to \code{FALSE}.}
+\item{grep_panels}{Logical. If \code{TRUE} then the values in \code{panels} will be used as regular expressions to match the names of panels in \code{design_object}. Defaults to \code{FALSE}.}
 
-\item{ignore.case.panels}{Logical. If \code{TRUE} and \code{grep.panels} is \code{TRUE} then the \code{grepl()} will be case insensitive. Defaults to \code{FALSE}.}
+\item{ignore_case_panels}{Logical. If \code{TRUE} and \code{grep_panels} is \code{TRUE} then the \code{grepl()} will be case insensitive. Defaults to \code{FALSE}.}
 
-\item{bookend.panels}{Logical. If \code{TRUE} and \code{grep.panels} is \code{TRUE} then the regular expression passed to \code{grepl()} will start with \code{"^"} and end with \code{"$"} to prevent partial matches with any of the values in \code{panels}. Defaults to \code{FALSE}.}
+\item{bookend_panels}{Logical. If \code{TRUE} and \code{grep_panels} is \code{TRUE} then the regular expression passed to \code{grepl()} will start with \code{"^"} and end with \code{"$"} to prevent partial matches with any of the values in \code{panels}. Defaults to \code{FALSE}.}
 
-\item{base.point.change}{An optional numeric value representing net change in base point count for the stratum and panels specified, e.g. 3 or -4. Defaults to \code{NULL}.}
+\item{base_point_change}{An optional numeric value representing net change in base point count for the stratum and panels specified, e.g. 3 or -4. Defaults to \code{NULL}.}
 
-\item{base.point.set}{An optional numeric value representing absolute the base point count to replace the current value for the stratum and panels specified. This will override \code{base.point.change} if both are provided. Defaults to \code{NULL}.}
+\item{base_point_set}{An optional numeric value representing absolute the base point count to replace the current value for the stratum and panels specified. This will override \code{base_point_change} if both are provided. Defaults to \code{NULL}.}
 
-\item{recalc.oversample}{Logical. If \code{TRUE} then the oversample point counts will be recalculated for the specified stratum and panels. Defaults to \code{FALSE}.}
+\item{recalc_oversample}{Logical. If \code{TRUE} then the oversample point counts will be recalculated for the specified stratum and panels. Defaults to \code{FALSE}.}
 
-\item{oversample.proportion}{A numeric value representing the proportion of base points that should be drawn as oversample points per panel within the specified stratum. Only used if \code{recalc.oversample} is \code{TRUE}. Defaults to \code{0.25}.}
+\item{oversample_proportion}{A numeric value representing the proportion of base points that should be drawn as oversample points per panel within the specified stratum. Only used if \code{recalc_oversample} is \code{TRUE}. Defaults to \code{0.25}.}
 
-\item{oversample.min}{A numeric value representing the minimum number of points per stratum per panel. Only used if \code{recalc.oversample} is \code{TRUE} and it is larger than the value calculated using \code{oversample.proportion}. Defaults to \code{3}.}
+\item{oversample_min}{A numeric value representing the minimum number of points per stratum per panel. Only used if \code{recalc_oversample} is \code{TRUE} and it is larger than the value calculated using \code{oversample_proportion}. Defaults to \code{3}.}
 }
 \value{
-The input \code{design.object} with the relevant base and oversample point values modified.
+The input \code{design_object} with the relevant base and oversample point values modified.
 }
 \description{
-Allows the surgical reallocation of points in an existing design object output from allocate.panels(). This can only be done one stratum at a time, so if multiple strata need to be changed, they'll have to be done in separate calls of this function. Likewise, changes are applied to all the panels provided in \code{panels}, so if different changes are required in different panels for a stratum, each of those will need to be a separate call.
+Allows the surgical reallocation of points in an existing design_object output from allocate.panels(). This can only be done one stratum at a time, so if multiple strata need to be changed, they'll have to be done in separate calls of this function. Likewise, changes are applied to all the panels provided in \code{panels}, so if different changes are required in different panels for a stratum, each of those will need to be a separate call.
 }

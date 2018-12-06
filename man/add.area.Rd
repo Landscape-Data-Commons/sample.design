@@ -4,14 +4,17 @@
 \alias{add.area}
 \title{Add areas to a Spatial Polygons Data Frame}
 \usage{
-add.area(spdf, area.ha = TRUE, area.sqkm = TRUE, byid = TRUE)
+add.area(spdf, area_ha = TRUE, area_sqkm = TRUE, area_acres = TRUE,
+  byid = TRUE)
 }
 \arguments{
 \item{spdf}{Spatial Polygons Data Frame to calculate areas for}
 
-\item{area.ha}{Logical. If \code{TRUE}, areas will be calculated and added in hectares. Default is \code{TRUE}.}
+\item{area_ha}{Logical. If \code{TRUE}, areas will be calculated and added in hectares. Default is \code{TRUE}.}
 
-\item{area.sqkm}{Logical. If \code{TRUE}, areas will be calculated and added in square kilometers. Default is \code{TRUE}.}
+\item{area_sqkm}{Logical. If \code{TRUE}, areas will be calculated and added in square kilometers. Default is \code{TRUE}.}
+
+\item{area_acres}{Logical. If \code{TRUE}, areas will be calculated and added in acres. Default is \code{TRUE}.}
 
 \item{byid}{Logical. If \code{TRUE}, areas will be calculated and added for each polygon by ID. If \code{FALSE} the area of the whole SPDF will be calculated and added, so every value for that field will be the same, regardless of polygon ID. Default is \code{TRUE}.}
 }

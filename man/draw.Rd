@@ -4,43 +4,44 @@
 \alias{draw}
 \title{A quick wrapper to execute simple designs}
 \usage{
-draw(design.name = "design", strata.spdf = NULL,
-  stratum.field = "STRATUM", sampleframe.spdf = NULL, points.spdf = NULL,
-  strata.lut = NULL, strata.lut.field = NULL, design.object = NULL,
-  panel.names = c("One", "Two", "Three", "Four", "Five"),
-  panel.sample.size = 50, points.min = 3, oversample.proportion = 0.25,
-  oversample.min = 3, seed.number = NULL)
+draw(design_name = "design", strata_spdf = NULL,
+  stratum_field = "STRATUM", sampleframe_spdf = NULL,
+  points_spdf = NULL, strata_lut = NULL, strata_lut_field = NULL,
+  design_object = NULL, panel_names = c("One", "Two", "Three", "Four",
+  "Five"), panel_sample_size = 50, points_min = 3,
+  oversample_proportion = 0.25, oversample_min = 3,
+  seed_number = NULL)
 }
 \arguments{
-\item{design.name}{A character string of the name to use for the design, often the name of the project.}
+\item{design_name}{A character string of the name to use for the design, often the name of the project.}
 
-\item{strata.spdf}{An optional Spatial Polygons Data Frame. Must either contain an attribute which exactly matches the string \code{stratum.field} and holds the stratum identities OR, if using \code{strata.lut}, an attribute which exactly matches \code{strata.lut.field} and contains values found in \code{strata.lut$strata.lut.field}. If \code{points.spdf} is provided, this will be used to attribute it with strata identities.}
+\item{strata_spdf}{An optional Spatial Polygons Data Frame. Must either contain an attribute which exactly matches the string \code{stratum_field} and holds the stratum identities OR, if using \code{strata_lut}, an attribute which exactly matches \code{strata_lut_field} and contains values found in \code{strata_lut$strata_lut_field}. If \code{points_spdf} is provided, this will be used to attribute it with strata identities.}
 
-\item{sampleframe.spdf}{An optional Spatial Polygons Data Frame. Necessary only to restrict \code{strata.spdf} or \code{points.spdf} if they are not already limited to the extent of the intended sample frame. If it is the only SPDF provided because there is no stratification scheme, it still must contain an attribute which exactly matches the string \code{stratum.field}, although there will only be one unique value in it.}
+\item{sampleframe_spdf}{An optional Spatial Polygons Data Frame. Necessary only to restrict \code{strata_spdf} or \code{points_spdf} if they are not already limited to the extent of the intended sample frame. If it is the only SPDF provided because there is no stratification scheme, it still must contain an attribute which exactly matches the string \code{stratum_field}, although there will only be one unique value in it.}
 
-\item{points.spdf}{An optional Spatial Points Data Frame. This is only necessary if the draw should be from within a set of discrete points and not from polygon areas. If neither \code{strata.spdf} nor \code{sampleframe.spdf} with strata identity information is provided, this must either contain an attribute which exactly matches the string \code{stratum.field} and holds the stratum identities OR, if using \code{strata.lut}, an attribute which exactly matches \code{strata.lut.field} and contains values found in \code{strata.lut$strata.lut.field}.}
+\item{points_spdf}{An optional Spatial Points Data Frame. This is only necessary if the draw should be from within a set of discrete points and not from polygon areas. If neither \code{strata_spdf} nor \code{sampleframe_spdf} with strata identity information is provided, this must either contain an attribute which exactly matches the string \code{stratum_field} and holds the stratum identities OR, if using \code{strata_lut}, an attribute which exactly matches \code{strata_lut_field} and contains values found in \code{strata_lut$strata_lut_field}.}
 
-\item{strata.lut}{An optional data frame. If provided, this must contain a variable with a name that exactly matches the string provided in \code{stratum.field} and a variable with a name that exactly matches the string provided in \code{strata.lut.field}. There must be unique relationships between the values in the two fields, i.e. a value in \code{strata.lut$strata.lut.field} CANNOT correspond with more than one value in \code{strata.lut$stratum.field}. The values in \code{strata.lut$strata.lut.field} must match values in the \code{data$strata.lut.field} slot of the provided SPDFs.}
+\item{strata_lut}{An optional data frame. If provided, this must contain a variable with a name that exactly matches the string provided in \code{stratum_field} and a variable with a name that exactly matches the string provided in \code{strata_lut_field}. There must be unique relationships between the values in the two fields, i.e. a value in \code{strata_lut$strata_lut_field} CANNOT correspond with more than one value in \code{strata_lut$stratum_field}. The values in \code{strata_lut$strata_lut_field} must match values in the \code{data$strata_lut_field} slot of the provided SPDFs.}
 
-\item{strata.lut.field}{An optional string specifying a column/attribute/variable name. If \code{strata.lut} is provided, then a variable with a name exactly matching this string must exist in both \code{strata.lut} and one of the SPDFs provided.}
+\item{strata_lut_field}{An optional string specifying a column/attribute/variable name. If \code{strata_lut} is provided, then a variable with a name exactly matching this string must exist in both \code{strata_lut} and one of the SPDFs provided.}
 
-\item{design.object}{An optional specially-constructed list to use instead of an automatically-generated design object. This will be passed to \code{spsurvey::grts()} as the argument \code{design} and must exactly follow the structure required for that. If this is not provided, a design object will be automatically constructed with points allocated proportionally by stratum size.}
+\item{design_object}{An optional specially-constructed list to use instead of an automatically-generated design object. This will be passed to \code{spsurvey::grts()} as the argument \code{design} and must exactly follow the structure required for that. If this is not provided, a design object will be automatically constructed with points allocated proportionally by stratum size.}
 
-\item{panel.names}{A character vector of the names to assign to the panels for automatically generating a proportional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel.sample.size}. Defaults to \code{c("One", "Two", "Three", "Four", "Five")}.}
+\item{panel_names}{A character vector of the names to assign to the panels for automatically generating a proportional-allocation design object. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("One", "Two", "Three", "Four", "Five")}.}
 
-\item{panel.sample.size}{A numeric vector of the number of base points to be drawn in each panel for automatically generating a proportional-allocation design object. This must be the same length and in the same order as \code{panel.names} UNLESS all panels have the same number of base points in which case \code{panel.sample.size} optionally may be a single numeric value despite \code{panel.names} containing more than one value. Defaults to \code{c(50)}.}
+\item{panel_sample_size}{A numeric vector of the number of base points to be drawn in each panel for automatically generating a proportional-allocation design object. This must be the same length and in the same order as \code{panel_names} UNLESS all panels have the same number of base points in which case \code{panel_sample_size} optionally may be a single numeric value despite \code{panel_names} containing more than one value. Defaults to \code{c(50)}.}
 
-\item{points.min}{A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size for automatically generating a proportional-allocation design object. Defaults to \code{3}.}
+\item{points_min}{A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size for automatically generating a proportional-allocation design object. Defaults to \code{3}.}
 
-\item{oversample.proportion}{A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel.sample.size * min.oversample.proportion} for automatically generating a proportional-allocation design object. Defaults to \code{0.25}.}
+\item{oversample_proportion}{A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel_sample_size * min.oversample_proportion} for automatically generating a proportional-allocation design object. Defaults to \code{0.25}.}
 
-\item{oversample.min}{A numeric value representing the minimum number of oversample points to allocate per stratum per panel for automatically generating a proportional-allocation design object. This is only used if it is greater than \code{panel.sample.size * min.oversample.proportion}. Defaults to \code{3}.}
+\item{oversample_min}{A numeric value representing the minimum number of oversample points to allocate per stratum per panel for automatically generating a proportional-allocation design object. This is only used if it is greater than \code{panel_sample_size * min.oversample_proportion}. Defaults to \code{3}.}
 
-\item{seed.number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
+\item{seed_number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
 }
 \value{
 A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
 }
 \description{
-Take some combination of strata, sample frame, and points with a design object or values for constructing one and produce a sample design as a Spatial Points Data Frame. Automatic generation of a design object is done using allocate.panels().
+Take some combination of strata, sample frame, and points with a design object or values for constructing one and produce a sample design as a Spatial Points Data Frame. Automatic generation of a design object is done using allocate_panels().
 }

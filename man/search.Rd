@@ -4,26 +4,26 @@
 \alias{search}
 \title{Find values in a data frame column/variable that match a list or vector}
 \usage{
-search(df = NULL, values, namestring = "", use.grepl = FALSE,
-  ignore.case.namestring = FALSE, ignore.case.values = FALSE,
-  bookend.namestring = FALSE, bookend.values = FALSE)
+search(df = NULL, values, namestring = "", use_grepl = FALSE,
+  ignore_case_namestring = FALSE, ignore_case_values = FALSE,
+  bookend_namestring = FALSE, bookend_values = FALSE)
 }
 \arguments{
 \item{df}{The data frame to search through}
 
-\item{values}{A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use.grepl = TRUE} or \code{ignore.case.values = TRUE}. If \code{grepl()} is used then these values are used to create a regular expression.}
+\item{values}{A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use_grepl = TRUE} or \code{ignore_case_values = TRUE}. If \code{grepl()} is used then these values are used to create a regular expression.}
 
 \item{namestring}{A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.}
 
-\item{use.grepl}{Logical. If \code{TRUE} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.}
+\item{use_grepl}{Logical. If \code{TRUE} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.}
 
-\item{ignore.case.namestring}{Logical. If \code{TRUE} then finding the column/variable name will be case insensitive. Defaults to \code{FALSE}.}
+\item{ignore_case_namestring}{Logical. If \code{TRUE} then finding the column/variable name will be case insensitive. Defaults to \code{FALSE}.}
 
-\item{ignore.case.values}{Logical. If \code{TRUE} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.}
+\item{ignore_case_values}{Logical. If \code{TRUE} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.}
 
-\item{bookend.namestring}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{name}. Defaults to \code{FALSE}.}
+\item{bookend_namestring}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{name}. Defaults to \code{FALSE}.}
 
-\item{bookend.values}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{FALSE}.}
+\item{bookend_values}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{FALSE}.}
 }
 \value{
 A vector of unique values.
