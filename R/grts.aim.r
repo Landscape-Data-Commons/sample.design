@@ -10,7 +10,7 @@
 #' @param seed_number An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.
 #' @return A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
 #' @export
-grts.aim <- function(design_object,
+grts_aim <- function(design_object,
                      design_name = "Design name",
                      src_frame = "sp_object",
                      sp_object = NULL,

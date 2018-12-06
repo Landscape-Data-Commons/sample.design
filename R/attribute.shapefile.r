@@ -10,7 +10,7 @@
 #' attribute.shapefile()
 #' @export
 
-attribute.shapefile <- function(spdf1,
+attribute_shapefile <- function(spdf1,
                                 spdf2,
                                 attributefield = NULL,
                                 newfield = NULL

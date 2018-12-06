@@ -12,7 +12,7 @@
 #' add.area()
 #' @export
 
-add.area <- function(spdf,
+add_area <- function(spdf,
                      area_ha = TRUE,
                      area_sqkm = TRUE,
                      area_acres = TRUE,
