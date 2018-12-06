@@ -11,7 +11,7 @@
 #'                            "Ecological.Site",
 #'                            "Soil.Map.Unit.Component")
 #' @export
-read.lut <- function(filepath = NULL,
+read_lut <- function(filepath = NULL,
                      ...,
                      filename = NULL,
                      sheet = NULL) {
