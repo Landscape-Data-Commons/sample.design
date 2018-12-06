@@ -10,7 +10,7 @@
 #' @param bookend_values Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{values}. Defaults to \code{FALSE}.
 #' @return A vector of unique values.
 #' @export
-search <- function(df = NULL,
+search <- function(df,
                    values,
                    namestring = "",
                    use_grepl = FALSE,
@@ -19,9 +19,6 @@ search <- function(df = NULL,
                    bookend_namestring = FALSE,
                    bookend_values = FALSE
 ){
-  if (is.null(df)) {
-    stop("Missing a data frame as df.")
-  }
   ## Get the data frame from df if it's an SPDF
   if (grepl(class(df), pattern = "(^Spatial).{1,100}(DataFrame$)")) {
     df <- df@data
