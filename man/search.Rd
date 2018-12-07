@@ -4,7 +4,7 @@
 \alias{search}
 \title{Find values in a data frame column/variable that match a list or vector}
 \usage{
-search(df = NULL, values, namestring = "", use_grepl = FALSE,
+search(df, values, namestring = "", use_grepl = FALSE,
   ignore_case_namestring = FALSE, ignore_case_values = FALSE,
   bookend_namestring = FALSE, bookend_values = FALSE)
 }
