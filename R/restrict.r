@@ -70,7 +70,7 @@ restrict <- function(spdf1 = NULL,
 ){
   ## Validity checks
   # Make sure spdf1 is a proper SPDF
-  if (!grepl(class(spdf1), pattern = "(^Spatial).{1,100}(DataFrame$)")) {
+  if (!grepl(class(spdf1), pattern = "^(Spatial).{1,100}(DataFrame)$")) {
     stop("An SPDF must be provided as spdf1")
   }
   # Make sure that spdf2 is a proper SPDF if provided

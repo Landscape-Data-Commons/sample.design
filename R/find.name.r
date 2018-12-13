@@ -13,7 +13,7 @@ find_name <- function(obj,
                       multiple = FALSE
 ){
   ## Get the data frame if it's an SPDF
-  if (grepl(class(obj), pattern = "(^Spatial).{1,100}(DataFrame$)")) {
+  if (grepl(class(obj), pattern = "^(Spatial).{1,100}(DataFrame)$")) {
     obj <- obj@data
   }
 
