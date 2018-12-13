@@ -52,7 +52,7 @@ attribute_shapefile <- function(spdf1,
     ## Make sure that the polygons have unique IDs
     if (class(current_spdf) == "SpatialPolygonsDataFrame") {
       current_spdf <- sp::spChFIDs(current_spdf,
-                                   paste(runif(n = 1, min = 0, max = 666666666),
+                                   paste(stats::runif(n = 1, min = 0, max = 666666666),
                                          row.names(current_spdf),
                                          sep = "."))
     }
