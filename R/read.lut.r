@@ -6,7 +6,7 @@
 #' @param ... Strings corresponding to column/variable names in the source file. Must provide at least one string.
 #' @return A data frame of the unique rows/observations in the source file for the given columns/variables.
 #' @examples
-#' # Read in a table of data about ecological sites and soils and create a lookup table with the columns "Ecological.Site" and "Soil.Map.Unit.Component"
+#' # Read in a table of data with the columns "Ecological.Site" and "Soil.Map.Unit.Component"
 #' ecosite.lookup <- read.lut(filename = "ecosite_soil_lookup.csv",
 #'                            "Ecological.Site",
 #'                            "Soil.Map.Unit.Component")
