@@ -38,23 +38,35 @@ draw <- function(design_name = "design",
   }
 
   # Correct format data checks
-  if (!is.null(points_spdf) & class(points_spdf) != "SpatialPointsDataFrame") {
-    stop("points_spdf must be a Spatial Points Data Frame")
+  if (!is.null(points_spdf)) {
+    if (class(points_spdf) != "SpatialPointsDataFrame") {
+      stop("points_spdf must be a Spatial Points Data Frame")
+    }
   }
-  if (!is.null(strata_spdf) & class(strata_spdf) != "SpatialPolygonsDataFrame") {
-    stop("strata_spdf must be a Spatial Polygons Data Frame")
+  if (!is.null(strata_spdf)) {
+    if (class(strata_spdf) != "SpatialPolygonsDataFrame") {
+      stop("strata_spdf must be a Spatial Polygons Data Frame")
+    }
   }
-  if (!is.null(sampleframe_spdf) & class(sampleframe_spdf) != "SpatialPolygonsDataFrame") {
-    stop("sampleframe_spdf must be a Spatial Polygons Data Frame")
+  if (!is.null(sampleframe_spdf)) {
+    if (class(sampleframe_spdf) != "SpatialPolygonsDataFrame") {
+      stop("sampleframe_spdf must be a Spatial Polygons Data Frame")
+    }
   }
-  if (!is.null(strata_lut) & class(strata_lut) != "data.frame") {
-    stop("strata_lut must be a data frame")
+  if (!is.null(strata_lut)) {
+    if (class(strata_lut) != "data.frame") {
+      stop("strata_lut must be a data frame")
+    }
   }
-  if (!is.null(strata_lut_field) & (!is.character(strata_lut_field) | length(strata_lut_field) != 1)) {
-    stop("strata_lut_field must be be a single character string")
+  if (!is.null(strata_lut_field)) {
+    if (!is.character(strata_lut_field) | length(strata_lut_field) != 1) {
+      stop("strata_lut_field must be be a single character string")
+    }
   }
-  if (!is.null(seed_number) & !is.numeric(seed_number)) {
-    stop("seed_number must be a single numeric value")
+  if (!is.null(seed_number)) {
+    if (!is.numeric(seed_number)) {
+      stop("seed_number must be a single numeric value")
+    }
   }
 
   # Making sure that there's correlation
