@@ -63,8 +63,8 @@ grts_aim <- function(design_object,
   ## Reproject the sample sites to Geographic DD NAD83
   sample_sites <- sp::spTransform(sample_sites, sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
   ## update the X and Y coordinate values
-  sample_sites$xcoord <- sp::coordinates(sample_sites)[, 1]
-  sample_sites$ycoord <- sp::coordinates(sample_sites)[, 2]
+  sample_sites[["xcoord"]] <- sp::coordinates(sample_sites)[, 1]
+  sample_sites[["ycoord"]] <- sp::coordinates(sample_sites)[, 2]
 
   ## Dropping the extra fields from the master sample, just keeping the ones specific to the draw plus the master sample ID
   fields_relevant <- c("siteID", "stratum", "panel", "wgt", "xcoord", "ycoord")
@@ -72,11 +72,11 @@ grts_aim <- function(design_object,
   names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
 
   # Change "OverSamp" to "OverSample + [STRATUM]"
-  oversample_panel_names <- paste(sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"], "Oversample")
-  sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"] <- oversample_panel_names
+  oversample_panel_names <- paste(sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"], "Oversample")
+  sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"] <- oversample_panel_names
 
   ## Rename the plots with the strata
-  sample_sites@data$PLOTID <- paste0(sample_sites@data$STRATUM, stringr::str_extract(string = sample_sites@data$PLOTID, pattern = "-[0-9]{1,4}$"))
+  sample_sites@data[["PLOTID"]] <- paste0(sample_sites@data[["STRATUM"]], stringr::str_extract(string = sample_sites@data[["PLOTID"]], pattern = "-[0-9]{1,4}$"))
 
   return(sample_sites)
 }

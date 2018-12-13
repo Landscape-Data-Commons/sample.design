@@ -58,7 +58,7 @@ reallocate <- function(design_object = list(),
 
   ## Get the particular panels
   for (panel in panels) {
-    current.panel <- current_stratum_object$panel[[panel]]
+    current.panel <- current_stratum_object[["panel"]][[panel]]
 
     ## Modify the panels
     current.panel <- current.panel + base_point_change
@@ -68,15 +68,15 @@ reallocate <- function(design_object = list(),
     }
 
     ## Write the panels back in
-    current_stratum_object$panel[[panel]] <- current.panel
+    current_stratum_object[["panel"]][[panel]] <- current.panel
   }
 
 
   ## If oversample is being recalculated, recalculate it
   if (recalc_oversample) {
-    current_stratum_object$over <- 0
-    for (panel in names(current_stratum_object$panel)) {
-      current_stratum_object$over <- ceiling(pmax(oversample_min, current_stratum_object$panel[[panel]] * oversample_proportion)) + current_stratum_object$over
+    current_stratum_object[["over"]] <- 0
+    for (panel in names(current_stratum_object[["panel"]])) {
+      current_stratum_object[["over"]] <- ceiling(pmax(oversample_min, current_stratum_object[["panel"]][[panel]] * oversample_proportion)) + current_stratum_object[["over"]]
     }
   }
 

@@ -37,14 +37,14 @@ allocate_panels <- function(spdf,
   if (!(stratum_field %in% names(df))) {
     stop("Error: Couldn't find the specified stratum field in the supplied points or polygons. Check spelling and case.")
   } else {
-    df$STRATUM <- df[, stratum_field]
+    df[["STRATUM"]] <- df[, stratum_field]
   }
 
   ## Remove all points or areas without strata assigned
-  df <- df[!is.na(df$STRATUM), ]
+  df <- df[!is.na(df[["STRATUM"]]), ]
 
   ## Create a data frame of strata and "area"
-  ## The presence/absence of df$AREA is tied to whether these were polys or points
+  ## The presence/absence of df[["AREA"]] is tied to whether these were polys or points
   if ("AREA" %in% names(df)) {
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
                                      AREA = sum(AREA))
@@ -59,13 +59,13 @@ allocate_panels <- function(spdf,
   panel_count <- length(panel_names)
 
   ## Create all the support values then the list that goes into the design object for each stratum
-  workingframe[["PROPORTION"]] <- workingframe$AREA / sum(workingframe$AREA)
+  workingframe[["PROPORTION"]] <- workingframe[["AREA"]] / sum(workingframe[["AREA"]])
   workingframe[["PER.PANEL.BASE"]] <- round(workingframe * remainder) + points_min
   workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
 
   ## Create the output design object list.
-  output <- lapply(split(workingframe, workingframe$STRATUM),
+  output <- lapply(split(workingframe, workingframe[["STRATUM"]]),
                    panel_names = panel_names,
                    panel_count = panel_count,
                    function(X, panel_names, panel_count) {
@@ -82,7 +82,7 @@ allocate_panels <- function(spdf,
                    })
 
   # The list needs to be named by stratum
-  output <- setNames(workingframe$STRATUM)
+  output <- setNames(workingframe[["STRATUM"]])
 
   return(output)
 }
@@ -183,7 +183,7 @@ design_dataframe <- function(design){
                      df.wide <- tidyr::spread(data = df,
                                               key = panel,
                                               value = count)
-                     df.wide$oversample <- design[[X]][["over"]]
+                     df.wide[["oversample"]] <- design[[X]][["over"]]
                    })
   return(output)
 }

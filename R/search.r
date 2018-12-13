@@ -52,7 +52,7 @@ search <- function(df,
                        },
                        ignore.case = ignore_case_values), ]
   } else {
-    output <- df[df$fieldname %in% values, ]
+    output <- df[df[[fieldname]] %in% values, ]
   }
 
   return(unique(output[, fieldname]))

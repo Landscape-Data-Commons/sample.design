@@ -24,22 +24,22 @@ add_area <- function(spdf,
   spdf <- sp::spTransform(x = spdf, CRSobj = sp::CRS("+proj=aea"))
 
   ## Add the area in hectares, using unname() to get an unnamed vector
-  spdf@data$AREA.HA <- unname(rgeos::gArea(spdf, byid = byid) * 0.0001)
+  spdf@data[["AREA.HA"]] <- unname(rgeos::gArea(spdf, byid = byid) * 0.0001)
 
 
 
   if (area_sqkm) {
     # Add the area in square kilometers, converting from hectares
-    spdf@data$AREA.SQKM <- spdf@data$AREA.HA * 0.01
+    spdf@data[["AREA.SQKM"]] <- spdf@data[["AREA.HA"]] * 0.01
   }
   if (area_acres) {
     # Add the area in acres, because that's how the BLM rolls
-    spdf@data$AREA.ACRES <- spdf@data$AREA.HA * 2.471
+    spdf@data[["AREA.ACRES"]] <- spdf@data[["AREA.HA"]] * 2.471
   }
 
   # And remove the hectares if they're unwanted
   if (!(area_ha)) {
-    spdf@data$AREA.HA <- NULL
+    spdf@data[["AREA.HA"]] <- NULL
   }
 
   return(sp::spTransform(spdf, original_proj))
