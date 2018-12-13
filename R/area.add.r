@@ -9,7 +9,7 @@
 #' @return The original Spatial Polygons Data Frame with an additional field for each area unit calculated.
 #' @keywords area
 #' @examples
-#' add.area()
+#' add_area()
 #' @export
 
 add_area <- function(spdf,
