@@ -38,7 +38,7 @@ reallocate <- function(design_object = list(),
   if (grep_stratum) {
     stratum <- find_name(obj = design_object,
                          name = stratum,
-                         ignore.case.name = ignore_case_stratum,
+                         ignore_case_name = ignore_case_stratum,
                          bookend = bookend_stratum,
                          multiple = FALSE)
   }

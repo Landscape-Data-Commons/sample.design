@@ -124,7 +124,7 @@ restrict <- function(spdf1 = NULL,
   if (is.character(inherit_field)) {
     inherit_field <- find_name(obj = spdf2@data,
                                name = inherit_field,
-                               ignore.case = ignore_case_inherit_field,
+                               ignore_case_name = ignore_case_inherit_field,
                                bookend = bookend_inherit_field,
                                multiple = FALSE)
     if (inherit_field %in% names(spdf1)) {
@@ -168,7 +168,7 @@ restrict <- function(spdf1 = NULL,
                                                                 namestring = filter_field_spdf1,
                                                                 ignore_case_namestring = FALSE,
                                                                 bookend_namestring = TRUE,
-                                                                use.grepl = use_grep_values_spdf1,
+                                                                use_grepl = use_grep_values_spdf1,
                                                                 ignore_case_values = ignore_case_values_spdf1,
                                                                 bookend_values = bookend_values_spdf1),
                    ]
@@ -180,7 +180,7 @@ restrict <- function(spdf1 = NULL,
                                                                 namestring = filter_field_spdf2,
                                                                 ignore_case_namestring = FALSE,
                                                                 bookend_namestring = TRUE,
-                                                                use.grepl = use_grep_values_spdf2,
+                                                                use_grepl = use_grep_values_spdf2,
                                                                 ignore_case_values = ignore_case_values_spdf2,
                                                                 bookend_values = bookend_values_spdf2),
                    ]
