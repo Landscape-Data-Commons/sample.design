@@ -67,14 +67,14 @@ attribute_shapefile <- function(spdf1,
 
   if (length(attributed_dfs) > 0) {
     if (length(attributed_dfs) == 1) {
-      output <- sp::SpatialPointsDataFrame(data = attributed_dfs[[1]],
-                                           coords = .[, coord_names],
-                                           proj4string = projection)
+      attributed_df <- attributed_dfs[[1]]
     } else {
-      output <- sp::SpatialPointsDataFrame(data = dplyr::bind_rows(attributed_dfs),
-                                           coords = .[, coord_names],
-                                           proj4string = projection)
+      attributed_df <- do.call((attributed_dfs), rbind)
     }
+    output <- sp::SpatialPointsDataFrame(data = attributed_df,
+                                         coords = attributed_df[, coord_names],
+                                         proj4string = projection)
+
     if (remove_coords) {
       output <- output[, names(output)[!(names(output) %in% coord_names)]]
     }
