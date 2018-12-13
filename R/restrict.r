@@ -108,14 +108,14 @@ restrict <- function(spdf1 = NULL,
 
   # Making sure that the fields actually exist
   if (is.character(filter_field_spdf1)) {
-    filter_field_spdf1 <- find.name(obj = spdf1@data,
+    filter_field_spdf1 <- find_name(obj = spdf1@data,
                                     name = filter_field_spdf1,
                                     ignore.case = ignore_case_field_spdf1,
                                     bookend = bookend_field_spdf1,
                                     multiple = FALSE)
   }
   if (is.character(filter_field_spdf2)) {
-    filter_field_spdf2 <- find.name(obj = spdf2@data,
+    filter_field_spdf2 <- find_name(obj = spdf2@data,
                                     name = filter_field_spdf2,
                                     ignore.case = ignore_case_field_spdf2,
                                     bookend = bookend_field_spdf2,

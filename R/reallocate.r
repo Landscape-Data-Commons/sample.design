@@ -48,7 +48,7 @@ reallocate <- function(design_object = list(),
   current_stratum_object <- design_object[[stratum]]
 
   if (grep_panels) {
-    panels <- find.name(obj = current_stratum_object,
+    panels <- find_name(obj = current_stratum_object,
                         name = panels,
                         ignore.case.name = ignore_case_panels,
                         bookend = bookend_panels,

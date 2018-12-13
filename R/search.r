@@ -27,7 +27,7 @@ search <- function(df,
   values <- unique(values)
 
   ## Get the fieldname as it occurs in the data frame
-  fieldname <- find.name(obj = df,
+  fieldname <- find_name(obj = df,
                          name = namestring,
                          ignore_case = ignore_case_namestring,
                          bookend = bookend_namestring,
