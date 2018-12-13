@@ -50,7 +50,7 @@ allocate_panels <- function(spdf,
                                      AREA = sum(AREA))
   } else (
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
-                                     AREA = n())
+                                     AREA = dplyr::n())
   )
 
   # After the minimum points are allocated, how many remain to be allocated?
@@ -72,7 +72,7 @@ allocate_panels <- function(spdf,
                      # Just for clarity because X isn't obvious
                      df <- X
                      # Make the list. It's made of a named vector of panel sizes in base point count
-                     list(panel = setNames(rep(df[1, "PER.PANEL.BASE"],
+                     list(panel = stats::setNames(rep(df[1, "PER.PANEL.BASE"],
                                                times = panel_count),
                                            panel_names),
                           # The selection type (always equal here)
@@ -82,7 +82,7 @@ allocate_panels <- function(spdf,
                    })
 
   # The list needs to be named by stratum
-  output <- setNames(workingframe[["STRATUM"]])
+  output <- stats::setNames(workingframe[["STRATUM"]])
 
   return(output)
 }
@@ -134,7 +134,7 @@ read_panels <- function(dataframe,
                      variables_relevant <- names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]
                      df_current <- dataframe[dataframe[[stratum_field]] == X, variables_relevant]
                      # Pull the panel values and create a named vector from them
-                     panel <- setNames(sapply(X = panel_names,
+                     panel <- stats::setNames(sapply(X = panel_names,
                                               FUN = function(X, df){
                                                 return(df[, X])
                                               },
@@ -159,7 +159,7 @@ read_panels <- function(dataframe,
                    })
 
   # Name the lists for each stratum with the stratum name
-  design <- setNames(design, dataframe[[stratum_field]])
+  design <- stats::setNames(design, dataframe[[stratum_field]])
 
   return(design)
 }
