@@ -25,6 +25,6 @@ The original Spatial Polygons Data Frame with an additional field for each area 
 This function takes a Spatial Polygons Data Frame and calculates and adds area fields to the data frame. Areas can be calculated either treating the whole SPDF as a unit or for each polygon individually.
 }
 \examples{
-add.area()
+add_area()
 }
 \keyword{area}

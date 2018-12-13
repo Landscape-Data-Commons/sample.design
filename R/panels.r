@@ -180,10 +180,10 @@ design_dataframe <- function(design){
                                       panel = names(design[[X]][["panel"]]),
                                       count = unname(design[[X]][["panel"]]))
                      # Spread it into a wide format because users expect the variables to correspond to panels
-                     df.wide <- tidyr::spread(data = df,
+                     df_wide <- tidyr::spread(data = df,
                                               key = panel,
                                               value = count)
-                     df.wide[["oversample"]] <- design[[X]][["over"]]
+                     df_wide[["oversample"]] <- design[[X]][["over"]]
                    })
   return(output)
 }

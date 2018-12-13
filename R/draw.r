@@ -105,7 +105,7 @@ draw <- function(design_name = "design",
   if (is.null(strata_spdf)) {
     population_spdf <- strata_spdf
     if (is.null(sampleframe_spdf)) {
-      population_spdf <- restrict(spdf1 = frame.spdf,
+      population_spdf <- restrict(spdf1 = population_spdf,
                                   spdf2 = sampleframe_spdf)
     }
   } else if (is.null(sampleframe_spdf)) {
@@ -170,9 +170,9 @@ draw <- function(design_name = "design",
   }
 
   ## The use the design object to draw points
-  output <- grts.aim(design_object = design_object,
+  output <- grts_aim(design_object = design_object,
                      design_name = design_name,
-                     sp.object = population_spdf,
+                     sp_object = population_spdf,
                      stratum_field = stratum_field,
                      seed_number = seed_number)
 

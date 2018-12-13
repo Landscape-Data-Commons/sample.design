@@ -29,7 +29,7 @@ search <- function(df,
   ## Get the fieldname as it occurs in the data frame
   fieldname <- find_name(obj = df,
                          name = namestring,
-                         ignore_case = ignore_case_namestring,
+                         ignore_case_name = ignore_case_namestring,
                          bookend = bookend_namestring,
                          multiple = FALSE)
 
