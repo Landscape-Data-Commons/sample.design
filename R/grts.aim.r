@@ -71,8 +71,9 @@ grts_aim <- function(design_object,
   sample_sites@data <- sample_sites@data[, fields_relevant]
   names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
 
-  # Change "OverSamp" to "OverSample"
-  sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"] <- "OverSample"
+  # Change "OverSamp" to "OverSample + [STRATUM]"
+  oversample_panel_names <- paste(sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"], "Oversample")
+  sample_sites@data$PANEL[sample_sites@data$PANEL == "OverSamp"] <- oversample_panel_names
 
   ## Rename the plots with the strata
   sample_sites@data$PLOTID <- paste0(sample_sites@data$STRATUM, stringr::str_extract(string = sample_sites@data$PLOTID, pattern = "-[0-9]{1,4}$"))
