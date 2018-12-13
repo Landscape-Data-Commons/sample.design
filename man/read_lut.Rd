@@ -22,7 +22,7 @@ A data frame of the unique rows/observations in the source file for the given co
 Reads in either a .CSV using \code{read.csv()} or a sheet from a .XLSX file using \code{readxl::read_excel()}, limits it to specified columns/variables, and returns only distinct rows.
 }
 \examples{
-# Read in a table of data about ecological sites and soils and create a lookup table with the columns "Ecological.Site" and "Soil.Map.Unit.Component"
+# Read in a table of data with the columns "Ecological.Site" and "Soil.Map.Unit.Component"
 ecosite.lookup <- read.lut(filename = "ecosite_soil_lookup.csv",
                            "Ecological.Site",
                            "Soil.Map.Unit.Component")
