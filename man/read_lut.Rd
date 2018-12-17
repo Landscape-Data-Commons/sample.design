@@ -19,7 +19,7 @@ read_lut(filepath = NULL, ..., filename = NULL, sheet = NULL)
 A data frame of the unique rows/observations in the source file for the given columns/variables.
 }
 \description{
-Reads in either a .CSV using \code{read.csv()} or a sheet from a .XLSX file using \code{readxl::read_excel()}, limits it to specified columns/variables, and returns only distinct rows.
+Reads in either a .CSV using \code{utils::read.csv()} or a sheet from a .XLSX file using \code{readxl::read_excel()}, limits it to specified columns/variables, and returns only distinct rows.
 }
 \examples{
 # Read in a table of data with the columns "Ecological.Site" and "Soil.Map.Unit.Component"
