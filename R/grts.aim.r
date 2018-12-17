@@ -12,7 +12,7 @@
 #' @export
 grts_aim <- function(design_object,
                      design_name = "Design name",
-                     src_frame = "sp_object",
+                     source_frame = "sp_object",
                      sp_object = NULL,
                      in_shape = NULL,
                      stratum_field = "STRATUM",
@@ -22,20 +22,20 @@ grts_aim <- function(design_object,
     set.seed(seed_number)
   }
   if (!is.null(sp_object)) {
-    src_frame <- "sp_object"
+    source_frame <- "sp_object"
     if (!(stratum_field %in% names(sp_object))) {
       stop("The variable stratum_field was not found in sp_object. Check case and spelling.")
     }
   } else if (!is.null(in_shape)) {
-    src_frame <- "shapefile"
+    source_frame <- "shapefile"
     in_shape <- gsub(in_shape, pattern = "\\.(shp)|(shp)$", replacement = "")
   } else {
     stop("Provide either an SPDF as sp_object or a filepath to a shapefile as in_shape.")
   }
-  if (src_frame == "sp_object" & is.null(sp_object)) {
+  if (source_frame == "sp_object" & is.null(sp_object)) {
     stop("Please provide an SPDF as sp_object.")
   }
-  if (src_frame == "shapefile" & is.null(in_shape)) {
+  if (source_frame == "shapefile" & is.null(in_shape)) {
     stop("Please provide a filepath to a shapefile as in_shape.")
   }
 
@@ -43,7 +43,7 @@ grts_aim <- function(design_object,
   sample_sites <- spsurvey::grts(design = design_object,
                                  DesignID = design_name,
                                  type.frame = "area",
-                                 src.frame = src_frame,
+                                 src.frame = source_frame,
                                  sp.object = sp_object,
                                  in.shape = in_shape,
                                  stratum = stratum_field,

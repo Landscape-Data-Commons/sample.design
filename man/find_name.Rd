@@ -12,11 +12,11 @@ find_name(obj, name = "", ignore_case_name = FALSE, bookend,
 
 \item{name}{A string to search the names of \code{obj} using. This will be used as a regular expression in \code{grepl()}.}
 
+\item{ignore_case_name}{Logical. Passed to \code{grepl()} to decide if the regular expression should be case insensitive. Defaults to \code{FALSE}.}
+
 \item{bookend}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression. Defaults to \code{TRUE}.}
 
 \item{multiple}{Logical. If \code{TRUE} then the function can return a vector of multiple names instead of just one. If \code{FALSE} then it will produce an error if multiple matches are found. Defaults to \code{FALSE}.}
-
-\item{ignore.case}{Logical. Passed to \code{grepl()} to decide if the regular expression should be case insensitive. Defaults to \code{FALSE}.}
 }
 \value{
 A vector of character strings.

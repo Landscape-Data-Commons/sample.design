@@ -5,13 +5,15 @@
 \title{Draw spatially balanced points with \code{spsurvey::grts()}, output in AIM format}
 \usage{
 grts_aim(design_object, design_name = "Design name",
-  src_frame = "sp_object", sp_object = NULL, in_shape = NULL,
+  source_frame = "sp_object", sp_object = NULL, in_shape = NULL,
   stratum_field = "STRATUM", seed_number = NULL)
 }
 \arguments{
 \item{design_object}{A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.}
 
 \item{design_name}{A character string of the name to use for the design, often the name of the project.}
+
+\item{source_frame}{Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp_object"}.}
 
 \item{sp_object}{If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.}
 
@@ -20,8 +22,6 @@ grts_aim(design_object, design_name = "Design name",
 \item{stratum_field}{A character string representing the name of the variable in either \code{sp_object} or \code{in_shape} containing the strata names matching those in \code{design_object}. Defaults to \code{"STRATUM"}.}
 
 \item{seed_number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
-
-\item{source_frame}{Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp_object"}.}
 }
 \value{
 A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
