@@ -7,7 +7,7 @@
 #' @param newfield The name of the field in \code{spdf1} as a string to add the values from \code{spdf2$attributefield} to. If NULL, the field will use \code{attributefield}. Defaults to NULL.
 #' @return The original SPDF spdf1 with the new field containing the values inherited from spdf2.
 #' @examples
-#' attribute.shapefile()
+#' attribute_shapefile()
 #' @export
 
 attribute_shapefile <- function(spdf1,

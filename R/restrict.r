@@ -227,7 +227,7 @@ restrict <- function(spdf1 = NULL,
       output@data <- output@data[, names(output@data)[names(output@data) %in% c(names(spdf1@data), inherit_field)]]
     } else {
       ## Attribute spdf1 with spdf2
-      output <- attribute.shapefile(spdf1 = spdf1,
+      output <- attribute_shapefile(spdf1 = spdf1,
                                     spdf2 = spdf2,
                                     newfield = if (inherit) {
                                       inherit_field
