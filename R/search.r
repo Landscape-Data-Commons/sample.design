@@ -20,8 +20,10 @@ search <- function(df,
                    bookend_values = FALSE
 ){
   ## Get the data frame from df if it's an SPDF
-  if (grepl(class(df), pattern = "^(Spatial).{1,100}(DataFrame)$")) {
-    df <- df@data
+  if(!is.null(df)) {
+    if (grepl(class(df), pattern = "^(Spatial).{1,100}(DataFrame)$")) {
+      df <- df@data
+    }
   }
 
   values <- unique(values)
