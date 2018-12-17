@@ -17,6 +17,8 @@ draw(design_name = "design", strata_spdf = NULL,
 
 \item{strata_spdf}{An optional Spatial Polygons Data Frame. Must either contain an attribute which exactly matches the string \code{stratum_field} and holds the stratum identities OR, if using \code{strata_lut}, an attribute which exactly matches \code{strata_lut_field} and contains values found in \code{strata_lut$strata_lut_field}. If \code{points_spdf} is provided, this will be used to attribute it with strata identities.}
 
+\item{stratum_field}{Optional character string. Must exactly match the name of a field in \code{strata_spdf} that contains the stratum identities.}
+
 \item{sampleframe_spdf}{An optional Spatial Polygons Data Frame. Necessary only to restrict \code{strata_spdf} or \code{points_spdf} if they are not already limited to the extent of the intended sample frame. If it is the only SPDF provided because there is no stratification scheme, it still must contain an attribute which exactly matches the string \code{stratum_field}, although there will only be one unique value in it.}
 
 \item{points_spdf}{An optional Spatial Points Data Frame. This is only necessary if the draw should be from within a set of discrete points and not from polygon areas. If neither \code{strata_spdf} nor \code{sampleframe_spdf} with strata identity information is provided, this must either contain an attribute which exactly matches the string \code{stratum_field} and holds the stratum identities OR, if using \code{strata_lut}, an attribute which exactly matches \code{strata_lut_field} and contains values found in \code{strata_lut$strata_lut_field}.}
