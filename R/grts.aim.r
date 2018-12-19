@@ -55,10 +55,10 @@ grts_aim <- function(design_object,
     sp::proj4string(sample_sites) <- sp_object@proj4string
   } else {
     sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = gsub(in_shape,
-                                                               pattern = "/([a-Z]|[0-9]){1,256}$",
+                                                               pattern = "/([A-z]|[0-9])+$",
                                                                replacement = ""),
                                                     layer = gsub(in_shape,
-                                                                 pattern = "/([a-Z]|[0-9]){1,256}$"))@proj4string
+                                                                 pattern = "/([A-z]|[0-9])+$"))@proj4string
   }
   ## Reproject the sample sites to Geographic DD NAD83
   sample_sites <- sp::spTransform(sample_sites, sp::CRS("+proj=longlat +ellps=GRS80 +datum=NAD83 +no_defs"))
