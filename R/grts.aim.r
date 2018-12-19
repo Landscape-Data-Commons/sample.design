@@ -3,7 +3,7 @@
 #' @description A wrapper for \code{spsurvey::grts()} that modifies the output SPDF to match the format expected by other parts of the AIM workflow, including distribution to field crews and populating design databases.
 #' @param design_object A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.
 #' @param design_name A character string of the name to use for the design, often the name of the project.
-#' @param source_frame Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp_object"}.
+#' @param source_frame Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp.object"}.
 #' @param sp_object If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.
 #' @param in_shape If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in_shape}. Defaults to \code{NULL}.
 #' @param stratum_field A character string representing the name of the variable in either \code{sp_object} or \code{in_shape} containing the strata names matching those in \code{design_object}. Defaults to \code{"STRATUM"}.
@@ -12,7 +12,7 @@
 #' @export
 grts_aim <- function(design_object,
                      design_name = "Design name",
-                     source_frame = "sp_object",
+                     source_frame = "sp.object",
                      sp_object = NULL,
                      in_shape = NULL,
                      stratum_field = "STRATUM",
@@ -22,7 +22,7 @@ grts_aim <- function(design_object,
     set.seed(seed_number)
   }
   if (!is.null(sp_object)) {
-    source_frame <- "sp_object"
+    source_frame <- "sp.object"
     if (!(stratum_field %in% names(sp_object))) {
       stop("The variable stratum_field was not found in sp_object. Check case and spelling.")
     }
@@ -32,7 +32,7 @@ grts_aim <- function(design_object,
   } else {
     stop("Provide either an SPDF as sp_object or a filepath to a shapefile as in_shape.")
   }
-  if (source_frame == "sp_object" & is.null(sp_object)) {
+  if (source_frame == "sp.object" & is.null(sp_object)) {
     stop("Please provide an SPDF as sp_object.")
   }
   if (source_frame == "shapefile" & is.null(in_shape)) {
