@@ -60,7 +60,7 @@ allocate_panels <- function(spdf,
 
   ## Create all the support values then the list that goes into the design object for each stratum
   workingframe[["PROPORTION"]] <- workingframe[["AREA"]] / sum(workingframe[["AREA"]])
-  workingframe[["PER.PANEL.BASE"]] <- round(workingframe * remainder) + points_min
+  workingframe[["PER.PANEL.BASE"]] <- round(workingframe[["PROPORTION"]] * remainder) + points_min
   workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
 
@@ -73,8 +73,8 @@ allocate_panels <- function(spdf,
                      df <- X
                      # Make the list. It's made of a named vector of panel sizes in base point count
                      list(panel = stats::setNames(rep(df[1, "PER.PANEL.BASE"],
-                                               times = panel_count),
-                                           panel_names),
+                                                      times = panel_count),
+                                                  panel_names),
                           # The selection type (always equal here)
                           seltype = "Equal",
                           # And total oversample points
@@ -82,7 +82,8 @@ allocate_panels <- function(spdf,
                    })
 
   # The list needs to be named by stratum
-  output <- stats::setNames(workingframe[["STRATUM"]])
+  output <- stats::setNames(output,
+                            workingframe[["STRATUM"]])
 
   return(output)
 }
