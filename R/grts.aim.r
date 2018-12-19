@@ -51,7 +51,7 @@ grts_aim <- function(design_object,
   )
 
   ## Assign projection info to the sample sites SPDF
-  if (is.null(sp_object)) {
+  if (!is.null(sp_object)) {
     sp::proj4string(sample_sites) <- sp_object@proj4string
   } else {
     sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = gsub(in_shape,
