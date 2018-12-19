@@ -72,13 +72,13 @@ allocate_panels <- function(spdf,
                      # Just for clarity because X isn't obvious
                      df <- X
                      # Make the list. It's made of a named vector of panel sizes in base point count
-                     list(panel = stats::setNames(rep(df[1, "PER.PANEL.BASE"],
+                     list(panel = unlist(stats::setNames(rep(df[1, "PER.PANEL.BASE"],
                                                       times = panel_count),
-                                                  panel_names),
+                                                  panel_names)),
                           # The selection type (always equal here)
                           seltype = "Equal",
                           # And total oversample points
-                          over = df[1, "TOTAL.OVERSAMPLE"])
+                          over = unlist(df[1, "TOTAL.OVERSAMPLE"]))
                    })
 
   # The list needs to be named by stratum
