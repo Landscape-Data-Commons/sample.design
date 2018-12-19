@@ -163,7 +163,7 @@ restrict <- function(spdf1 = NULL,
 
   ## If filtering the SPDFs, do it here
   if (!is.null(filter_field_spdf1)) {
-    spdf1 <- spdf1[spdf1@data[[filter_field_spdf1]] %in% search(df = spdf1,
+    spdf1 <- spdf1[spdf1@data[[filter_field_spdf1]] %in% search(dataframe = spdf1,
                                                                 values = filter_values_spdf1,
                                                                 namestring = filter_field_spdf1,
                                                                 ignore_case_namestring = FALSE,
@@ -175,7 +175,7 @@ restrict <- function(spdf1 = NULL,
   }
 
   if (!is.null(filter_field_spdf2)) {
-    spdf2 <- spdf2[spdf2@data[[filter_field_spdf2]] %in% search(df = spdf2,
+    spdf2 <- spdf2[spdf2@data[[filter_field_spdf2]] %in% search(dataframe = spdf2,
                                                                 values = filter_values_spdf2,
                                                                 namestring = filter_field_spdf2,
                                                                 ignore_case_namestring = FALSE,
