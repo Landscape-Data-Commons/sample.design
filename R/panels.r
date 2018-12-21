@@ -73,8 +73,8 @@ allocate_panels <- function(spdf,
                      df <- X
                      # Make the list. It's made of a named vector of panel sizes in base point count
                      list(panel = unlist(stats::setNames(rep(df[1, "PER.PANEL.BASE"],
-                                                      times = panel_count),
-                                                  panel_names)),
+                                                             times = panel_count),
+                                                         panel_names)),
                           # The selection type (always equal here)
                           seltype = "Equal",
                           # And total oversample points
@@ -136,11 +136,11 @@ read_panels <- function(dataframe,
                      df_current <- dataframe[dataframe[[stratum_field]] == X, variables_relevant]
                      # Pull the panel values and create a named vector from them
                      panel <- stats::setNames(sapply(X = panel_names,
-                                              FUN = function(X, df){
-                                                return(df[, X])
-                                              },
-                                              df = df_current),
-                                       panel_names)
+                                                     FUN = function(X, df){
+                                                       return(df[, X])
+                                                     },
+                                                     df = df_current),
+                                              panel_names)
 
                      # E pull the oversample value or calculate it
                      if (!is.null(oversample_field)) {
@@ -173,18 +173,20 @@ design_dataframe <- function(design){
   strata <- names(design)
 
   # Work through the strata, extracting the information and converting it into a data frame
-  output <- lapply(X = strata,
-                   design = design,
-                   FUN = function(X, design){
-                     # Make a tidy data frame
-                     df <- data.frame(stratum = X,
-                                      panel = names(design[[X]][["panel"]]),
-                                      count = unname(design[[X]][["panel"]]))
-                     # Spread it into a wide format because users expect the variables to correspond to panels
-                     df_wide <- tidyr::spread(data = df,
-                                              key = panel,
-                                              value = count)
-                     df_wide[["oversample"]] <- design[[X]][["over"]]
-                   })
+  output <- do.call(rbind, lapply(X = strata,
+                                  design = design,
+                                  FUN = function(X, design){
+                                    # Make a tidy data frame
+                                    df <- data.frame(stratum = X,
+                                                     panel = names(design[[X]][["panel"]]),
+                                                     count = unname(design[[X]][["panel"]]))
+                                    # Spread it into a wide format because users expect the variables to correspond to panels
+                                    df_wide <- tidyr::spread(data = df,
+                                                             key = panel,
+                                                             value = count)
+                                    df_wide[["oversample"]] <- design[[X]][["over"]]
+
+                                    return(df_wide)
+                                  }))
   return(output)
 }
