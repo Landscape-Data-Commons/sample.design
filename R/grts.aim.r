@@ -72,7 +72,7 @@ grts_aim <- function(design_object,
   names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
 
   # Change "OverSamp" to "OverSample + [STRATUM]"
-  oversample_panel_names <- paste(sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"], "Oversample")
+  oversample_panel_names <- paste(sample_sites@data[["STRATUM"]][sample_sites@data[["PANEL"]] == "OverSamp"], "Oversample")
   sample_sites@data[["PANEL"]][sample_sites@data[["PANEL"]] == "OverSamp"] <- oversample_panel_names
 
   ## Rename the plots with the strata
