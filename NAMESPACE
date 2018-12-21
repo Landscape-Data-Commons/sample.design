@@ -3,6 +3,7 @@
 export(add_area)
 export(allocate_panels)
 export(attribute_shapefile)
+export(compare_designs)
 export(design_dataframe)
 export(draw)
 export(find_name)
