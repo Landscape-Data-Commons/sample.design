@@ -39,13 +39,16 @@ grts_aim <- function(design_object,
     stop("Please provide a filepath to a shapefile as in_shape.")
   }
 
+  # Set type.frame value depending on type of spdf
+  type_frame <- switch(class(sp_object),
+                       "SpatialPolygonsDataFrame" = {"area"},
+                       "SpatialPointsDataFrame" = {"finite"})
+
   ## Invoke spsurvey::grts() first
   sample_sites <- spsurvey::grts(design = design_object,
                                  DesignID = design_name,
                                  # Set type.frame value depending on type of spdf
-                                 type.frame = switch(class(sp_object),
-                                                     "SpatialPolygonsDataFrame" = {"area"},
-                                                     "SpatialPointsDataFrame" = {"finite"}),
+                                 type.frame = type_frame,
                                  src.frame = source_frame,
                                  sp.object = sp_object,
                                  in.shape = in_shape,
