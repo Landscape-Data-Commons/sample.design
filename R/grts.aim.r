@@ -47,7 +47,6 @@ grts_aim <- function(design_object,
   ## Invoke spsurvey::grts() first
   sample_sites <- spsurvey::grts(design = design_object,
                                  DesignID = design_name,
-                                 # Set type.frame value depending on type of spdf
                                  type.frame = type_frame,
                                  src.frame = source_frame,
                                  sp.object = sp_object,
