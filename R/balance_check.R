@@ -189,136 +189,256 @@ gm_mean <- function(x,
 }
 
 ###########################################################
-NN<-function(apts)	# Derive mean Nearest Neighbor using a pts file containing XMETERS and YMETERS
-{
-  a<--1*apts$XMETERS		## Assumes X is always negative
-  b<-apts$YMETERS
-  a<-outer(a,a,'-')
-  a<-a*a
-  b<-outer(b,b,'-')
-  b<-b*b
-  a<-a+b
-  a<-sqrt(a)			## Euclidean distance -> Sqrt of a**2 + b**2
-  a[a==0] <-999999999		## This just gets rid of the difference between the same pt, enabling min() function to find the true NN of the point
-
-  Geo<-NULL
-  RMuNN<-0
-  for(i in 1:nrow(apts)) {
-    nn<-min(a[,i])
-    RMuNN<-RMuNN+nn
-    Geo<-rbind(Geo,nn)
+# Derive mean Nearest Neighbor using a pts file containing XMETERS and YMETERS
+NN <- function(dataframe,
+               x_var,
+               y_var) {
+  if (class(dataframe) != "data.frame") {
+    stop("dataframe must be a data frame")
   }
-  RMuNN<-(RMuNN/nrow(apts))	## Derive mean NN - arithmetic
-  GMuNN<-gm_mean(Geo,T)		## Derive mean NN - geometric
-  ret<-rbind(RMuNN,GMuNN)
-  return(ret)
+  if (!(x_var %in% names(dataframe))) {
+    stop("x_var must correspond to the name of a variable in dataframe")
+  }
+  if (!(y_var %in% names(dataframe))) {
+    stop("y_var must correspond to the name of a variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[x_var]])) {
+    stop("x_var must correspond to the name of a numeric variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[y_var]])) {
+    stop("y_var must correspond to the name of a numeric variable in dataframe")
+  }
+  # How many points are there?
+  point_count <- nrow(dataframe)
+
+  # Calculate Euclidean distance between all points!
+  # Assumes X is always negative
+  a <- -1 * dataframe[[x_var]]
+  b <- dataframe[[y_var]]
+  a <- outer(a, a, '-')
+  a <- a * a
+  b <- outer(b, b, '-')
+  b <- b * b
+  # h is for hypotenuse!
+  h <- a + b
+  # Euclidean distance is the square root of a^2 + b^2
+  h <- sqrt(h)
+  # This just gets rid of the difference between a point and itself
+  # Enables min() function to find the true nearest neighbor of the point
+  h[h == 0] <- Inf
+
+  # Get the distance to the nearest neighbor for each point
+  nearest_dists <- sapply(1:point_count,
+                          distances = h,
+                          FUN = function(X, distances) {
+                            min(distances[, X])
+                          })
+
+  # Calculate arithmetic mean
+  arith_mean <- mean(nearest_dists)
+  # Calculate the geometric mean
+  geo_mean <- gm_mean(nearest_dists,
+                      na.rm = TRUE)
+
+  return(nearest_dists)
+
+  # TODO: Make this make sense as an output format (probably named numeric vector)
+  return(c(arith_mean = arith_mean, geo_mean = geo_mean))
+
+  # Geo <- NULL
+  # RMuNN <- 0
+  # for(i in 1:point_count) {
+  #   nearest_dist <- min(a[, i])
+  #   RMuNN <- RMuNN + nearest_dist
+  #   Geo <- rbind(Geo, dearest_dist)
+  # }
+  #
+  # # Derive mean NN - arithmetic
+  # RMuNN <- (RMuNN / nrow(dataframe))
+  # # Derive mean NN - geometric
+  # GMuNN <- gm_mean(Geo,
+  #                  na.rm = TRUE)
+  # ret <- rbind(RMuNN, GMuNN)
+  # return(ret)
 }
 ###########################################################################GenPts(number,thepts,tempS,StrataNN,StrataBox)
-## Generate sets of random points, derive Mean NN of each set, compare with the specified NN (MeanNN) of the GRTS (input) pts, record the proportion
-##          of random replicates where the random NN >= NN of the input pts.
+## Generate sets of random points
+# derive Mean NN of each set
+# compare with the specified NN (MeanNN) of the GRTS (input) pts
+# record the proportion of random replicates where the random NN >= NN of the input pts.
 GenPts<-function(number,		## Number of reps
-                 thepts.spdf,		## The pts file
-                 aoi.spdf,		## The AOI (frame or a stratum file)
+                 pts_spdf,		## The pts file
+                 aoi_spdf,		## The AOI (frame or a stratum file)
                  MeanNN,		## Vector of NN distances, output from NN()
-                 type)			## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1
+                 type, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1
+                 seed_number = 1)
 
 {
-  projection=CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
-  projectionAL <- CRS("+proj=aea")
-  target<-1
+  # NAD83 CRS for projecting
+  projectionNAD83 <- sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  # Alber's equal area CRS for projecting
+  projectionAL <- sp::CRS("+proj=aea")
 
+  count <- 0
+  samplesize <- number		## The requested number of random simulations
+  nn_am_greater_count <- 0		## The proportion of random sets with a mean NN => than MNN of the input pts
+  nn_gm_greater_count <- 0
+  if (type == 1) {
+    ProbDistr <- ExtractPolyArea(aoi_spdf)
+  }	## Generate the cumulative Prob Distribution
+  if (type == 2) {
+    ProbDistr <- ExtractPolyAreaAquatic(aoi_spdf)
+  }
 
-  cnt<-0
-  samplesize<-number		## The requested number of random simulations
-  proportion1<-0		## The proportion of random sets with a mean NN => than MNN of the input pts
-  proportion2<-0
-  if(type==1)ProbDistr<-ExtractPolyArea(aoi.spdf)	## Generate the cumulative Prob Distribution
-  if(type==2)ProbDistr<-ExtractPolyAreaAquatic(aoi.spdf)
+  while(number > 0) {
+    # We'll put the results from each pass in here
+    store_spdf <- NULL
 
-  while(number>0) {
-    store.spdf<-NULL
-    counter<-nrow(thepts.spdf)			## Number of random points we need to generate
-    while(counter>0) {
-      temp<-NULL
-      for(i in 1:(nrow(thepts.spdf)*1.25) ) {  	## Pick up counter*1.25 draws then check them out.  With bbox() below, may select points outside of polygon area.
-        ## The 25% adjustment helps to account for non-overlapping points.  By adding perhaps more than we need, we at least cut
-        ## down on repeat conversion from Spatial Points to SpatialPointsDataFrame and the use of the over() function [seems to
-        ## be a bit of a bottle neck in terms of time!]. If we exceed what we need, we get rid of the extra points below....
-        set.seed(1)
-        urv<-runif(1)				##  uniform random variate (urv) for selecting a polygon
-        set.seed(1)
-        opt<-SelectFrDistr(ProbDistr,urv)	##  Using the urv, determine the polygon number (opt) from the cumulative freq distribution
-        if(type==1)poly<-aoi.spdf@polygons[[1]]@Polygons[[opt]]	## If dissolved (as it should be), then always access polygons[[1]].  Polygons[[x]] are the multiple polygons.
-        if(type==2)poly<-aoi.spdf@polygons[[opt]]@Polygons[[1]] ## If not dissolved
-        set.seed(1)
-        z<-spsample(poly,n=1,"random",bb=bbox(poly))	## Use the bounding box in spsample to select just 1 random point.
-        if(is.null(temp)){temp<-z}else{temp<-rbind(temp,z)}	## Probably doing something wrong here, but can't seem to bind temp if it isn't already set???????
+    # How many points we want. On each pass, counter is reduced by however many points were just grabbed
+    # I think that should always be 1, but just to be safe I'm leaving Steve's incrementer
+    counter <- nrow(pts_spdf)
+
+    while(counter > 0) {
+      temp <- NULL
+      ## Pick up counter*1.25 draws then check them out.  With bbox() below, may select points outside of polygon area.
+      ## The 25% adjustment helps to account for non-overlapping points.  By adding perhaps more than we need, we at least cut
+      ## down on repeat conversion from Spatial Points to SpatialPointsDataFrame and the use of the over() function [seems to
+      ## be a bit of a bottle neck in terms of time!]. If we exceed what we need, we get rid of the extra points below....
+      for(iteration in 1:(round(nrow(pts_spdf)*1.25))) {
+        # We set the seed number any time it might get triggered
+        set.seed(seed_number)
+
+        # Get a uniform random variate for selecting a polygon
+        urv <- runif(1)
+
+        # Using the urv, determine the polygon number (opt) from the cumulative freq distribution
+        # The vars are hardcoded because we know they're coming from ExtractPolyArea()
+        poly_id <- SelectFrDistr(dataframe = ProbDistr,
+                                 prob_var = "cum_freq",
+                                 id_var = "id",
+                                 value = urv)
+
+        # If dissolved (as it should be), then always access polygons[[1]].  Polygons[[x]] are the multiple polygons.
+        if (type == 1) {
+          poly <- aoi_spdf@polygons[[1]]@Polygons[[poly_id]]
+        }
+        # If not dissolved
+        if (type == 2) {
+          poly <- aoi_spdf@polygons[[poly_id]]@Polygons[[1]]
+        }
+
+        set.seed(seed_number)
+
+        # Use the bounding box in spsample to select just 1 random point.
+        z <- sp::spsample(poly,
+                          n = 1,
+                          type = "random",
+                          bb = sp::bbox(poly))
+
+        # Probably doing something wrong here, but can't seem to bind temp if it isn't already set???????
+        if(is.null(temp)) {
+          temp <- z
+        } else {
+          temp <- rbind(temp, z)
+        }
       }
 
 
-      ##  Translate from SpatialPoints to SpatialPointsDataFrame, overlay onto the aoi (a stratum or the Frame), and only retain overlapping points
-      proj4string(temp)=CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
-      temp.spdf <- SpatialPointsDataFrame(temp, data.frame(id=1:length(temp)))
-      goodpts<-over(temp.spdf,aoi.spdf)		## goodpts$CODE will be =1 if a point overlaps an actual polygon in aoi.spdf (a stratum or the frame)
-      temp.spdf$CODE<-goodpts$CODE
-      temp.spdf<-temp.spdf[temp.spdf$CODE %in% target ,]	## Only want overlapping points
+      # Translate from SpatialPoints to SpatialPointsDataFrame
+      sp::proj4string(temp) <- projectionNAD83
+      temp_spdf <- sp::SpatialPointsDataFrame(coords = temp,
+                                              data = data.frame(id = 1:length(temp)))
 
-      ## Bind the points that overlap aoi.spdf, and adjust counter.
-      if(nrow(temp.spdf)>0) {
-        if(is.null(store.spdf)) {store.spdf<-temp.spdf}else {store.spdf<-rbind(store.spdf,temp.spdf)}
-        counter<-counter-nrow(temp.spdf)
-        #print(counter)
+      # Find overlap!
+      overlap <- sp::over(temp_spdf,
+                          aoi_spdf)
+
+      # Only keep the points where there was spatial overlap
+      temp_spdf <- temp_spdf[!is.na(overlap[[1]]), ]
+
+      ## Bind the points that overlap aoi_spdf, and adjust counter.
+      if(nrow(temp_spdf) > 0) {
+        if(is.null(store_spdf)) {
+          store_spdf <- temp_spdf
+        } else {
+          store_spdf <- rbind(store_spdf, temp_spdf)
+        }
+        counter <- counter - nrow(temp_spdf)
       }
     }
-    ## For reference only...
-    #coordinates(store.df)=~X+Y
-    #proj4string(store.df)=CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
-    #rand.spdf <- SpatialPointsDataFrame(store.df, data.frame(id=1:length(store.df)))
-    ####
 
-    rand.spdf<-store.spdf
-    rand.spdf<-rand.spdf[1:nrow(thepts.spdf),]	## In case we have more random points than needed, just pick the first nrow(thepts.spdf) pts.  We
-    ## still have a fully random sample since we effectively store the random points by accession, and
-    ## we elimiinate points from the bottom up.
-    number<-number-1				## Decrement rep counter
-    temp.spdf<- spTransform(rand.spdf,projection)
-    rand.spdf@data <- cbind(rand.spdf@data,temp.spdf@coords)
-    names(rand.spdf)[names(rand.spdf) == "X"] <- "LONG"		## Noticed this can be X or x; so lets account for both possibilities.
-    names(rand.spdf)[names(rand.spdf) == "Y"] <- "LAT"
-    names(rand.spdf)[names(rand.spdf) == "x"] <- "LONG"
-    names(rand.spdf)[names(rand.spdf) == "y"] <- "LAT"
-    temp.spdf<- spTransform(rand.spdf,projectionAL)
-    rand.spdf@data <- cbind(rand.spdf@data,temp.spdf@coords)
-    names(rand.spdf)[names(rand.spdf) == "X"] <- "XMETERS"
-    names(rand.spdf)[names(rand.spdf) == "Y"] <- "YMETERS"
-    names(rand.spdf)[names(rand.spdf) == "x"] <- "XMETERS"
-    names(rand.spdf)[names(rand.spdf) == "y"] <- "YMETERS"
+    # In case we have more random points than needed, just pick the first nrow(pts_spdf) points.
+    # We still have a fully random sample since we effectively store the random points by accession
+    # and we elimiinate points from the bottom up.
+    rand_spdf <- store_spdf[1:nrow(pts_spdf), ]
 
-    RMuNN<-NN(rand.spdf)					## Returns Arithmetic and Geometric NN
-    if(RMuNN[1]>= MeanNN[1])proportion1<-proportion1+1	## Arithmetic NN
-    if(RMuNN[2]>= MeanNN[2])proportion2<-proportion2+1	## Geometric NN
+    # Decrement rep counter
+    number <- number - 1
 
-    ## Just for show: Let's you see the evolution of the P value as number of reps increase.  Output to console every 100 reps.
+    # Reproject to NAD83
+    # temp_spdf<- spTransform(rand_spdf, projectionNAD83)
+
+    # Add the coordinates to the data frame
+    rand_spdf@data <- cbind(rand_spdf@data, rand_spdf@coords)
+
+    # Rename to LAt and LONG
+    # Noticed this can be X or x; so lets account for both possibilities.
+    names(rand_spdf)[grepl(names(rand_spdf), pattern = "^x$", ignore.case = TRUE)] <- "LONG"
+    names(rand_spdf)[grepl(names(rand_spdf), pattern = "^y$", ignore.case = TRUE)] <- "LAT"
+
+    # Alber's equal area projection to get those coords in the data frame
+    rand_spdf_al <- sp::spTransform(rand_spdf, projectionAL)
+    rand_spdf@data <- cbind(rand_spdf@data,temp_spdf@coords)
+    names(rand_spdf)[grepl(names(rand_spdf), pattern = "^x$", ignore.case = TRUE)] <- "XMETERS"
+    names(rand_spdf)[grepl(names(rand_spdf), pattern = "^y$", ignore.case = TRUE)] <- "YMETERS"
+
+    # Get the distance to nearest neighbor for each point in the random set
+    rand_nn <- NN(dataframe = rand_spdf@data,
+                  x_var = "XMETERS",
+                  y_var = "YMETERS")
+    # Get the arithmetic and geometric means of those nearest neighbor distances
+    rand_nn_am <- mean(rand_nn)
+    rand_nn_gm <- gm_mean(rand_nn,
+                          na.rm = TRUE)
+
+    # And the same for the overall design
+    design_nn_am <- mean(MeanNN)
+    design_nn_gm <- gm_mean(MeanNN,
+                            na.rm = TRUE)
+
+    # If the mean nearest neighbor distance is >= that of the overall design
+    # then increment the count for that stat up by 1
+    if(rand_nn_am >= design_nn_am) {
+      nn_am_greater_count <- nn_am_greater_count + 1
+    }
+    if(rand_nn_gm >= design_nn_gm) {
+      nn_gm_greater_count <- nn_gm_greater_count + 1
+    }
+
+    # Just for show: Let's you see the evolution of the P value as number of reps increase.  Output to console every 100 reps.
     #print(number)
-    cnt<-samplesize-number
-    a<-cnt/100
-    b<-round(a,digits=0)
-    if(a*100 == b*100 & cnt!=0){
-      print(paste("Working on rep # = ",cnt," Evolving Arithmetic P value= ",proportion1/cnt,sep=" "))
-      print(paste("Working on rep # = ",cnt," Evolving Geometric P value= ",proportion2/cnt,sep=" "))
+    count <- samplesize - number
+    a <- count / 100
+    b <- round(a, digits = 0)
+    if(count == round(count / 100, digits = 0) * 100 & count != 0){
+      message(paste0("Working on rep # = ",
+                     count,
+                     "\nEvolving Arithmetic P value = ",
+                     nn_am_greater_count / count))
+      message(paste0("Working on rep # = ",
+                     count,
+                     "\nEvolving Geometric P value = ",
+                     nn_gm_greater_count / count))
     }
+  }
 
-    ## In case you wanna look at the random pts - quickie diagnostic for special occasions.
-    #writeOGR(rand.spdf, ".",output,driver="ESRI Shapefile",overwrite_layer=T)
-    #q()
+  # Convert count to proportion
+  nn_am_greater_prop <- nn_am_greater_count / samplesize
+  nn_gm_greater_prop <- nn_gm_greater_count / samplesize
 
-
-  }  ## While number >0
-
-  proportion1<-proportion1/samplesize		## Convert count to proportion
-  proportion2<-proportion2/samplesize
-  ret<-c(proportion1,proportion2)		## s.l. P value based on Arithmetic mean, based on Geometric mean
-  return(ret)
+  # s.l. P value based on means
+  output <- c(p_arith = nn_am_greater_prop, p_geom = nn_gm_greater_prop)
+  return(output)
 }
 ############################################################################################
 Ingest<-function(layername)	## layer name of shapefile to ingest
