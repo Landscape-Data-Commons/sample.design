@@ -181,10 +181,11 @@ SelectFrDistr <- function(dataframe,
 
 ###########################################################
 ## Geometric mean calcs
-gm_mean = function(x, na.rm=TRUE){
-  ret<- exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
-  return(ret)
+gm_mean <- function(x,
+                    na.rm = TRUE) {
+  exp(sum(log(x[x > 0]), na.rm = na.rm) / length(x))
 }
+
 ###########################################################
 NN<-function(apts)	# Derive mean Nearest Neighbor using a pts file containing XMETERS and YMETERS
 {
