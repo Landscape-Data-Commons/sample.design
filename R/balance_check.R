@@ -97,12 +97,7 @@ ExtractPolyArea <- function(spdf) {
   areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
 
   # Add cumulative frequency distribution, which can be treated as a probability distribution
-  areas_df[["cum_freq"]] <- areas_df[["area_prop"]]
-  if (nrow(areas_df) > 1) {
-    for (row in 2:nrow(areas_df)) {
-      areas_df[row, "cum_freq"] <- areas_df[row, "cum_freq"] + areas_df[(row - 1), "cum_freq"]
-    }
-  }
+  areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
 
   # Return this data frame!
   return(areas_df)
