@@ -147,16 +147,38 @@ ExtractPolyAreaAquatic <- function(spdf) {
 
 ###############################################################################
 ##  Select polygon from prob distribution.  randn is a urv.
-SelectFrDistr<-function(ProbDistr,randn)
-{
-  for(i in 1:nrow(ProbDistr)) {
-    if(randn<ProbDistr$VAR1[i]) {
-      return(ProbDistr$VAR2[i])
-      break
-    }
+SelectFrDistr <- function(dataframe,
+                          prob_var = "cum_freq",
+                          id_var = "id",
+                          value) {
+  if (class(dataframe) != "data.frame") {
+    stop("dataframe must be a data frame")
   }
-  return(1)		## A default
+  if (!(prob_var %in% names(dataframe))) {
+    stop("prob_var must correspond to the name of a variable in dataframe")
+  }
+  if (!(id_var %in% names(dataframe))) {
+    stop("id_var must correspond to the name of a variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[prob_var]])) {
+    stop("prob_var must correspond to the name of a numeric variable in dataframe")
+  }
+  if (!is.numeric(value)) {
+    stop("value must be numeric")
+  }
+
+  # Check to see if any of the values in prob_var are greater than value
+  # If so, return the ID of the first, else return 1
+  check <- value < dataframe[[prob_var]]
+
+  if (any(check)) {
+    return(dataframe[check, id_var][1])
+  } else {
+    return(1)
+  }
 }
+
+
 ###########################################################
 ## Geometric mean calcs
 gm_mean = function(x, na.rm=TRUE){
