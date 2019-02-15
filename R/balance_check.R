@@ -76,11 +76,14 @@ ExtractPolyArea <- function(spdf) {
     stop("spdf must be a spatial polygons data frame")
   }
 
-  # Get the areas of the polygons in the SPDF
-  areas <- sapply(X = spdf@polygons[[1]]@Polygons,
-                  FUN = function(X) {
-                    X@area
-                  })
+  # Get the areas of the polygons
+  areas <- unlist(sapply(X = spdf@polygons,
+                         FUN = function(X) {
+                           sapply(X = X@Polygons,
+                                  FUN = function(X) {
+                                    X@area
+                                  })
+                         }))
 
   # Make a data frame with the areas and the within-polygon ID
   areas_df <- data.frame(area = areas,
