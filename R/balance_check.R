@@ -110,6 +110,8 @@ ExtractPolyArea <- function(spdf) {
 #########################################################################################################
 #  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
 ## This only works if polygons were NOT dissolved - designed for aquatic lines buffered to form a polygonal frame
+# TODO: MAKE THIS HANDLE THE SUB-POLYGONS CORRECTLY!!!! IT FUCKS UP GenPts() WHEN TRYING TO SELECT POLYGONS BECAUSE THE ID ISN'T CORRECT
+# The problem being that these aren't dissolved, so there's the polygon and then subpolys as opposed to just polygons
 ExtractPolyAreaAquatic <- function(spdf) {
   if (class(spdf) != "SpatialPolygonsDataFrame") {
     stop("spdf must be a spatial polygons data frame")
