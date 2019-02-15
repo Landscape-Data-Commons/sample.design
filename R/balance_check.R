@@ -107,33 +107,41 @@ ExtractPolyArea <- function(spdf) {
 #########################################################################################################
 #  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
 ## This only works if polygons were NOT dissolved - designed for aquatic lines buffered to form a polygonal frame
-ExtractPolyAreaAquatic <- function(spdf)
-{
-  results <- list()
-
-  for(i in 1:length(spdf@polygons))
-  {
-    results[[i]] <- spdf@polygons[[i]]@Polygons[[1]]@area
+ExtractPolyAreaAquatic <- function(spdf) {
+  if (class(spdf) != "SpatialPolygonsDataFrame") {
+    stop("spdf must be a spatial polygons data frame")
   }
 
-  results <- Reduce(rbind, results)
+  # Get the areas of the polygons
+  areas <- sapply(X = spdf@polygons,
+                  FUN = function(X) {
+                    sapply(X = X@Polygons,
+                           FUN = function(X) {
+                             X@area
+                           })
+                  })
 
-  temp.df<-NULL
-  for(i in 1:length(results)) {
-    temp<-data.frame(VAR1=results[i],VAR2=i)		## This gives us   area, PolygonID (accession number in @polygons[[1]]@Polygons[[the ID]])
-    temp.df<-rbind(temp.df,temp)
-  }
-  a<-temp.df[order(-temp.df$VAR1) ,]			## From largest to smallest - can help speed up selecting from the probability distribution
-  total<-sum(a$VAR1)
+  # Make a data frame with the areas and the within-polygon ID
+  areas_df <- data.frame(area = areas,
+                         id = 1:length(areas))
 
-  a$VAR1[1]<-a$VAR1[1]/total
-  if(nrow(a)>1) {
-    for(i in 2:nrow(a)) {
-      a$VAR1[i]<-(a$VAR1[i]/total)+a$VAR1[i-1]	## This is the cumulative frequency distribution which is treated as a probability distribution
-    }
-  }							## Now, a$VAR1[x] is the cumulative prob., a$VAR2[x] is the corresponding PolygonID in decending order based on area
-  return(a)
-} ## End of ExtractPolyArea()
+  # Sort from largest to smallest area
+  # (This can help speed up selecting from the probability distribution)
+  areas_df <- areas_df[order(-areas_df[["area"]]), ]
+
+  # Get the total area
+  total_area <- sum(areas_df[["area"]])
+
+  # Add proportional area to the data frame
+  areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
+
+  # Add cumulative frequency distribution, which can be treated as a probability distribution
+  areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
+
+  # Return this data frame!
+  return(areas_df)
+}
+
 ###############################################################################
 ##  Select polygon from prob distribution.  randn is a urv.
 SelectFrDistr<-function(ProbDistr,randn)
@@ -208,10 +216,13 @@ GenPts<-function(number,		## Number of reps
         ## The 25% adjustment helps to account for non-overlapping points.  By adding perhaps more than we need, we at least cut
         ## down on repeat conversion from Spatial Points to SpatialPointsDataFrame and the use of the over() function [seems to
         ## be a bit of a bottle neck in terms of time!]. If we exceed what we need, we get rid of the extra points below....
+        set.seed(1)
         urv<-runif(1)				##  uniform random variate (urv) for selecting a polygon
+        set.seed(1)
         opt<-SelectFrDistr(ProbDistr,urv)	##  Using the urv, determine the polygon number (opt) from the cumulative freq distribution
         if(type==1)poly<-aoi.spdf@polygons[[1]]@Polygons[[opt]]	## If dissolved (as it should be), then always access polygons[[1]].  Polygons[[x]] are the multiple polygons.
         if(type==2)poly<-aoi.spdf@polygons[[opt]]@Polygons[[1]] ## If not dissolved
+        set.seed(1)
         z<-spsample(poly,n=1,"random",bb=bbox(poly))	## Use the bounding box in spsample to select just 1 random point.
         if(is.null(temp)){temp<-z}else{temp<-rbind(temp,z)}	## Probably doing something wrong here, but can't seem to bind temp if it isn't already set???????
       }
