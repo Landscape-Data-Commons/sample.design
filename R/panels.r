@@ -43,15 +43,23 @@ allocate_panels <- function(spdf,
   ## Remove all points or areas without strata assigned
   df <- df[!is.na(df[["STRATUM"]]), ]
 
+  # How many points minimum will be needed?
+  required_base <- points_min * length(unique(df[["STRATUM"]]))
+  required_oversample <- round(max(required_base * oversample_proportion, oversample_min * length(unique(df[["STRATUM"]]))))
+
   ## Create a data frame of strata and "area"
   ## The presence/absence of df[["AREA"]] is tied to whether these were polys or points
   if ("AREA" %in% names(df)) {
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
                                      AREA = sum(AREA))
-  } else (
+  } else {
     workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
                                      AREA = dplyr::n())
-  )
+    # What if there aren't enough points???
+    if (sum(workingframe[["AREA"]]) < required_base) {
+      stop(paste0("There aren't enough points available (", sum(workingframe[["AREA"]]),") to meet the minimum number of base points requested (", required_base,")."))
+    }
+  }
 
   # After the minimum points are allocated, how many remain to be allocated?
   remainder <- panel_sample_size - nrow(workingframe) * points_min
@@ -63,6 +71,13 @@ allocate_panels <- function(spdf,
   workingframe[["PER.PANEL.BASE"]] <- round(workingframe[["PROPORTION"]] * remainder) + points_min
   workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
+
+  if (any(working.frame[["PER.PANEL.BASE"]]) < 0) {
+    stop("One or more strata ended up with a negative number of base points allocated. Check to make sure you aren't asking for too many points.")
+  }
+  if (any(working.frame[["TOTAL.OVERSAMPLE"]]) < 0) {
+    stop("One or more strata ended up with a negative number of oversample points allocated. Check to make sure you aren't asking for too many points.")
+  }
 
   ## Create the output design object list.
   output <- lapply(split(workingframe, workingframe[["STRATUM"]]),
