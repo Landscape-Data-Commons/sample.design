@@ -2,7 +2,7 @@
 #' @description Return all unique values from a column/variable in a data frame which match values in a list or vector.
 # #' @param df The data frame to search through
 # #' @param namestring A string to search the names of \code{df} using. This will be used as a regular expression in \code{grepl()}.
-# #' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use_grepl = TRUE} or \code{ignore_case_values = TRUE}. If \code{grepl()} is used then these values are used to create a regular expression.
+# #' @param values A list or vector of values to search for. By default the comparison is done with \code{match()} but uses \code{grepl()} if \code{use_grepl = TRUE} or \code{ignore_case_values = TRUE}. If \code{grepl()} is used then these values are used to create a regular expression. Defaults to \code{c("*")}
 # #' @param use_grepl Logical. If \code{TRUE} then the search will be done using \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.
 # #' @param ignore_case_namestring Logical. If \code{TRUE} then finding the column/variable name will be case insensitive. Defaults to \code{FALSE}.
 # #' @param ignore_case_values Logical. If \code{TRUE} then finding the values will be case insensitive and will use \code{grepl()} instead of \code{match()}. Defaults to \code{FALSE}.
@@ -11,7 +11,7 @@
 # #' @return A vector of unique values.
 #' @export
 search <- function(dataframe = NULL,
-                   values,
+                   values = c("*"),
                    namestring = "",
                    use_grepl = FALSE,
                    ignore_case_namestring = FALSE,
