@@ -6,14 +6,7 @@
 \usage{
 restrict(spdf1 = NULL, spdf2 = NULL, inherit = FALSE,
   inherit_field = NULL, ignore_case_inherit_field = FALSE,
-  bookend_inherit_field = FALSE, filter_field_spdf1 = NULL,
-  filter_values_spdf1 = NULL, use_grep_values_spdf1 = FALSE,
-  ignore_case_field_spdf1 = FALSE, ignore_case_values_spdf1 = FALSE,
-  bookend_field_spdf1 = FALSE, bookend_values_spdf1 = FALSE,
-  filter_field_spdf2 = NULL, filter_values_spdf2 = NULL,
-  use_grep_values_spdf2 = FALSE, ignore_case_field_spdf2 = FALSE,
-  ignore_case_values_spdf2 = FALSE, bookend_field_spdf2 = FALSE,
-  bookend_values_spdf2 = FALSE)
+  bookend_inherit_field = FALSE)
 }
 \arguments{
 \item{spdf1}{An SPDF to restrict.}
@@ -27,34 +20,6 @@ restrict(spdf1 = NULL, spdf2 = NULL, inherit = FALSE,
 \item{ignore_case_inherit_field}{Logical. If \code{TRUE} then finding the attribute name in \code{spdf2} with \code{inherit_field} will be case insensitive. Defaults to \code{FALSE}.}
 
 \item{bookend_inherit_field}{Logical. If \code{TRUE} then \code{^} and \code{$} will be added to the ends of the regular expression passed to \code{grepl()} when searching using \code{inherit_field}. Defaults to \code{FALSE}.}
-
-\item{filter_field_spdf1}{An optional character string to be used as a regular expression to find a single matching attribute name in \code{spdf1}. The associated values will be used to filter geometry to only observations where the matching attribute values match \code{filter_values_spdf1}.}
-
-\item{filter_values_spdf1}{An optional list or vector of values to filter \code{spdf1} by. Only geometry where the values in the attribute matching \code{filter_field_spdf1} which match \code{filter_values_spdf1} will be retained. By default the comparison is done with \code{match()} but uses \code{grepl()} \code{ignore_case_values_spdf1 == T} or \code{bookend_values_spdf1 == T}. If \code{grepl()} is used then these values are used to create a regular expression.}
-
-\item{use_grep_values_spdf1}{Logical. If \code{TRUE} then \code{filter_values_spdf1} will be used to create a regular expression and passed to \code{grepl()} instead of just being compared using \code{match}. Defaults to \code{FALSE}.}
-
-\item{ignore_case_field_spdf1}{Logical. If \code{TRUE} then finding the attribute name in \code{spdf1} using \code{filter_field_spdf1} will use \code{grepl()} instead of \code{match()} and be case insensitive. Defaults to \code{FALSE}.}
-
-\item{ignore_case_values_spdf1}{Logical. If \code{TRUE} then finding the values matching \code{filter_values_spdf1} in the attribute name in \code{spdf1} matching \code{filter_field_spdf1} will use \code{grepl()} instead of \code{match()} and be case insensitive. Defaults to \code{FALSE}.}
-
-\item{bookend_field_spdf1}{Logical. If \code{TRUE} then finding the attribute name in \code{spdf1} using \code{filter_field_spdf1} will use \code{grepl()} instead of \code{match()} and add \code{"^"} and \code{"$"} to the ends of the regular expression to force exact matches. Defaults to \code{FALSE}.}
-
-\item{bookend_values_spdf1}{Logical. If \code{TRUE} then finding the values matching \code{filter_values_spdf1} in the attribute name in \code{spdf1} matching \code{filter_field_spdf1} will use \code{grepl()} instead of \code{match()} and add \code{"^"} and \code{"$"} to the ends of the regular expression to force exact matches. Defaults to \code{FALSE}.}
-
-\item{filter_field_spdf2}{An optional character string to be used as a regular expression to find a single matching attribute name in \code{spdf2}. The associated values will be used to filter geometry to only observations where the matching attribute values match \code{filter_values_spdf2}.}
-
-\item{filter_values_spdf2}{An optional list or vector of values to filter \code{spdf2} by. Only geometry where the values in the attribute matching \code{filter_field_spdf2} which match \code{filter_values_spdf2} will be retained. By default the comparison is done with \code{match()} but uses \code{grepl()} \code{ignore_case_values_spdf2 == T} or \code{bookend_values_spdf2 == T}. If \code{grepl()} is used then these values are used to create a regular expression.}
-
-\item{use_grep_values_spdf2}{Logical. If \code{TRUE} then \code{filter_values_spdf2} will be used to create a regular expression and passed to \code{grepl()} instead of just being compared using \code{match}. Defaults to \code{FALSE}.}
-
-\item{ignore_case_field_spdf2}{Logical. If \code{TRUE} then finding the attribute name in \code{spdf2} using \code{filter_field_spdf2} will use \code{grepl()} instead of \code{match()} and be case insensitive. Defaults to \code{FALSE}.}
-
-\item{ignore_case_values_spdf2}{Logical. If \code{TRUE} then finding the values matching \code{filter_values_spdf2} in the attribute name in \code{spdf2} matching \code{filter_field_spdf2} will use \code{grepl()} instead of \code{match()} and be case insensitive. Defaults to \code{FALSE}.}
-
-\item{bookend_field_spdf2}{Logical. If \code{TRUE} then finding the attribute name in \code{spdf2} using \code{filter_field_spdf2} will use \code{grepl()} instead of \code{match()} and add \code{"^"} and \code{"$"} to the ends of the regular expression to force exact matches. Defaults to \code{FALSE}.}
-
-\item{bookend_values_spdf2}{Logical. If \code{TRUE} then finding the values matching \code{filter_values_spdf2} in the attribute name in \code{spdf2} matching \code{filter_field_spdf2} will use \code{grepl()} instead of \code{match()} and add \code{"^"} and \code{"$"} to the ends of the regular expression to force exact matches. Defaults to \code{FALSE}.}
 }
 \value{
 An SPDF of geometry and values from \code{spdf1} where the filtering criteria were met. If \code{inherit == T} then there will be an additional attribute from \code{spdf2}.
