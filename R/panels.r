@@ -93,7 +93,7 @@ allocate_panels <- function(spdf,
                           # The selection type (always equal here)
                           seltype = "Equal",
                           # And total oversample points
-                          over = unlist(df[1, "TOTAL.OVERSAMPLE"]))
+                          over = unname(unlist(df[1, "TOTAL.OVERSAMPLE"])))
                    })
 
   # The list needs to be named by stratum
