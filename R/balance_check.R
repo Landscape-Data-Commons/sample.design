@@ -721,14 +721,18 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
   }
 
   ######### Analyze by strata if requested
+  # If there's a stratification field and it exists in the spdf, get to work
+  if(!is.null(stratafield)) {
+    if (!(stratafield %in% names(frame_spdf@data))) {
+      stop(paste("The variable", stratfield, "does not appear in frame_spdf@data."))
+    }
 
-  if(!is.null(strata_spdf)) {
     # Just to simplify things, make a STRATUM variable
-    strata_spdf@data[["STRATUM"]] <- strata_spdf@data[["STRATUM"]]
-    strata <- unique(strata_spdf@data[["STRATUM"]])
+    frame_spdf@data[["STRATUM"]] <- frame_spdf@data[["STRATUM"]]
+    strata <- unique(frame_spdf@data[["STRATUM"]])
 
     output_strata <- lapply(X = strata,
-                            strata_spdf = strata_spdf,
+                            strata_spdf = frame_spdf,
                             pts_spdf = pts_spdf,
                             FUN = function(X, strata_spdf, pts_spdf){
                               # For clarity
@@ -746,12 +750,29 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
                               # If there are in fact points in the stratum, do the randomization test
                               if (nrow(current_pts_spdf) > 1) {
 
-                                output <- test_point_balance(aoi_spdf = stratum_spdf,
-                                                             aoi_name = stratum,
-                                                             pts_spdf = current_pts_spdf,
-                                                             reps = reps,
-                                                             type = 1,
-                                                             seed_number = seed_number)
+                                # Add the coordinates so that we can do nearest neighbor calculations
+                                current_pts_spdf <- get_coords(current_pts_spdf)
+
+                                # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
+                                nn_means_stratum <- NN_mean(current_pts_spdf@data,
+                                                            x_var = "XMETERS",
+                                                            y_var = "YMETERS")
+
+                                ## Do randomization test
+                                proportions_frame <- test_points(number = reps,
+                                                                 pts_spdf = current_pts_spdf,
+                                                                 aoi_spdf = stratum_spdf,
+                                                                 type = 1,
+                                                                 seed_number = seed_number)
+
+                                # Build the output data frame for the sample frame
+                                output <- data.frame("polygon" = stratum,
+                                                     "point_count" = nrow(current_pts_spdf),
+                                                     "reps" = reps,
+                                                     "mean_arithmetic" = nn_means_stratum[["arith_mean"]],
+                                                     "mean_geometric" = nn_means_stratum[["geo_mean"]],
+                                                     "p_arithmetic" = proportions_stratum["p_arith"],
+                                                     "p_geometric" = proportions_stratum["p_geom"])
 
                               } else {
                                 # If there weren't points in the stratum, just give us the empty output
