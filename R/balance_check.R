@@ -695,12 +695,27 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
 
   # If requested, first analyze entire frame
   if(doFrame) {
-    output_frame <- test_point_balance(aoi_spdf = frame_spdf,
-                                       aoi_name = "Sample Frame",
-                                       pts_spdf = pts_spdf,
-                                       reps = reps,
-                                       type = 1,
-                                       seed_number = seed_number)
+    # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
+    nn_means_all <- NN_mean(pts_spdf@data,
+                            x_var = "XMETERS",
+                            y_var = "YMETERS")
+
+    ## Do randomization test
+    proportions_frame <- test_points(number = reps,
+                                     pts_spdf = pts_spdf,
+                                     aoi_spdf = frame_spdf,
+                                     type = 1,
+                                     seed_number = seed_number)
+
+    # Build the output data frame for the sample frame
+    output_frame <- data.frame("polygon" = "Sample Frame",
+                               "point_count" = nrow(pts_spdf),
+                               "reps" = reps,
+                               "mean_arithmetic" = nn_means_all[["arith_mean"]],
+                               "mean_geometric" = nn_means_all[["geo_mean"]],
+                               "p_arithmetic" = proportions_frame["p_arith"],
+                               "p_geometric" = proportions_frame["p_geom"])
+
   } else {
     output_frame <- NULL
   }
