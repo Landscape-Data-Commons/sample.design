@@ -201,11 +201,22 @@ select_from_distribution <- function(dataframe,
 }
 
 
-###########################################################
-## Geometric mean calcs
+#' Calculate the geometric mean of a numeric vector
+#' @param x Numeric vector. The values to calculate a geometric mean from
+#' @param na.rm Logical. If \code{TRUE} then \code{NA} values will be dropped from \code{x} before calculating the geometric mean. Defaults to \code{TRUE}
+#' @return The geometric mean as a single numeric value.
+#' @esport
+
 gm_mean <- function(x,
                     na.rm = TRUE) {
-  exp(sum(log(x[x > 0]), na.rm = na.rm) / length(x))
+  if (!is.numeric(x)) {
+    stop("x must be numeric")
+  }
+
+  # Here's the math for a geometric mean, I guess
+  output <- exp(sum(log(x[x > 0]), na.rm = na.rm) / length(x))
+
+  return(output)
 }
 
 ###########################################################
