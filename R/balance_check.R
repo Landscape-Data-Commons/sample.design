@@ -361,7 +361,7 @@ NN_mean <- function(dataframe,
 # derive Mean NN of each set
 # compare with the specified NN (nearest_dists) of the GRTS (input) pts
 # record the proportion of random replicates where the random NN >= NN of the input pts.
-#' @description Generate sets of random points to compare to a core set
+#' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{3}.
 #' @param pts_spdf Spatial Points Data Frame. The points that are being compared against.
 #' @param aoi_spdf Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.
@@ -371,10 +371,10 @@ NN_mean <- function(dataframe,
 #' @export
 
 test_points <- function(number,
-                   pts_spdf,
-                   aoi_spdf,
-                   type = 1, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1 TOD
-                   seed_number = 1){
+                        pts_spdf,
+                        aoi_spdf,
+                        type = 1, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1 TOD
+                        seed_number = 1){
   if (number < 0) {
     stop("number must be a positive integer")
   }
