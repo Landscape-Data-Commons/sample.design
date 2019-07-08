@@ -155,11 +155,18 @@ ExtractPolyAreaAquatic <- function(spdf) {
 }
 
 ###############################################################################
-##  Select polygon from prob distribution.  randn is a urv.
-SelectFrDistr <- function(dataframe,
-                          prob_var = "cum_freq",
-                          id_var = "id",
-                          value) {
+#' Select polygon from a probability distribution
+#' @description Given a data frame of IDs with associated probabilities and a number, select the ID with the smallest probability value greater than than the number given.
+#' @param dataframe A data frame. Must contain an identity variable with a name matching \code{id_var} and a probability variable with a name matching \code{prob_var}. Will be sorted by ascending probability.
+#' @param value Numeric. A single numeric value to compare against the probabilities in \code{dataframe}.
+#' @param prob_var Character string. Must match the name of the variable in \code{dataframe} that contains the probability values. Defaults to \code{"cum_freq"}.
+#' @param id_var Character string. Must match the name of the variable in \code{dataframe} that contains the identities. Defaults to \code{"id"}.
+#' @return The identity value from \code{dataframe} with the smallest probabilty value greater than \code{value} OR the first identity value if none were greater than \code{value}.
+#' @export
+select_from_distribution <- function(dataframe,
+                                     value,
+                                     prob_var = "cum_freq",
+                                     id_var = "id") {
   if (class(dataframe) != "data.frame") {
     stop("dataframe must be a data frame")
   }
