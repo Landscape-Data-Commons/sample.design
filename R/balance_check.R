@@ -678,13 +678,15 @@ test_point_balance <- function(aoi_spdf,
 }
 
 ######################################################################
-Random <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
-                   pts_spdf,		## the GRTS points as a spdf  (shapefile)
-                   reps,		## Number of sets of random points
-                   strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
-                   stratafield,	## Strata-field name in strata or NA
-                   doFrame = TRUE,
-                   seed_number = 1)
+#' Test to see if a set of points are spatially balanced within the polygons used to draw them
+#' @description Given a
+check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
+                          pts_spdf,		## the GRTS points as a spdf  (shapefile)
+                          reps,		## Number of sets of random points
+                          strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
+                          stratafield,	## Strata-field name in strata or NA
+                          doFrame = TRUE,
+                          seed_number = 1)
 
 {
 
