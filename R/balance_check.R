@@ -604,10 +604,17 @@ test_points <- function(number,
 }
 
 ###############################################################################
-GetXY <- function(spdf,
-                  x_var = "XMETERS",
-                  y_var = "YMETERS",
-                  projection = CRS("+proj=aea")){
+#' Add coordinates to the data slot of a SpatialPointsDataFrame
+#' @param spdf A SpatialPointsDataFrame.
+#' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{spdf@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
+#' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{spdf@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
+#' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.
+#' @return The SPDF provided as \code{spdf} with the coordinates added to \code{"x_var"} and \code{"y_var"}.
+#' @export
+get_coords <- function(spdf,
+                       x_var = "XMETERS",
+                       y_var = "YMETERS",
+                       projection = CRS("+proj=aea")){
   if (!grepl(class(spdf), pattern = "^SpatialPointsDataFrame")) {
     stop("spdf must be a spatial points data frame")
   }
