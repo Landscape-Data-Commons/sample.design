@@ -660,10 +660,10 @@ test_point_balance <- function(aoi_spdf,
 
   ## Do randomization test
   proportions_frame <- test_points(number = reps,
-                              pts_spdf = pts_spdf,
-                              aoi_spdf = aoi_spdf,
-                              type = type,
-                              seed_number = seed_number)
+                                   pts_spdf = pts_spdf,
+                                   aoi_spdf = aoi_spdf,
+                                   type = type,
+                                   seed_number = seed_number)
 
   # Build the output data frame for the sample frame
   output_frame <- data.frame("polygon" = aoi_name,
