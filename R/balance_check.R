@@ -370,7 +370,7 @@ NN_mean <- function(dataframe,
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{pts_spdf} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
-test_points <- function(number,
+test_points <- function(number = 500,
                         pts_spdf,
                         aoi_spdf,
                         type = 1, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1 TOD
@@ -632,7 +632,7 @@ get_coords <- function(spdf,
 test_point_balance <- function(aoi_spdf,
                                aoi_name,
                                pts_spdf,
-                               reps,
+                               reps = 500,
                                type,
                                seed_number) {
   if (!grepl(class(aoi_spdf), pattern = "^SpatialPolygons")) {
@@ -682,7 +682,7 @@ test_point_balance <- function(aoi_spdf,
 #' @description Given a
 check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
                           pts_spdf,		## the GRTS points as a spdf  (shapefile)
-                          reps,		## Number of sets of random points
+                          reps = 500,		## Number of sets of random points
                           strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
                           stratafield,	## Strata-field name in strata or NA
                           doFrame = TRUE,
