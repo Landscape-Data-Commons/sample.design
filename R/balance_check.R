@@ -114,7 +114,6 @@ extract_poly_area <- function(polygons,
   return(areas_df)
 }
 
-## End of ExtractPolyArea()
 #########################################################################################################
 #  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
 ## This only works if polygons were NOT dissolved - designed for aquatic lines buffered to form a polygonal frame
