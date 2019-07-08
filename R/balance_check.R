@@ -711,8 +711,8 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
     output_frame <- data.frame("polygon" = "Sample Frame",
                                "point_count" = nrow(pts_spdf),
                                "reps" = reps,
-                               "mean_arithmetic" = nn_means_all[["arith_mean"]],
-                               "mean_geometric" = nn_means_all[["geo_mean"]],
+                               "mean_arithmetic" = nn_means_all["arith_mean"],
+                               "mean_geometric" = nn_means_all["geo_mean"],
                                "p_arithmetic" = proportions_frame["p_arith"],
                                "p_geometric" = proportions_frame["p_geom"])
 
