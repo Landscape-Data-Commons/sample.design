@@ -587,14 +587,18 @@ test_points <- function(number,
   return(output)
 }
 ############################################################################################
-Ingest<-function(layername)	## layer name of shapefile to ingest
-{
-  projection = CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
-
-  Aspdf <- readOGR(dsn=getwd(),layer=layername,stringsAsFactors=FALSE)  ## The sample frame
-  Aspdf <- spTransform(Aspdf, projection)
-  names(Aspdf@data) <- str_to_upper(names(Aspdf@data))
-  return(Aspdf)
+Ingest <- function(layer_name,
+                   layer_path = getwd(),
+                   reproject = FALSE,
+                   projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+  spdf <- readOGR(dsn = layer_path,
+                  layer = layer_name,
+                  stringsAsFactors = FALSE)
+  if (reproject) {
+    spdf <- sp::spTransform(Aspdf, projection)
+  }
+  names(spdf@data) <- str_to_upper(names(spdf@data))
+  return(spdf)
 }
 ###############################################################################
 GetXY<-function(thepts)
