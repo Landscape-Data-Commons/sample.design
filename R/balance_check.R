@@ -182,6 +182,12 @@ select_from_distribution <- function(dataframe,
   if (!is.numeric(value)) {
     stop("value must be numeric")
   }
+  if (length(value) > 1) {
+    stop("value must be a single numeric value")
+  }
+
+  # Make sure that they're ordered!
+  dataframe <- dataframe[order(dataframe[[prob_var]]), ]
 
   # Check to see if any of the values in prob_var are greater than value
   # If so, return the ID of the first, else return 1
