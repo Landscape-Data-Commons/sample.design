@@ -618,136 +618,131 @@ GetXY <- function(spdf,
 
   return(spdf)
 }
+
+test_point_balance <- function(aoi_spdf,
+                               aoi_name,
+                               pts_spdf,
+                               reps,
+                               type,
+                               seed_number) {
+  if (!grepl(class(aoi_spdf), pattern = "^SpatialPolygons")) {
+    stop("aoi_spdf must be a spatial polygons data frame")
+  }
+
+  # We need to handle what to do if the geometry is empty
+  if (length(aoi_spdf@polygons) < 1) {
+    stop("There's no geometry in aoi_spdf")
+  }
+
+  # And if it's not dissolved, we'll do that!
+  if (length(aoi_spdf@polygons) > 1) {
+    message("The polygons in aoi_spdf need to be dissolved. Dissolving now.")
+    aoi_spdf <- methods::as(sf::st_combine(sf::st_as_sf(aoi_spdf)), "Spatial")
+  }
+
+  # Add the coordinates so that we can do nearest neighbor calculations
+  pts_spdf <- GetXY(pts_spdf)
+
+  # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
+  nn_means <- NN_mean(pts_spdf@data,
+                      x_var = "XMETERS",
+                      y_var = "YMETERS")
+
+  ## Do randomization test
+  proportions_frame <- test_points(number = reps,
+                              pts_spdf = pts_spdf,
+                              aoi_spdf = aoi_spdf,
+                              type = type,
+                              seed_number = seed_number)
+
+  # Build the output data frame for the sample frame
+  output_frame <- data.frame("polygon" = aoi_name,
+                             "point_count" = nrow(pts_spdf),
+                             "reps" = reps,
+                             "mean_arithmetic" = nn_means_all[["arith_mean"]],
+                             "mean_geometric" = nn_means_all[["geo_mean"]],
+                             "p_arithmetic" = proportions_frame["p_arith"],
+                             "p_geometric" = proportions_frame["p_geom"])
+
+  return(output)
+}
+
 ######################################################################
-Random<-function(WD,		##working directory
-                 frame,		## the sample frame as a spdf (shapefile)
-                 pts,		## the GRTS points as a spdf  (shapefile)
-                 reps,		## Number of sets of random points
-                 output,	## Name of file to store results
-                 strata,	## Name of strata file (analyses will be conducted at the strata level) or NA
-                 stratafield,	## Strata-field name in strata or NA
-                 doFrame) 	## Set to T for analysis across the entire FRAME (ignores strata if specified), else F
+Random <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
+                   pts_spdf,		## the GRTS points as a spdf  (shapefile)
+                   reps,		## Number of sets of random points
+                   strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
+                   stratafield,	## Strata-field name in strata or NA
+                   doFrame = TRUE,
+                   seed_number = 1)
 
 {
-  projection = CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
-  projectionAL <- CRS("+proj=aea")
 
-  setwd(WD)
-  numberofreps<-reps
+  # Add the coordinates so that we can do nearest neighbor calculations
+  pts_spdf <- GetXY(pts_spdf)
 
-  blank<-"Randomization Results"
-  write.table(blank,output,row.names=F,col.names=F,quote=F,append=F)
-
-
-  ## Ingest all of the points corresponding to the entire Frame.  Even if doFrame==F, we'll use the full suite of pts for the strata-based analysis
-  Framepts.spdf<-Ingest(pts)
-  Framepts.spdf<-GetXY(Framepts.spdf)	## Access X & Y
-
-  # quickie for experimenting with N
-  # Framepts.spdf$DELETE<-0
-  #for(i in 201:nrow(Framepts.spdf)) {
-  #   Framepts.spdf$DELETE[i]<-1
-  #}
-  #Framepts.spdf<-Framepts.spdf[Framepts.spdf$DELETE==0 ,]
-
-
-
-  if(doFrame==T) {		## If requested, first analyze entire frame
-    ## ingest the frame
-    frame.spdf<-Ingest(frame)
-    frame.spdf$CODE<-1
-    frame.spdf<-frame.spdf[, c("CODE")]			## Render Frame to just CODE
-
-    # Derive Mean NN of the Frame points
-    FrameNN<-NN(Framepts.spdf)		## Mean NN; [1]=arithmetic, [2]=geometric
-    print(paste("Arithmetic Mean nearest neighbor of the input points= ",FrameNN[1]," for N= ",nrow(Framepts.spdf)," points",sep=" "))
-    print(paste("Geometric Mean nearest neighbor of the input points= ",FrameNN[2]," for N= ",nrow(Framepts.spdf)," points",sep=" "))
-
-    ## Do randomization test for the entire frame
-    number<-reps
-    thepts<-Framepts.spdf
-    proportion<-GenPts(number,thepts,frame.spdf,FrameNN,1)	## Number of requested sim reps, the pts file, the aoi file (frame or a stratum file),
-    ##   the previously calculated vector (arithmetic and geometric) of MNN distances of the input pts
-
-    print(paste("Proportion of random draws with Arithmetic NN >=  NN of the input points = ",proportion[1],sep=" "))
-    a<-data.frame(COL="Arithmetic Mean NN(meters) of the ",COL2="",COL3="",N=nrow(Framepts.spdf),COL4="input points = ",VAL=FrameNN[1])
-    b<-data.frame(COL="Proportion of",COL2=as.character(numberofreps),COL3=" random draws with an Arithmetic mean NN >= mean NN of the",N=nrow(Framepts.spdf),COL4=" input points = ",VAL=proportion[1])
-    ans<-rbind(a,b)
-
-    print(paste("Proportion of random draws with Geometric NN >=  NN of the input points = ",proportion[2],sep=" "))
-    a<-data.frame(COL="Geometric Mean NN(meters) of the ",COL2="",COL3="",N=nrow(Framepts.spdf),COL4="input points = ",VAL=FrameNN[2])
-    b<-data.frame(COL="Proportion of",COL2=as.character(numberofreps),COL3=" random draws with a Geometric mean NN >= mean NN of the",N=nrow(Framepts.spdf),COL4=" input points = ",VAL=proportion[2])
-    ans<-rbind(ans,a)
-    ans<-rbind(ans,b)
-    write.table(ans,output,row.names=F,col.names=F,quote=F,append=T)
-
-  }else {
-    frame.spdf<-NULL
+  # If requested, first analyze entire frame
+  if(doFrame) {
+    output_frame <- test_point_balance(aoi_spdf = frame_spdf,
+                                       aoi_name = "Sample Frame",
+                                       pts_spdf = pts_spdf,
+                                       reps = reps,
+                                       type = 1,
+                                       seed_number = seed_number)
+  } else {
+    output_frame <- NULL
   }
-
-
 
   ######### Analyze by strata if requested
-  strata.spdf<-NULL
-  # Ingest the strata file if specified, and analyze on a stratum basis
-  if(!is.na(strata)) {
-    strata.spdf<-Ingest(strata)
-  }else {
-    q()
+
+  if(!is.null(strata_spdf)) {
+    # Just to simplify things, make a STRATUM variable
+    strata_spdf@data[["STRATUM"]] <- strata_spdf@data[["STRATUM"]]
+    strata <- unique(strata_spdf@data[["STRATUM"]])
+
+    output_strata <- lapply(X = strata,
+                            strata_spdf = strata_spdf,
+                            pts_spdf = pts_spdf,
+                            FUN = function(X, strata_spdf, pts_spdf){
+                              # For clarity
+                              stratum <- X
+
+                              # Get just the relevant polygons
+                              stratum_spdf <- strata_spdf[strata_spdf[["STRATUM"]] == stratum, ]
+
+                              # Get just the points that fall in this stratum
+                              current_pts_spdf <- pts_spdf
+                              current_pts_spdf@data[["STRATUM"]] <- sp::over(pts_spdf,
+                                                                             stratum_spdf)[["STRATUM"]]
+                              current_pts_spdf <- pts_spdf[!is.na(current_pts_spdf@data[["STRATUM"]]), ]
+
+                              # If there are in fact points in the stratum, do the randomization test
+                              if (nrow(current_pts_spdf) > 1) {
+
+                                output <- test_point_balance(aoi_spdf = stratum_spdf,
+                                                             aoi_name = stratum,
+                                                             pts_spdf = current_pts_spdf,
+                                                             reps = reps,
+                                                             type = 1,
+                                                             seed_number = seed_number)
+
+                              } else {
+                                # If there weren't points in the stratum, just give us the empty output
+                                output <- data.frame("polygon" = stratum,
+                                                     "point_count" = 0,
+                                                     "reps" = NA,
+                                                     "mean_arithmetic" = NA,
+                                                     "mean_geometric" = NA,
+                                                     "p_arithmetic" = NA,
+                                                     "p_geometric" = NA)
+                              }
+                            })
   }
+  # Combine the outputs
+  output <- rbind(output_frame, output_strata)
 
-  if(!is.null(strata.spdf)) {
-    names(strata.spdf)[names(strata.spdf)==stratafield]<-"STRATA"
-    strata.spdf<-strata.spdf[, c("STRATA")]
-    slist<-unique(strata.spdf$STRATA)
-
-    for(i in 1:length(slist)) {
-      tempS<-strata.spdf[strata.spdf$STRATA %in% slist[i] ,]
-      tempS$CODE<-1
-      tempT<-over(Framepts.spdf,tempS)
-      Framepts.spdf$USE<-tempT$STRATA
-      tempPTS<-Framepts.spdf[!is.na(Framepts.spdf$USE) ,]		## Now we have just the points within strata i (from slist)
-      Framepts.spdf$USE<-NULL			## Clear for re-use
-      if(nrow(tempPTS)>1) {			## If we have >1 points, do a randomization
-        # Derive Mean NN of the Stratum points
-        StrataNN<-NN(tempPTS)		## Mean NN; [1]=arithmetic, [2]=geometric
-        print(paste("For Stratum = ",slist[i],":",sep=""))
-        print(paste("Arithmetic Mean nearest neighbor of the input points= ",StrataNN[1]," for N= ",nrow(tempPTS)," points",sep=" "))
-        print(paste("Geometric Mean nearest neighbor of the input points= ",StrataNN[2]," for N= ",nrow(tempPTS)," points",sep=" "))
-
-        ## Do randomization test for this stratum
-        number<-reps
-        thepts<-tempPTS
-        proportion<-GenPts(number,thepts,tempS,StrataNN,1)	## Number of requested sim reps, the pts file, the aoi file (frame or a stratum file),
-        ##   the previously calculated vector (arithmetic and geometric) of NN distances of the input pts
-        print(paste("Proportion of random draws with Arithmetic NN >=  NN of the input points = ",proportion[1],sep=" "))
-        a<-data.frame(COL="Arithmetic Mean NN(meters) of the ",COL2="",COL3="",N=nrow(tempPTS),COL4="input points = ",VAL=StrataNN[1])
-        b<-data.frame(COL="Proportion of",COL2=as.character(numberofreps),COL3=" random draws with an Arithmetic mean NN >= mean NN of the",N=nrow(tempPTS),COL4=" input points = ",VAL=proportion[1])
-        ans<-rbind(a,b)
-
-        print(paste("Proportion of random draws with Geometric NN >=  NN of the input points = ",proportion[2],sep=" "))
-        a<-data.frame(COL="Geometric Mean NN(meters) of the ",COL2="",COL3="",N=nrow(tempPTS),COL4="input points = ",VAL=StrataNN[2])
-        b<-data.frame(COL="Proportion of",COL2=as.character(numberofreps),COL3=" random draws with a Geometric mean NN >= mean NN of the",N=nrow(tempPTS),COL4=" input points = ",VAL=proportion[2])
-        ans<-rbind(ans,a)
-        ans<-rbind(ans,b)
-        blank<-c(" ")
-        write.table(blank,output,row.names=F,col.names=F,quote=F,append=T)
-        blank<-paste("For Stratum= ",slist[i],":",sep="")
-        write.table(blank,output,row.names=F,col.names=F,quote=F,append=T)
-        write.table(ans,output,row.names=F,col.names=F,quote=F,append=T)
-      }else {
-        print(paste("For Stratum = ",slist[i],":",sep=""))
-        print(paste("WARNING, number of points only = ",nrow(tempPTS),sep=""))
-        blank<-" "
-        write.table(blank,output,row.names=F,col.names=F,quote=F,append=T)
-        blank<-paste("For Stratum = ",slist[i],":",sep="")
-        write.table(blank,output,row.names=F,col.names=F,quote=F,append=T)
-        blank<-paste("WARNING, number of points only = ",nrow(tempPTS),sep="")
-        write.table(blank,output,row.names=F,col.names=F,quote=F,append=T)
-      }
-    }
-  }
-} ## End of Random()
+  return(output)
+}
 
 
 
