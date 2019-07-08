@@ -101,10 +101,14 @@ extract_poly_area <- function(polygons,
   total_area <- sum(areas_df[["area"]])
 
   # Add proportional area to the data frame
-  areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
+  if (area_prop) {
+    areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
+  }
 
   # Add cumulative frequency distribution, which can be treated as a probability distribution
-  areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
+  if (cum_freq) {
+    areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
+  }
 
   # Return this data frame!
   return(areas_df)
