@@ -548,16 +548,16 @@ test_points <- function(number,
     number <- number - 1
 
     # Add the latitude and longitude to the data frame
-    rand_spdf <- GetXY(spdf = rand_spdf,
-                       x_var = "LONG",
-                       y_var = "LAT",
-                       projection = projectionNAD83)
+    rand_spdf <- get_coords(spdf = rand_spdf,
+                            x_var = "LONG",
+                            y_var = "LAT",
+                            projection = projectionNAD83)
 
     # Add the x and y meters now
-    rand_spdf <- GetXY(spdf = rand_spdf,
-                       x_var = "XMETERS",
-                       y_var = "YMETERS",
-                       projection = projectionAL)
+    rand_spdf <- get_coords(spdf = rand_spdf,
+                            x_var = "XMETERS",
+                            y_var = "YMETERS",
+                            projection = projectionAL)
 
     # Get the distance to nearest neighbor for each point in the random set
     rand_nn <- NN_mean(dataframe = rand_spdf@data,
