@@ -85,20 +85,16 @@ extract_poly_area <- function(polygons,
   }
 
   # Get the areas of the polygons
-  areas <- unlist(sapply(X = spdf@polygons,
-                         FUN = function(X) {
-                           sapply(X = X@Polygons,
-                                  FUN = function(X) {
-                                    X@area
-                                  })
-                         }))
+  areas_df <- data.frame(id = 1:length(polygons@polygons[[1]]@Polygons),
+                         area = sapply(X = polygons@polygons[[1]]@Polygons,
+                                       FUN = function(X){
+                                         X@area
+                                       }),
+                         stringsAsFactors = FALSE)
 
-  # Make a data frame with the areas and the within-polygon ID
-  areas_df <- data.frame(area = areas,
-                         id = 1:length(areas))
 
   # Sort from largest to smallest area
-  # (This can help speed up selecting from the probability distribution)
+  # (This can help speed up selecting from the probability distribution elsewhere)
   areas_df <- areas_df[order(-areas_df[["area"]]), ]
 
   # Get the total area
