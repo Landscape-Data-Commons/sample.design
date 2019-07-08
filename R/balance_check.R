@@ -466,9 +466,18 @@ test_points <- function(number,
       # The 25% extra helps to account for non-overlapping points.
       # By adding perhaps more than we need, we at least cut down on repeat conversion from Spatial Points to SpatialPointsDataFrame
       # We drop any excess points anyway
-      for(iteration in 1:(round(counter * 1.25))) {
+
+      iterations <- round(counter * 1.25)
+
+      # Get our seed numbers for these iterations
+      # We add the value of number and counter so that we don't get identical seeds on different passes
+      set.seed(seed_number + number + counter)
+      current_seeds <- sample(1:99999,
+                              size = iterations)
+      for(iteration in 1:interations) {
         # We set the seed number any time it might get triggered
-        set.seed(seed_number)
+        # Use the seed number we generated for this iteration
+        set.seed(current_seeds[iteration])
 
         # Get a uniform random variate for selecting a polygon. This gets compared against the cumulative frequency
         urv <- runif(1)
@@ -489,7 +498,7 @@ test_points <- function(number,
         }
 
         # MAKE IT REPRODUCIBLE!!!!
-        set.seed(seed_number)
+        set.seed(current_seeds[iteration])
 
         # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
         rand_point <- sp::spsample(poly,
