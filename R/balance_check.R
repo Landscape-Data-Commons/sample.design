@@ -73,6 +73,17 @@ extract_poly_area <- function(polygons,
     stop("spdf must be a spatial polygons data frame")
   }
 
+  # We need to handle what to do if the geometry is empty
+  if (length(polygons@polygons) < 1) {
+    stop("There's no geometry in polygons")
+  }
+
+  # And if it's not dissolved, we'll do that!
+  if (length(polygons@polygons) > 1) {
+    message("The polygons need to be dissolved. Dissolving now.")
+    polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
+  }
+
   # Get the areas of the polygons
   areas <- unlist(sapply(X = spdf@polygons,
                          FUN = function(X) {
