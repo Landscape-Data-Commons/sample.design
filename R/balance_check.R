@@ -651,7 +651,7 @@ test_point_balance <- function(aoi_spdf,
   }
 
   # Add the coordinates so that we can do nearest neighbor calculations
-  pts_spdf <- GetXY(pts_spdf)
+  pts_spdf <- get_coords(pts_spdf)
 
   # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
   nn_means <- NN_mean(pts_spdf@data,
