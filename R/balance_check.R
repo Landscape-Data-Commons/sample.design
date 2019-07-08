@@ -691,7 +691,7 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
 {
 
   # Add the coordinates so that we can do nearest neighbor calculations
-  pts_spdf <- GetXY(pts_spdf)
+  pts_spdf <- get_coords(pts_spdf)
 
   # If requested, first analyze entire frame
   if(doFrame) {
