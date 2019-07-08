@@ -602,20 +602,7 @@ test_points <- function(number,
   output <- c(p_arith = nn_am_greater_prop, p_geom = nn_gm_greater_prop)
   return(output)
 }
-############################################################################################
-Ingest <- function(layer_name,
-                   layer_path = getwd(),
-                   reproject = FALSE,
-                   projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
-  spdf <- readOGR(dsn = layer_path,
-                  layer = layer_name,
-                  stringsAsFactors = FALSE)
-  if (reproject) {
-    spdf <- sp::spTransform(Aspdf, projection)
-  }
-  names(spdf@data) <- str_to_upper(names(spdf@data))
-  return(spdf)
-}
+
 ###############################################################################
 GetXY <- function(spdf,
                   x_var = "XMETERS",
