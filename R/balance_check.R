@@ -57,16 +57,6 @@
 #     grab lunch, then come back and check out all of the results.......
 
 
-#I.  Copy all of Section I. into the R console.
-#####################################################################
-library(raster)
-library(tidyverse)
-library(stringr)
-library(rgdal)
-library(rgeos)
-library(maptools)
-library(digest)
-library(sp)
 
 ################################################################
 #  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
