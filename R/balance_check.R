@@ -396,6 +396,13 @@ test_points <- function(number,
     stop("There's no geometry in aoi_spdf")
   }
 
+  # And if it's not dissolved, we'll do that!
+  if (length(aoi_spdf@polygons) > 1) {
+    message("The polygons in aoi_spdf need to be dissolved. Dissolving now.")
+    aoi_spdf <- methods::as(sf::st_combine(sf::st_as_sf(aoi_spdf)), "Spatial")
+  }
+
+
   # NAD83 CRS for projecting
   projectionNAD83 <- sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
   # Alber's equal area CRS for projecting
