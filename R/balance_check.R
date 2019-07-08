@@ -359,7 +359,7 @@ NN_mean <- function(dataframe,
 ###########################################################################GenPts(number,thepts,tempS,StrataNN,StrataBox)
 ## Generate sets of random points
 # derive Mean NN of each set
-# compare with the specified NN (MeanNN) of the GRTS (input) pts
+# compare with the specified NN (nearest_dists) of the GRTS (input) pts
 # record the proportion of random replicates where the random NN >= NN of the input pts.
 GenPts<-function(number,		## Number of reps
                  pts_spdf,		## The pts file
