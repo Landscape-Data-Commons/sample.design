@@ -601,22 +601,22 @@ Ingest <- function(layer_name,
   return(spdf)
 }
 ###############################################################################
-GetXY<-function(thepts)
-{
-  projectionAL <- CRS("+proj=aea")
+GetXY <- function(spdf,
+                  x_var = "XMETERS",
+                  y_var = "YMETERS",
+                  projection = CRS("+proj=aea")){
+  if (!grepl(class(spdf), pattern = "^SpatialPointsDataFrame")) {
+    stop("spdf must be a spatial points data frame")
+  }
+  # Create a reprojected spdf to grab coords from
+  temp_spdf <- sp::spTransform(spdf,
+                               projection)
 
-  # access the x, y coordinates of the pts and derive nearest neighbor
-  thepts@data <- cbind(thepts@data, thepts@coords)
-  names(thepts)[names(thepts) == "coords.x1"] <- "LONGITUDE"
-  names(thepts)[names(thepts) == "coords.x2"] <- "LATITUDE"
+  # Write them into the original spdf
+  spdf@data[[x_var]] <- temp_spdf@coords[[1]]
+  spdf@data[[y_var]] <- temp_spdf@coords[[2]]
 
-  temp.spdf<- spTransform(thepts,projectionAL)
-  thepts@data <- cbind(thepts@data, temp.spdf@coords)
-  names(thepts)[names(thepts) == "coords.x1"] <- "XMETERS"
-  names(thepts)[names(thepts) == "coords.x2"] <- "YMETERS"
-
-  thepts<-thepts[, c("XMETERS","YMETERS")]
-  return(thepts)
+  return(spdf)
 }
 ######################################################################
 Random<-function(WD,		##working directory
