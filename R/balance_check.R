@@ -219,8 +219,59 @@ gm_mean <- function(x,
   return(output)
 }
 
-###########################################################
-# Derive mean Nearest Neighbor using a pts file containing XMETERS and YMETERS
+
+#' Calculate a distance matrix for a data frame of coordinates
+#' @description Given a data frame containing X and Y Cartesian coordinates, calculate a distance matrix between the points.
+#' @param dataframe A data frame. Must contain numeric variables corresponding to \code{x_var} and \code{y_var} containing the X and Y coordinate values.
+#' @param x_var Character string. The name of the variable in \code{dataframe} containing the X components of the coordinates.
+#' @param y_var Character string. The name of the variable in \code{dataframe} containing the Y components of the coordinates.
+#' @return A matrix of the distances between the points.
+#' @export
+dist_matrix <- function(dataframe,
+                        x_var,
+                        y_var){
+  if (class(dataframe) != "data.frame") {
+    stop("dataframe must be a data frame")
+  }
+  if (!(x_var %in% names(dataframe))) {
+    stop("x_var must correspond to the name of a variable in dataframe")
+  }
+  if (!(y_var %in% names(dataframe))) {
+    stop("y_var must correspond to the name of a variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[x_var]])) {
+    stop("x_var must correspond to the name of a numeric variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[y_var]])) {
+    stop("y_var must correspond to the name of a numeric variable in dataframe")
+  }
+
+  # Calculate Euclidean distance between all points!
+  a <- dataframe[[x_var]]
+  b <- dataframe[[y_var]]
+  a <- outer(a, a, '-')
+  a_sq <- a * a
+  b <- outer(b, b, '-')
+  b_sq <- b * b
+
+  # h is for hypotenuse!
+  h <- a_sq + b_sq
+
+  # Euclidean distance is the square root of a^2 + b^2
+  h <- sqrt(h)
+
+  return(h)
+
+}
+
+
+#' Find the distances to nearest neighbor for a collection of Cartesian coordinates
+#' @description Given a data frame containing X and Y Cartesian coordinates, find the distance to the nearest point for each point in the data frame.
+#' @param dataframe A data frame. Must contain numeric variables corresponding to \code{x_var} and \code{y_var} containing the X and Y coordinate values.
+#' @param x_var Character string. The name of the variable in \code{dataframe} containing the X components of the coordinates.
+#' @param y_var Character string. The name of the variable in \code{dataframe} containing the Y components of the coordinates.
+#' @return A numeric vector of the distances, one for each point.
+#' @export
 NN <- function(dataframe,
                x_var,
                y_var) {
@@ -239,59 +290,72 @@ NN <- function(dataframe,
   if (!is.numeric(dataframe[[y_var]])) {
     stop("y_var must correspond to the name of a numeric variable in dataframe")
   }
+
+  # Get a distance matrix
+  distance_matrix <- dist_matrix(dataframe = dataframe,
+                                 x_var = x_var,
+                                 y_var = y_var)
+
   # How many points are there?
   point_count <- nrow(dataframe)
 
-  # Calculate Euclidean distance between all points!
-  # Assumes X is always negative
-  a <- -1 * dataframe[[x_var]]
-  b <- dataframe[[y_var]]
-  a <- outer(a, a, '-')
-  a <- a * a
-  b <- outer(b, b, '-')
-  b <- b * b
-  # h is for hypotenuse!
-  h <- a + b
-  # Euclidean distance is the square root of a^2 + b^2
-  h <- sqrt(h)
-  # This just gets rid of the difference between a point and itself
+  # This just "gets rid of" the difference between a point and itself
   # Enables min() function to find the true nearest neighbor of the point
-  h[h == 0] <- Inf
+  distance_matrix[distance_matrix == 0] <- Inf
 
   # Get the distance to the nearest neighbor for each point
   nearest_dists <- sapply(1:point_count,
-                          distances = h,
+                          distances = distance_matrix,
                           FUN = function(X, distances) {
                             min(distances[, X])
                           })
 
+  return(nearest_dists)
+}
+
+#' Find the mean distance to nearest neighbor for a collection of Cartesian coordinates
+#' @description Given a data frame containing X and Y Cartesian coordinates, find the arithmetic and geometric mean distance to the nearest point.
+#' @param dataframe A data frame. Must contain numeric variables corresponding to \code{x_var} and \code{y_var} containing the X and Y coordinate values.
+#' @param x_var Character string. The name of the variable in \code{dataframe} containing the X components of the coordinates.
+#' @param y_var Character string. The name of the variable in \code{dataframe} containing the Y components of the coordinates.
+#' @return A named numeric vector of the mean distances: \code{"arith_mean"} containing the arithmetic mean and \code{"geo_mean"} containing the geometric mean.
+#' @export
+NN_mean <- function(dataframe,
+                    x_var,
+                    y_var){
+  if (class(dataframe) != "data.frame") {
+    stop("dataframe must be a data frame")
+  }
+  if (!(x_var %in% names(dataframe))) {
+    stop("x_var must correspond to the name of a variable in dataframe")
+  }
+  if (!(y_var %in% names(dataframe))) {
+    stop("y_var must correspond to the name of a variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[x_var]])) {
+    stop("x_var must correspond to the name of a numeric variable in dataframe")
+  }
+  if (!is.numeric(dataframe[[y_var]])) {
+    stop("y_var must correspond to the name of a numeric variable in dataframe")
+  }
+
+  # Get the vector of nearest neighbor distances
+  nearest_dists <- NN(dataframe,
+                      x_var,
+                      y_var)
+
   # Calculate arithmetic mean
   arith_mean <- mean(nearest_dists)
+
   # Calculate the geometric mean
   geo_mean <- gm_mean(nearest_dists,
                       na.rm = TRUE)
 
-  return(nearest_dists)
-
-  # TODO: Make this make sense as an output format (probably named numeric vector)
+  # Return the two values
   return(c(arith_mean = arith_mean, geo_mean = geo_mean))
-
-  # Geo <- NULL
-  # RMuNN <- 0
-  # for(i in 1:point_count) {
-  #   nearest_dist <- min(a[, i])
-  #   RMuNN <- RMuNN + nearest_dist
-  #   Geo <- rbind(Geo, dearest_dist)
-  # }
-  #
-  # # Derive mean NN - arithmetic
-  # RMuNN <- (RMuNN / nrow(dataframe))
-  # # Derive mean NN - geometric
-  # GMuNN <- gm_mean(Geo,
-  #                  na.rm = TRUE)
-  # ret <- rbind(RMuNN, GMuNN)
-  # return(ret)
 }
+
+
 ###########################################################################GenPts(number,thepts,tempS,StrataNN,StrataBox)
 ## Generate sets of random points
 # derive Mean NN of each set
