@@ -585,7 +585,7 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
                           strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
                           stratafield,	## Strata-field name in strata or NA
                           doFrame = TRUE,
-                          seed_number = 1)
+                          seed_number = 420,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 {
