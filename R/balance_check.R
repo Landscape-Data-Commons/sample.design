@@ -522,8 +522,8 @@ get_coords <- function(spdf,
                                projection)
 
   # Write them into the original spdf
-  spdf@data[[x_var]] <- temp_spdf@coords[[1]]
-  spdf@data[[y_var]] <- temp_spdf@coords[[2]]
+  spdf@data[[x_var]] <- temp_spdf@coords[, 1]
+  spdf@data[[y_var]] <- temp_spdf@coords[, 2]
 
   return(spdf)
 }
