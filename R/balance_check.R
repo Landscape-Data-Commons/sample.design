@@ -1,63 +1,3 @@
-## RandomizePV4.R - 5/16/2018; SLGarman - BLM NOC, Denver.  Version 4.  Uses spsample and bb=bbox() to locate random samples in GenPts(). And, this
-##                                                          version can use (buffered) NHD lines to evaluate aquatic AIM designs.
-
-## Determines if the dispersion of points in a survey design is different from random.  Developed specifically to evaluate the spatial balance of merged (i.e., expanded) GRTS designs.
-## For a specified Frame and n GRTS points, derives x number of random sets of n points, and compares
-## the mean nearest neighbor (MNN) distance of the input points with that of each set of randomly selected points.
-
-## Records the proportion of random-point sets with a MNN equal to or greater than the survey-design (GRTS) points.
-## This proportion can be treated as a P value to test:
-##	Ho: GRTS design is not different from random
-##	Ha: GRTS design is different from random
-
-##      E.g., a proportion of 0.03 means that the input GRTS points are different from random.
-##            A proportion of 0.20 means that the input GRTS points are Likely Not different from random - that is,
-##              randomly selected point sets were more dispersed than the GRTS points in 20% of the replications.
-
-## Mean NN is based on Arithmetic mean and Geometric mean.  Arithmetic-mean results are most applicable when there is 1 highly dominant polygon per feature.
-## That is, the frame or a strata is represented almost entirely by 1 polygon.  Where a frame or stratum is represented by multiple disjunct
-## (and highly dispersed) polygons, the Geometric mean should be considered (better represents the central tendency of highly skewed data).  If random proportions of
-##  both measures are > 0.1, then best to retain Ho:, else good bet to go with Ha: especially if the Geometric mean is <= 0.05.
-
-
-## This version only works on Polygonal sample frames and strata.  Additionally, this version includes the option to perform randomization tests on a strata basis.
-
-
-## I.  AIM Terrestrial analyses.  For both Frame and Strata, requires polygons to be dissolve - only 1 feature per attribute.  The strata of each point in the point file
-## is derived by overlaying the points on the strata file.  Random() [see bottom of the script] is called to process AIM terrestrial designs.
-
-## II.  AIM Aquatic analyses.  This was an add-on.  The strata and frame in this case are the same, and consists of buffered NHD lines (buffer by say 0.5 m to create a poly-line
-## file - easier to process using this algorithm). Unlike AIM Terrestrial frames and strata, NHD poly-lines SHOULD NOT be dissolved; multiple polygons per feature (i.e., stream order segment)
-## are EXPECTED.  The user specifies the name of the strata field in the NHD 'strata' file.  It is assumed that the Aquatic points file contains a field called STRM_ORDR that defines
-## the strata (stream order), and STRM_ORDR values match the strata values in the NHD poly-line file.  STRM_ORDER is directly used to determine the strata of points - the script
-## doesn't overlay points onto the NHD file to determine strata like it does with Terrestrial AIM points (aquatic point locations are field-derived coordinates and do not
-## always overlap even the buffered NHD poly-line).  RandomAquatic() is called to process AIM Aquatic designs.
-
-
-
-# How to run this script.
-#1)  Copy all of section I into the R console
-
-#2)  Modify the I/O arguments in section II, then cut and paste arguments and the call to Random() to the R console.
-## Specify the working directory where the following shapefiles reside
-## Specify the polygonal frame (shapefile)
-## Specify the GRTS points (the input points shapefile)
-## Specify the number of random replications (500 should do the trick, can try more depending on computer speed)
-## Specify the output file name (summary of results - short and sweet)
-## Specify the random number seed or leave as is
-## Specify a strata file for an analysis based on strata, else set this to NA.  For terrestrial AIM analyses, strata file must be dissolved.
-## Specify the strata field name in the strata file, else set this to NA
-## Regardless if a strata file/analysis is performed, can specify an entire frame analysis that ignores strata
-
-#3)  OR use Batch mode to run the script after you modify I/O arguments.  Your system path must include the bin subdirectory of the R version you want to use.
-#     Do the following in a command-line console:   R CMD BATCH randomizepv4.r capture_console_output
-
-#     capture_console_output is an ASCII file that records the output you'd see in the R console when running from the console.
-#     You can batch multiple jobs at once (rename your modified versions of randomizepv4.r & use different file names to capture the results),
-#     grab lunch, then come back and check out all of the results.......
-
-
-
 ################################################################
 #' Get the areas of polygons
 #' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
@@ -409,13 +349,15 @@ test_points <- function(number = 500,
   projectionAL <- sp::CRS("+proj=aea")
 
   # Grab the point coordinates to calculate the mean nearest neighbor
-  pts_coords <- pts_spdf@coords
-  names(pts_coords) <- c("x", "y")
+  pts_coords <- get_coords(pts_spdf,
+                           x_var = "XMETERS",
+                           y_var = "YMETERS",
+                           projection = projectionAL)@data
 
   # Calculate the mean nearest neighbor
   nn_means <- NN_mean(pts_coords,
-                      x_var = "x",
-                      y_var = "y")
+                      x_var = "XMETERS",
+                      y_var = "YMETERS")
 
   # Just splitting them out for clarity later
   design_nn_am <- nn_means[["arith_mean"]]
