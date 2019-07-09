@@ -400,7 +400,7 @@ test_points <- function(number = 500,
                           polygons = aoi_spdf,
                           type = type,
                           FUN = function(X, point_count, probability_distribution, nn_means, polygons, type){
-                            message("Seed ", X)
+                            # message("Seed ", X)
                             # Pick up point_count * 1.5 points then check them out.
                             # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
                             # The 25% extra helps to account for those non-overlapping points.
