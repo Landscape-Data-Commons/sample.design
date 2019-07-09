@@ -586,9 +586,15 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
                           stratafield,	## Strata-field name in strata or NA
                           doFrame = TRUE,
                           seed_number = 1)
+                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 {
 
+  # Reproject
+  frame_spdf <- sp::spTransform(frame_spdf,
+                                projection)
+  pts_spdf <- sp::spTransform(pts_spdf,
+                              projection)
   # Add the coordinates so that we can do nearest neighbor calculations
   pts_spdf <- get_coords(pts_spdf)
 
