@@ -486,10 +486,6 @@ test_points <- function(number = 500,
 
                             return(data.frame("am" = rand_nn["arith_mean"],
                                               "gm" = rand_nn["geo_mean"]))
-
-                            # Split the arithmetic and geometric means out for clarity
-                            message("arithmetic mean ", rand_nn_am)
-                            message("geometric mean ", rand_nn_gm)
                           })
   )
 
