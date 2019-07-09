@@ -2,12 +2,12 @@
 #' Get the areas of polygons
 #' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
 #' @param polygons Spatial Polygons or Spatial Polygons Data Frame. The polygons to be summarized.
-#' @param area_prop Logical. If \code{TRUE} then the output data frame will include the variable \code{"area_prop"} with the proportional areas of the polygon identities. Defaults to \code{TRUE}.
+# #' @param area_prop Logical. If \code{TRUE} then the output data frame will include the variable \code{"area_prop"} with the proportional areas of the polygon identities. Defaults to \code{TRUE}.
 #' @param cum_freq Logical. If \code{TRUE} then the output data frame will include the variable \code{"cum_freq"} with the cumulative frequencies of the polygon identities. Note that it sorts the polygons from smallest to largest area before doing this. Defaults to \code{TRUE}.
 #' @return A data frame containing the polygon index within \code{polygons@@polygons[[1]]@@Polygons}, and if asked for, the proportional area (\code{"area_prop"}) and the cumulative frequency (\code{"cum_freq"}).
 #' @export
 extract_poly_area <- function(polygons,
-                              area_prop = TRUE,
+                              # area_prop = TRUE,
                               cum_freq = TRUE) {
   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
     stop("spdf must be a spatial polygons data frame")
