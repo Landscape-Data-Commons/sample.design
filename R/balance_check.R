@@ -390,7 +390,8 @@ test_points <- function(number = 500,
   # How many points we want.
   point_count <- nrow(pts_spdf)
 
-  # Generate the sets of points. We're doing it over a vector of seed numbers with length = number
+  # Generate the sets of points. We're doing it over a vector of seed numbers with length = number.
+  # That means that each set of generated points has their own starting seed and are therefore unique
   means <- do.call(rbind,
                    lapply(X = seed_number + 1:number,
                           point_count = point_count,
