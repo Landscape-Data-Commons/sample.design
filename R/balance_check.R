@@ -629,7 +629,7 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
   # If there's a stratification field and it exists in the spdf, get to work
   if(!is.null(stratafield)) {
     if (!(stratafield %in% names(frame_spdf@data))) {
-      stop(paste("The variable", stratfield, "does not appear in frame_spdf@data."))
+      stop(paste("The variable", stratafield, "does not appear in frame_spdf@data."))
     }
 
     # Just to simplify things, make a STRATUM variable
