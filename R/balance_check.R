@@ -405,10 +405,9 @@ test_points <- function(number = 500,
                             # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
                             # The 25% extra helps to account for those non-overlapping points.
                             # We drop any excess points anyway
-                            iterations <- round(point_count * 1.5)
+                            iterations <- round(point_count * 2)
 
                             # Get our seed numbers for these iterations
-                            # We add the value of number and counter so that we don't get identical seeds on different passes
                             set.seed(X)
                             current_seeds <- sample(1:99999,
                                                     size = iterations)
