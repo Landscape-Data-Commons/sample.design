@@ -448,8 +448,9 @@ test_points <- function(number = 500,
                                                             # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
                                                             rand_point <- sp::spsample(poly,
                                                                                        n = 1,
-                                                                                       type = "random",
-                                                                                       bb = sp::bbox(poly))
+                                                                                       type = "random"#,
+                                                                                       #bb = sp::bbox(poly)
+                                                                                       )
 
                                                             return(rand_point)
                                                           }))
