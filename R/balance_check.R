@@ -582,14 +582,12 @@ test_point_balance <- function(aoi_spdf,
 check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
                           pts_spdf,		## the GRTS points as a spdf  (shapefile)
                           reps = 500,		## Number of sets of random points
-                          strata_spdf = NULL,	## Name of strata file (analyses will be conducted at the strata level) or NA
                           stratafield,	## Strata-field name in strata or NA
                           doFrame = TRUE,
                           seed_number = 420,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 {
-
   # Reproject
   frame_spdf <- sp::spTransform(frame_spdf,
                                 projection)
