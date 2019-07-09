@@ -314,7 +314,7 @@ test_points <- function(number = 500,
                         pts_spdf,
                         aoi_spdf,
                         type = 1, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1 TOD
-                        seed_number = 1){
+                        seed_number = 420){
   if (number < 0) {
     stop("number must be a positive integer")
   }
