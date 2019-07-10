@@ -84,46 +84,7 @@ extract_poly_area <- function(polygons,
   return(areas_df)
 }
 
-#  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
-## This only works if polygons were NOT dissolved - designed for aquatic lines buffered to form a polygonal frame
-# TODO: MAKE THIS HANDLE THE SUB-POLYGONS CORRECTLY!!!! IT FUCKS UP GenPts() WHEN TRYING TO SELECT POLYGONS BECAUSE THE ID ISN'T CORRECT
-# The problem being that these aren't dissolved, so there's the polygon and then subpolys as opposed to just polygons
-ExtractPolyAreaAquatic <- function(spdf) {
-  if (class(spdf) != "SpatialPolygonsDataFrame") {
-    stop("spdf must be a spatial polygons data frame")
-  }
 
-  # Get the areas of the polygons
-  areas <- sapply(X = spdf@polygons,
-                  FUN = function(X) {
-                    sapply(X = X@Polygons,
-                           FUN = function(X) {
-                             X@area
-                           })
-                  })
-
-  # Make a data frame with the areas and the within-polygon ID
-  areas_df <- data.frame(area = areas,
-                         id = 1:length(areas))
-
-  # Sort from largest to smallest area
-  # (This can help speed up selecting from the probability distribution)
-  areas_df <- areas_df[order(-areas_df[["area"]]), ]
-
-  # Get the total area
-  total_area <- sum(areas_df[["area"]])
-
-  # Add proportional area to the data frame
-  areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
-
-  # Add cumulative frequency distribution, which can be treated as a probability distribution
-  areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
-
-  # Return this data frame!
-  return(areas_df)
-}
-
-###############################################################################
 #' Select polygon from a probability distribution
 #' @description Given a data frame of IDs with associated probabilities and a number, select the ID with the smallest probability value greater than than the number given.
 #' @param dataframe A data frame. Must contain an identity variable with a name matching \code{id_var} and a probability variable with a name matching \code{prob_var}. Will be sorted by ascending probability.
