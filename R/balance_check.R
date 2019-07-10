@@ -822,35 +822,3 @@ RandomAquatic<-function(WD,		##working directory
 } ## End of RandomAquatic()
 ##  Paste all of the above into the R console.
 
-##################################################################################################################
-## II. Modify the following arguments, then call Random for Terrestrial AIM analysis, else RandomAquatic for Aquatic AIM analysis.
-##     For Terrestrial AIM analyses, all shapefiles must be dissolved (1 row per feature in the shapefile).
-##     For Aquatic AIM analyses, the strata/frame file (1 in the same) should not be dissolved (pertains to the standard way strata are generated in the aquatic world).
-
-
-WD<-c("c:/projects/mastergrts")	# Working directory - all input files must reside in this directory
-frame<-c("Frame")			# Name of the frame file in the working directory - this will be the same as strata for AIM Aquatic analyses
-pts<-c("grtssample")			# Name of the GRTS pts file in the working directory.  A field called USE is created in the terrestrial overlay function, so
-##    the incoming pts file shouldn't have a field named USE.
-reps<-500				# No. of randomly selected sets of points
-output<-c("test")		        # Name of file to record the results
-set.seed(1)				# Set the random number seed or not!
-
-############## Strata info
-strata<-NA
-#strata<-c("eagleSTRDISS")		# Set to NA if you don't want to analyze by strata (e.g., strata<-NA) , else enter the name of the strata shapefile.
-#stratafield<-c("GRIDCODE")		# If strata is set, then specify the strata field in the strata shapefile (upper case), else stratafield is ignored.
-# stratafield is the strata attribute within file=strata.
-## NOTE:  The strata field is renamed STRATA in prcessing, so the strata file can't already have this field name.
-## For Terrestrial AIM processing, the over() function is used to derive the 'actual' strata of points; thus,
-## any strata designation within the pts file is not used!  THUS, the strata file used to generate in input GRTS pts should be same as used here.
-
-doFrame<-T				# Set to T if you want to analyze across the enter Frame without regard to strata, else set to F.  Even if you set strata, setting this to T
-#     will generate results where strata are ignored; in essence you do 2 analyses at once - frame-based and strata-based.  If strata  == NA,
-#     make sure this is set to T, otherwise no analyses are performed!
-
-## Nothing is returned from Random() - the ASCII-formatted results are output during processing to the file specified by output (set above)
-Random(WD,frame,pts,reps,output,strata,stratafield,doFrame)		## Call this if doing Terrestrial AIM
-#RandomAquatic(WD,frame,pts,reps,output,strata,stratafield,doFrame)	## Call this if doing Aquatic AIM
-q()									## Use this to terminate when running a batch file
-
