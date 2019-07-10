@@ -1,4 +1,3 @@
-################################################################
 #' Get the areas of polygons
 #' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
 #' @param polygons Spatial Polygons or Spatial Polygons Data Frame. The polygons to be summarized.
@@ -54,7 +53,6 @@ extract_poly_area <- function(polygons,
   return(areas_df)
 }
 
-#########################################################################################################
 #  Extract area of polygons & build a cumulative Prob. Distribution indexed by polygon number (spdf is the strata or frame)
 ## This only works if polygons were NOT dissolved - designed for aquatic lines buffered to form a polygonal frame
 # TODO: MAKE THIS HANDLE THE SUB-POLYGONS CORRECTLY!!!! IT FUCKS UP GenPts() WHEN TRYING TO SELECT POLYGONS BECAUSE THE ID ISN'T CORRECT
@@ -499,7 +497,6 @@ test_points <- function(number = 500,
   return(output)
 }
 
-###############################################################################
 #' Add coordinates to the data slot of a SpatialPointsDataFrame
 #' @param spdf A SpatialPointsDataFrame.
 #' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{spdf@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
@@ -573,7 +570,6 @@ test_point_balance <- function(aoi_spdf,
   return(output)
 }
 
-######################################################################
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
 #' @description Given a
 check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (shapefile)
@@ -695,7 +691,6 @@ check_balance <- function(frame_spdf = NULL,		## the sample frame as a spdf (sha
 
 
 
-######################################################################
 ##  This more-or-less dups Random() but is customized to work on buffered NHD polygons for aquatic analyses.
 RandomAquatic<-function(WD,		##working directory
                         frame,		## the sample frame as a spdf (shapefile)
