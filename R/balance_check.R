@@ -1,3 +1,34 @@
+dissolve_spdf <- function(spdf, dissolve_field){
+  if (!grepl(class(spdf), pattern = "^SpatialPolygonsDataFrame")) {
+    stop("spdf must be a spatial polygons data frame")
+  }
+  if (!is.character(dissolve_field)) {
+    stop("dissolve field must be a character string")
+  }
+  if (!(dissolve_field %in% names(spdf@data))) {
+    stop(dissolve_field, " does not occur in the names of spdf@data")
+  }
+  unique_ids <- as.character(unique(spdf@data[[dissolve_field]]))
+  poly_list <- lapply(X = unique_ids,
+                      spdf = spdf,
+                      dissolve_field = dissolve_field,
+                      FUN = function(X, spdf, dissolve_field){
+                        spdf_current <- spdf[spdf@data[[dissolve_field]] == X, ]
+                        spdf_current <- methods::as(sf::st_combine(sf::st_as_sf(spdf_current)), "Spatial")
+                        df <- data.frame(id = X,
+                                         stringsAsFactors = FALSE)
+                        names(df) <- dissolve_field
+                        rownames(df) <- spdf_current@polygons[[1]]@ID
+                        spdf_current <- sp::SpatialPolygonsDataFrame(Sr = spdf_current,
+                                                                     data = df)
+                        return(spdf_current)
+                      })
+  output <- do.call(rbind,
+                    poly_list)
+  return(output)
+}
+
+
 #' Get the areas of polygons
 #' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
 #' @param polygons Spatial Polygons or Spatial Polygons Data Frame. The polygons to be summarized.
