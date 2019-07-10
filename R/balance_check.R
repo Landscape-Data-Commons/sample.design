@@ -514,55 +514,6 @@ get_coords <- function(spdf,
   return(spdf)
 }
 
-test_point_balance <- function(aoi_spdf,
-                               aoi_name,
-                               pts_spdf,
-                               reps = 500,
-                               type,
-                               seed_number) {
-  if (!grepl(class(aoi_spdf), pattern = "^SpatialPolygons")) {
-    stop("aoi_spdf must be a spatial polygons data frame")
-  }
-
-  # We need to handle what to do if the geometry is empty
-  if (length(aoi_spdf@polygons) < 1) {
-    stop("There's no geometry in aoi_spdf")
-  }
-
-  # And if it's not dissolved, we'll do that!
-  if (length(aoi_spdf@polygons) > 1) {
-    message("The polygons in aoi_spdf need to be dissolved. Dissolving now.")
-    aoi_spdf <- methods::as(sf::st_combine(sf::st_as_sf(aoi_spdf)), "Spatial")
-  }
-
-  # Add the coordinates so that we can do nearest neighbor calculations
-  pts_spdf <- get_coords(pts_spdf)
-
-  # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
-  nn_means <- NN_mean(pts_spdf@data,
-                      x_var = "XMETERS",
-                      y_var = "YMETERS")
-
-  ## Do randomization test
-  proportions_frame <- test_points(number = reps,
-                                   pts_spdf = pts_spdf,
-                                   aoi_spdf = aoi_spdf,
-                                   type = type,
-                                   seed_number = seed_number)
-
-  # Build the output data frame for the sample frame
-  output_frame <- data.frame("polygon" = aoi_name,
-                             "point_count" = nrow(pts_spdf),
-                             "reps" = reps,
-                             "mean_arithmetic" = nn_means_all[["arith_mean"]],
-                             "mean_geometric" = nn_means_all[["geo_mean"]],
-                             "p_arithmetic" = proportions_frame["p_arith"],
-                             "p_geometric" = proportions_frame["p_geom"])
-
-  return(output)
-}
-
-
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
 #' @description Given a set of points and the polygons used to draw them, test the spatial balance of the point by comparing them to randomly located points generated within the polygons
 #' @param polygons_spdf Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons_spdf@@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.
