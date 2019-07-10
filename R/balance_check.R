@@ -479,15 +479,19 @@ test_points <- function(number = 500,
                           })
   )
 
-  # Calc proportions
+  # This is the whole damn goal:
+  # What proportion of our comparison draws had a HIGHER mean nearest neighbor distance than the points?
+  # We assume that a higher mean nearest neighbor distance means more spatially balanced
+  # So these are effectively the proportions of draws that are MORE BALANCED than the points
+  # Which means that they're basically a P value for the H0 "The points provided are spatially balanced"
   nn_am_greater_prop <- sum(means[["am"]] > design_nn_am) / number
   nn_gm_greater_prop <- sum(means[["gm"]] > design_nn_gm) / number
 
-  # Basically they're P value based on means
   output <- c(p_arith = nn_am_greater_prop, p_geom = nn_gm_greater_prop)
   rownames(output) <- NULL
   return(output)
 }
+
 
 #' Add coordinates to the data slot of a SpatialPointsDataFrame
 #' @param spdf A SpatialPointsDataFrame.
@@ -561,6 +565,7 @@ test_point_balance <- function(aoi_spdf,
 
   return(output)
 }
+
 
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
 #' @description Given a
