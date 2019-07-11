@@ -1,39 +1,5 @@
-##  GenDistLists() takes the distance matrix and orders the New points from closest to farthest for each existing GRTS point.
-
-##  Somewhat tricky schema, so the following is provided to help us remember what the heck is going on here...
-
-##  dist lists the distances between each of the existing N GRTS pts and the new pts.  Each column is an existing GRTS pts for a total of N columns.
-#   NRows will equal the number of new points minus the number of existing GRTS pts.  Each row in dist is the accession point-number of the new points starting at N+1.
-
-## disto lists the accession point-number from the nearest to the farthest.  Each column is the same as dist, each row however is ordered from closest to
-## farthest and the numeric value is the accession point number.
-
-## E.g., say dist has 52 columns and 104 rows (52 existing GRTS pts and 104 new points).  Column 1 is the first existing GRTS point.
-##       Row 1 is the first new point which is row #53 in apts, row 104 is the last new point.
-##       disto has 52 columns and 104 rows.  Again, the first column is the first existing GRTS point.  The first row of this column say is 9, meaning that
-##       row 9 in dist (col=1, row=9) will have the smallest distance.  This is the smallest for the first existing GRTS point.  Column 2, row 1 is say 70 which
-##       means dist(col=2, row=70) will show the smallest distance for the second existing GRTS point.  In apts, these smallest points will be entry 9+52 (61) and 70+52 (122). ETC..
-
-GenDistLists<-function(a,extant,apts)
-{
-  displ<-extant+1
-  dist<-NULL
-  for(c in 1:extant) {
-    z<-data.frame(VAR=a[displ:nrow(apts),c])
-    zo<-data.frame(order(z))
-
-    if(c==1) {
-      dist<-z
-      disto<-zo
-    }else {
-      dist<-cbind(dist,z)
-      disto<-cbind(disto,zo)
     }
   }
-  ret<-cbind(dist,disto)	## odd way to combine and return results, but it works!
-  return(ret)
-}
-##################################################
 ## GetClosestPts - select the existing pts that spatially best matches the dispersion of a new GRTS draw.
 GetClosestPts<-function(apts,stratafield)
 {
