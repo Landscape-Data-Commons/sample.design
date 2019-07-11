@@ -165,7 +165,6 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                        ## If stratafield=NA, then ingested point files are assumed to represent an entire frame and spatial balance is based on the entire
                        ## collection of existing and New points.
 
-                       output,		## This is the output shapefile.
                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 ##  Ingest inputs, call functions to access XY coords and to identify and eliminate New points, and output
 ##          expanded, balanced design.
