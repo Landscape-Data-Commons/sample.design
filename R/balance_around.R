@@ -166,7 +166,6 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                        ## collection of existing and New points.
 
                        output,		## This is the output shapefile.
-                       option,		## 1 or 2- see top of script for explanation
                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 ##  Ingest inputs, call functions to access XY coords and to identify and eliminate New points, and output
 ##          expanded, balanced design.
@@ -229,27 +228,12 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                     y_var = "YMETERS",
                     projection = projectionAL)
 
-  if (option == 1) {
     # This determines the number of New points to eliminate, and eliminates the points
     pts <- NN(pts,
               extant,
               stratafield)
-  }
 
 
-  ## Option 2.
-  #########TO derive the best spatial balance, skip the above call to NN and do the following.
-  ##          This was designed for/is most useful whenever you are selecting x revisit points per stratum from a e.g. 5-yr design.
-  ##          See selectpts.R which derives the number of points per strata and extracts the points. However, sometimes the original
-  ##          design is not balanced, so selectpts.r output is very unbalanced.  Here we skip the extraction portion of selectpts.r and
-  ##          do what we can to ID the best set of existing points (most spatially balanced) given a 'template' GRTS example (LayerN), where this
-  ##          template has the exact number of points we want by strata.
-  if (option == 2) {
-    pts <- GetClosestPts(pts,
-                         stratafield)
-  }
-
-  ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
   new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
 
   # Get the existing plot ids and renumber them
