@@ -228,14 +228,17 @@ balance_around <- function(existing_points_spdf,		## Name of existing points sha
     pts <- keep_farthest(existing_points_spdf = existing_points_spdf,
                          new_points_spdf = new_points_spdf)
 
+  # Time to tweak the new points that were kept
   new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
 
   # Get the existing plot ids and renumber them
-  plotids <- pts@data[new_indices_remaining, "PLOTID"]
-  plotids <- gsub(plotids,
-                  pattern = "\d*$",
-                  replacement = "")
-  pts@data[new_indices_remaining, "PLOTID"] <- paste0(plotids, 1:length(new_indices_remaining))
+  if (any(new_indices_remaining)) {
+    plotids <- pts@data[new_indices_remaining, "PLOTID"]
+    plotids <- gsub(plotids,
+                    pattern = "\d*$",
+                    replacement = "")
+    pts@data[new_indices_remaining, "PLOTID"] <- paste0(plotids, 1:length(new_indices_remaining))
+  }
 
   # TODO: Rename within strata.
   # Does this mean using over() with stratification polygons to determine new stratification assignments for old points?
