@@ -209,29 +209,56 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                        option,		## 1 or 2- see top of script for explanation
                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # TODO: Sanitization (including reprojection)
+
   # Alber's equal area CRS for projecting
   projectionAL <- sp::CRS("+proj=aea")
+
+  # Assign the codes that indicate if they're existing plots or freshly-drawn ones
+  existing_pts_spdf@data[["TYPE"]] <- "EXISTING"
+  new_points_spdf@data[["TYPE"]] <- "NEW"
+
+  # Add in the fields that the points don't have for easy combination
+  missing_vars_new <- names(existing_points_spdf@data)[!(names(existing_points_spdf@data) %in% names(new_points_spdf@data))]
+  new_points_spdf@data[, missing_vars_new] <- NA
+  missing_vars_existing <- names(new_points_spdf@data)[!(names(new_points_spdf@data) %in% names(existing_points_spdf@data))]
+  existing_points_spdf@data[, missing_vars_existing] <- NA
+
+  # Bind the 2 point files together
+  pts <- rbind(existing_points_spdf, new_points_spdf)
+
+  # What are the existing points' indices?
+  extant_indices <- 1:nrow(existing_points_spdf@data)
+  # Which are the new points' indices?
+  new_indices <- (nrow(existing_points_spdf@data) + 1):(nrow(existing_points_spdf@data) + nrow(new_points_spdf@data))
+
+  # Rename the date that the plot was sampled to "PREVDATE"
+  pts@data[["PREVDATE"]] <- pts@data[["DATEVISITE"]]
+
+  # Restrict to only relevant fields
+  pts <- pts[ , c("TYPE",
+                  stratafield,
+                  "PLOTID",
+                  "PLOTKEY",
+                  "PRIMARYKEY",
+                  "PANEL",
+                  "PROJECTNAM",
+                  "PREVDATE")]
+
+  # Make these all NA for the new points
+  new_points_spdf@data[new_indices, "PLOTID"] <- NA
+  new_points_spdf@data[new_indices, "PLOTKEY"] <- NA
+  new_points_spdf@data[new_indices, "PRIMARYKEY"] <- NA
+  new_points_spdf@data[new_indices, "PROJECTNAM"] <- NA
+  new_points_spdf@data[new_indices, "PREVDATE"] <- NA
+
+  # Determine the number of existing points
+  extant <- nrow(existing_points_spdf@data)
+
   # Add coordinates to the combined points for distance calculations
   pts <- get_coords(pts,
                     x_var = "XMETERS",
                     y_var = "YMETERS",
                     projection = projectionAL)
-
-  pts$CODE<-1				## CODE assignment
-  pts2$CODE<-2
-  pts$PREVDATE<-pts$DATEVISITE
-  pts<-pts[ ,c("CODE",stratafield,"PLOTID","PLOTKEY","PRIMARYKEY","PROJECTNAM","PREVDATE")]
-  pts2$PLOTID<-NA
-  pts2$PLOTKEY<-NA
-  pts2$PRIMARYKEY<-NA
-  pts2$PROJECTNAM<-NA
-  pts2$PREVDATE<-NA
-
-  pts2<-pts2[ ,c("CODE",stratafield,"PLOTID","PLOTKEY","PRIMARYKEY","PROJECTNAM","PREVDATE")]
-
-  pts<-rbind(pts,pts2)			## Bind the 2 point files together
-  extant<-pts[pts$CODE==1 ,]
-  extant<-nrow(extant)			## Determine the number of existing points
 
   if (option == 1) {
     # This determines the number of New points to eliminate, and eliminates the points
