@@ -248,18 +248,9 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
 
   }
 
-  pts$DATEVIS<-" "
-  pts$MDCATY<-"Equal"				## MUTARE Equal or Unequal, but depends if you think this is important info; else whatever.
-  names(pts)[names(pts) == "THESTRATA"] <- "STRATA"
-
   ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
   new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
 
-  pts$FRAME<-"Buffalo Hills Intensification"	## MUTARE    Frame name
-  pts$PANEL<-"2019"				## MUTARE    sample year
-  pts$EVALSTA<-"NotEval"
-  pts$FINAL_DESI<-" "
-  #######################################################################################
   # Get the existing plot ids and renumber them
   plotids <- pts@data[new_indices_remaining, "PLOTID"]
   plotids <- gsub(plotids,
@@ -271,6 +262,10 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   # Does this mean using over() with stratification polygons to determine new stratification assignments for old points?
 
 
+  # None of the points are considered visited now!
+  pts@data[["DATEVIS"]] <- ""
+  pts@data[["EVALSTA"]] <- "NotEval"
+  pts@data[["FINAL_DESI"]] <- ""
 
   # Add coordinates!
   pts <- get_coords(pts,
