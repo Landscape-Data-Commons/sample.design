@@ -83,12 +83,6 @@ keep_farthest <- function(existing_points_spdf,
   if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
     stop("existing_points_spdf must be a spatial points data frame")
   }
-
-  ## Check to ensure we have selected nrow(apts) points (New pts that are closest to existing GRTS pts) to delete
-  y<-unique(z)
-  if(length(y) != extant ) {
-    print(paste("ERROR, we have not eliminated sufficient pts", y, nrow(apts)-extant,sep=" "))
-    q()
   }
 
   apts$DELETE<-0
