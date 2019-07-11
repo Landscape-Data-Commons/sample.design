@@ -276,7 +276,5 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
                     y_var = "LONG",
                     projection = projection)
 
-  pts$ORDERDes<-pts$COUNTER
-  pts$COUNTER<-NULL
   return(pts)
 }
