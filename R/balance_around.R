@@ -278,6 +278,5 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
 
   pts$ORDERDes<-pts$COUNTER
   pts$COUNTER<-NULL
-  writeOGR(pts, ".",output,driver="ESRI Shapefile",overwrite_layer=T)	# output the final shapefile
   return(pts)
 }
