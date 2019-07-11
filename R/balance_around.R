@@ -208,6 +208,11 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
                      output,		## This is the output shapefile.
                      option		## 1 or 2- see top of script for explanation
 )
+  # Add coordinates to the combined points for distance calculations
+  pts <- get_coords(pts,
+                    x_var = "XMETERS",
+                    y_var = "YMETERS",
+                    projection = projectionAL)
 
 {
   pts$CODE<-1				## CODE assignment
@@ -226,7 +231,6 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   extant<-pts[pts$CODE==1 ,]
   extant<-nrow(extant)			## Determine the number of existing points
 
-  pts<-GetXY(pts)			## Access point location in meters (UTM)
   if (option == 1) {
     # This determines the number of New points to eliminate, and eliminates the points
     pts <- NN(pts,
