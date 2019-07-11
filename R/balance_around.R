@@ -41,8 +41,6 @@ GetClosestPts<-function(apts,stratafield)
 ## FindClosest() - the work-horse that determines the unique New points that are the closest to existing points.
 ##                 After identifying these points, eliminates them from the combined points file (apts).
 
-FindClosest<-function(apts,dist,disto,extant)
-{
   ## Best to loop.  If shared points, keep the closest and increment the row index for the !closest.  Keep looping until no more shared pts.
 
   if(extant>1) {
@@ -79,6 +77,8 @@ FindClosest<-function(apts,dist,disto,extant)
       }
       #if(tr)print(paste("Not Unique ",z[i],sep=" "))
     }
+keep_farthest <- function(existing_points_spdf,
+                          new_points_spdf){
   }
 
   ## Check to ensure we have selected nrow(apts) points (New pts that are closest to existing GRTS pts) to delete
