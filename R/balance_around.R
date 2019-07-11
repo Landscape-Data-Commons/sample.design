@@ -208,6 +208,7 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                        output,		## This is the output shapefile.
                        option,		## 1 or 2- see top of script for explanation
                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+  # TODO: Sanitization (including reprojection)
   # Add coordinates to the combined points for distance calculations
   pts <- get_coords(pts,
                     x_var = "XMETERS",
