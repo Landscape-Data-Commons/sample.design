@@ -301,7 +301,7 @@ NN_mean <- function(dataframe,
 #' @param pts_spdf Spatial Points Data Frame. The points that are being compared against.
 #' @param aoi_spdf Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.
 #' @param type Numeric. Use \code{1} when aoi_spdf is a dissolved set of polygons and \code{2} when aoi_spdf is an undissolved set of polylines. Defaults to \code{1}
-#' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{1}.
+#' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{pts_spdf} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
