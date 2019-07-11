@@ -137,7 +137,8 @@ get_closest <- function(existing_points_spdf,
 
   return(output)
 }
-#############################################################################################
+
+
 ## FindClosest() - the work-horse that determines the unique New points that are the closest to existing points.
 ##                 After identifying these points, eliminates them from the combined points file (apts).
 
