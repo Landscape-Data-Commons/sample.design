@@ -138,7 +138,8 @@ NN<-function(apts,extant,stratafield)	# Derive New points that are closest to ex
 {
 
   if(is.na(stratafield)) {						## If NA, then we are dealing with just 1 frame area - all points will be considered
-    a<-GetDistMatrix(apts)		## Matrix of distances among every point.
+    a<-dist_matrix(apts)		## Matrix of distances among every point.
+    a[a == 0] <- Inf
     ret<-GenDistLists(a,extant,apts)	## Generate the distance and New-point accession order lists for further processing
     dist<-ret[,1:extant]			## The 1:extant columns are Euclidean distance
     disto<-ret[,(extant+1):(extant*2)]	## The extant+1:extant*2 columns are the accession numbers of New points, where the accession number
@@ -157,7 +158,8 @@ NN<-function(apts,extant,stratafield)	# Derive New points that are closest to ex
       if(nrow(checkE)>0) {		## Any existing points?
         if(nrow(checkN)>nrow(checkE)) {			## The number of New points must be > number of existing points, else nothing to do here
           Spts<-rbind(checkE,checkN)		## Stratum pts file
-          a<-GetDistMatrix(Spts)		## All of the remaining dups the processing described directly above, but here its by stratum
+          a<-dist_matrix(Spts)		## All of the remaining dups the processing described directly above, but here its by stratum
+          a[a == 0] <- Inf
           extant<-nrow(checkE)
           ret=GenDistLists(a,extant,Spts)
           dist<-ret[,1:extant]
@@ -270,12 +272,12 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
 
 
 
-  pts@data<-cbind(pts@data,pts@coords)
-  pts$LAT<-pts$coords.x2
-  pts$LONG<-pts$coords.x1
 
-  #pts$coords.x1<-NULL   ## MUTARE   You can keep the coords or delete them.
-  #pts$coords.x2<-NULL
+  # Add coordinates!
+  pts <- get_coords(pts,
+                    x_var = "LAT",
+                    y_var = "LONG",
+                    projection = projection)
 
   pts$ORDERDes<-pts$COUNTER
   pts$COUNTER<-NULL
