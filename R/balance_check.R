@@ -1,3 +1,9 @@
+#' Dissolve polygons in an SPDF by an identity variable
+#' @description Dissolve polygons together on an identity variable to produce an SPDF with one observation per identity.
+#' @param spdf Spatial Polygons Data Frame. The polygons to dissolve. Must have an identity variable with a name patching \code{dissolve_field}.
+#' @param dissolve_field Character string. The name of the variable in \code{spdf@@data} containing the polygon identities
+#' @return A spatial polygons data frame with one observation per unique identity in the original \code{spdf}. The associated data frame contains only the identities in a variable named using \code{dissolve_field}.
+#' @export
 dissolve_spdf <- function(spdf, dissolve_field){
   if (!grepl(class(spdf), pattern = "^SpatialPolygonsDataFrame")) {
     stop("spdf must be a spatial polygons data frame")
