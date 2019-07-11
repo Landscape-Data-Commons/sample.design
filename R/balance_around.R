@@ -199,22 +199,21 @@ NN<-function(apts,extant,stratafield)	# Derive New points that are closest to ex
 ##  Ingest inputs, call functions to access XY coords and to identify and eliminate New points, and output
 ##          expanded, balanced design.
 
-BalancePTS<-function(layerE,		## Name of existing points shapefile
-                     layerN,		## Name of New points shapefile
-                     stratafield,  	## Name of the stratum field in the ingested point files.  If set, then points will be balanced on a stratum by stratum basis.
-                     ## If stratafield=NA, then ingested point files are assumed to represent an entire frame and spatial balance is based on the entire
-                     ## collection of existing and New points.
+BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefile
+                       new_points_spdf,		## Name of New points shapefile
+                       stratafield,  	## Name of the stratum field in the ingested point files.  If set, then points will be balanced on a stratum by stratum basis.
+                       ## If stratafield=NA, then ingested point files are assumed to represent an entire frame and spatial balance is based on the entire
+                       ## collection of existing and New points.
 
-                     output,		## This is the output shapefile.
-                     option		## 1 or 2- see top of script for explanation
-)
+                       output,		## This is the output shapefile.
+                       option,		## 1 or 2- see top of script for explanation
+                       projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # Add coordinates to the combined points for distance calculations
   pts <- get_coords(pts,
                     x_var = "XMETERS",
                     y_var = "YMETERS",
                     projection = projectionAL)
 
-{
   pts$CODE<-1				## CODE assignment
   pts2$CODE<-2
   pts$PREVDATE<-pts$DATEVISITE
