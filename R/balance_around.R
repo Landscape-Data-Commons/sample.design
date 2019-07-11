@@ -1,13 +1,3 @@
-#I.  Librarys and Functions - copy all of section I into the R console
-#########################################################################################
-library(raster)
-#library(tidyverse)
-library(stringr)
-library(rgdal)
-library(rgeos)
-library(maptools)
-library(digest)
-
 ############################################################################################
 Ingest<-function(layername)	## layer name of shapefile to ingest
 {
