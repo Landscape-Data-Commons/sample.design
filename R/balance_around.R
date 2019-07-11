@@ -229,7 +229,12 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   extant<-nrow(extant)			## Determine the number of existing points
 
   pts<-GetXY(pts)			## Access point location in meters (UTM)
-  if(option==1) pts<-NN(pts,extant,stratafield)	## This determines the number of New points to eliminate, and eliminates the points
+  if (option == 1) {
+    # This determines the number of New points to eliminate, and eliminates the points
+    pts <- NN(pts,
+              extant,
+              stratafield)
+  }
 
 
   ## Option 2.
@@ -239,7 +244,9 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   ##          design is not balanced, so selectpts.r output is very unbalanced.  Here we skip the extraction portion of selectpts.r and
   ##          do what we can to ID the best set of existing points (most spatially balanced) given a 'template' GRTS example (LayerN), where this
   ##          template has the exact number of points we want by strata.
-  if(option==2) pts<-GetClosestPts(pts,stratafield)
+  if (option == 2) {
+    pts <- GetClosestPts(pts,
+                         stratafield)
   }
 
   ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
