@@ -223,8 +223,7 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
   pts <- get_coords(pts,
                     x_var = "XMETERS",
                     y_var = "YMETERS",
-                    projection = projectionAL)
-
+                    projection = sp::CRS("+proj=aea"))
 
   # This determines the number of New points to eliminate, and eliminates the points
     pts <- keep_farthest(existing_points_spdf = existing_points_spdf,
