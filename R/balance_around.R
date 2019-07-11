@@ -246,30 +246,29 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   #pts$PRIMARY<-" "
 
 
-  ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
-  icnt<-0
-  #pts$PLOTID<-NA
-  pts$COUNTER<-0
-  for(i in 1:nrow(pts)) {
-    if(pts$CODE[i]==2) {		## The new pts that carry over into the final output
-      icnt<-icnt+1
-      ret<-paste("BH_INT-",icnt,sep="")		## MUTARE   Plot name prefix. Suffix is an accession number
-      pts$PLOTID[i]<-ret
-      pts$COUNTER[i]<-icnt
-    }
   }
 
   pts$DATEVIS<-" "
   pts$MDCATY<-"Equal"				## MUTARE Equal or Unequal, but depends if you think this is important info; else whatever.
   names(pts)[names(pts) == "THESTRATA"] <- "STRATA"
 
+  ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
+  new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
 
   pts$FRAME<-"Buffalo Hills Intensification"	## MUTARE    Frame name
   pts$PANEL<-"2019"				## MUTARE    sample year
   pts$EVALSTA<-"NotEval"
   pts$FINAL_DESI<-" "
   #######################################################################################
+  # Get the existing plot ids and renumber them
+  plotids <- pts@data[new_indices_remaining, "PLOTID"]
+  plotids <- gsub(plotids,
+                  pattern = "\d*$",
+                  replacement = "")
+  pts@data[new_indices_remaining, "PLOTID"] <- paste0(plotids, 1:length(new_indices_remaining))
 
+  # TODO: Rename within strata.
+  # Does this mean using over() with stratification polygons to determine new stratification assignments for old points?
 
 
 
