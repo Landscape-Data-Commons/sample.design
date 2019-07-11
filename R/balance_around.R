@@ -225,11 +225,10 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
                     y_var = "YMETERS",
                     projection = projectionAL)
 
-    # This determines the number of New points to eliminate, and eliminates the points
-    pts <- NN(pts,
-              extant,
-              stratafield)
 
+  # This determines the number of New points to eliminate, and eliminates the points
+    pts <- keep_farthest(existing_points_spdf = existing_points_spdf,
+                         new_points_spdf = new_points_spdf)
 
   new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
 
