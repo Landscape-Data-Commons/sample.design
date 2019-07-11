@@ -240,12 +240,6 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   ##          do what we can to ID the best set of existing points (most spatially balanced) given a 'template' GRTS example (LayerN), where this
   ##          template has the exact number of points we want by strata.
   if(option==2) pts<-GetClosestPts(pts,stratafield)
-  ########################
-
-  #pts$PLOTKEY<-" "    ## In case you don't want to retain this info..
-  #pts$PRIMARY<-" "
-
-
   }
 
   ###########################################  WHERE WE FORMAT THE DATA.  This generally needs to be customized.
