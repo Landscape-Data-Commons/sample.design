@@ -284,33 +284,3 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
   writeOGR(pts, ".",output,driver="ESRI Shapefile",overwrite_layer=T)	# output the final shapefile
   return(pts)
 }
-
-## Paste everything above into the R Console
-
-################################################################################################################################
-#II.   I/O arguments - modify then cut and paste into R console
-setwd("c:/projects/revisit/blackrock/buffalo/grtsU")		# Working directory where all input shapefiles reside, and where the output will reside
-
-layerE<-c("thexistingpts")		## Name of the existing points shapefile.  Must have the same stratafield as layerN.
-
-layerN<-c("thenewgrts")		## Name of the New (GRTS template) points shapefile.  Must have the same stratafield as layerE.
-output<-c("thefinalpts")		## Name of the points shapefile with the expanded, balanced design (the results)
-stratafield<-c("DMNNT_STRT")		## Name of strata field (upper case) if balancing by strata. However, the code seems to need
-##      a strata field even if there is no 'real' strata.  So, insert a variable (e.g., SCODE)
-##      and set to 1 in layerE and in LayerN.  TODO - fix this issue so stratafield<-NA properly works.
-
-option<-1				## OPTION 1 or OPTION 2 - see top of script for explanation.  Option 1 is where you are adding pts
-## around existing pts.  Option 2 shouldn't be used, but is retained for future consideration.
-
-## Had problems when there is only 1 existing point in the frame or a strata.  This was fixed, but if there are future
-##      problems for some reason, check the logic that deals with dist and disto in FindClosest().
-
-pts<-BalancePTS(layerE,layerN,stratafield,output,option)	## The final set of new pts.  BalancePts outputs the resulting pts file.
-
-### NOTE:  At the end of BalancePTS() we set attributes to carry-over into the output.
-##         This needs to be customized for every application.  Currently we create a plot name and a frame name.  You may want
-##         to add other fields.  Search for MUTARE (s.l. latin for modify) which identifies the customized info.
-##################################################################################################################################
-
-q()					## Include this when BATCH processing
-
