@@ -79,6 +79,9 @@ GetClosestPts<-function(apts,stratafield)
     }
 keep_farthest <- function(existing_points_spdf,
                           new_points_spdf){
+  # TODO: Sanitize
+  if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
+    stop("existing_points_spdf must be a spatial points data frame")
   }
 
   ## Check to ensure we have selected nrow(apts) points (New pts that are closest to existing GRTS pts) to delete
