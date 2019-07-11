@@ -159,7 +159,6 @@ NN<-function(apts,extant,stratafield)	# Derive New points that are closest to ex
   return(apts)
 }
 
-BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefile
                        new_points_spdf,		## Name of New points shapefile
                        stratafield,  	## Name of the stratum field in the ingested point files.  If set, then points will be balanced on a stratum by stratum basis.
                        ## If stratafield=NA, then ingested point files are assumed to represent an entire frame and spatial balance is based on the entire
@@ -175,6 +174,7 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
 #' @param projection CRS object. The projection to force on the spatial objects. Defaults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial points data frame containing all the points from \code{existing_points_spdf} and the selected points from \code{new_points_spdf}. The projection will match \code{projection}.
 #' @export
+balance_around <- function(existing_points_spdf,		## Name of existing points shapefile
   # TODO: Sanitization (including reprojection)
 
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
