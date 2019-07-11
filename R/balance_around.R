@@ -150,13 +150,11 @@ NN<-function(apts,extant,stratafield)	# Derive New points that are closest to ex
     apts<-savepts
   } #if else
 
-  ## Clean up
-  apts$XMETERS<-NULL
-  apts$YMETERS<-NULL
-  apts$LONGITUDE<-NULL
-  apts$LATITUDE<-NULL
+  # Now that we have our indices to remove, let's do it as we combine points
+  output <- rbind(existing_points_spdf[, common_varnames],
+                  new_points_spdf[-removal_indices, common_varnames])
 
-  return(apts)
+  return(output)
 }
 
 
