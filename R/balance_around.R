@@ -178,9 +178,6 @@ BalancePTS <- function(existing_points_spdf,		## Name of existing points shapefi
 #' @export
   # TODO: Sanitization (including reprojection)
 
-  # Alber's equal area CRS for projecting
-  projectionAL <- sp::CRS("+proj=aea")
-
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
   existing_pts_spdf@data[["TYPE"]] <- "EXISTING"
   new_points_spdf@data[["TYPE"]] <- "NEW"
