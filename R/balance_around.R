@@ -210,8 +210,6 @@ BalancePTS<-function(layerE,		## Name of existing points shapefile
 )
 
 {
-  pts<-Ingest(layerE)			## Ingest the existing points
-  pts2<-Ingest(layerN)			## Ingest the New points
   pts$CODE<-1				## CODE assignment
   pts2$CODE<-2
   pts$PREVDATE<-pts$DATEVISITE
