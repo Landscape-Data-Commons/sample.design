@@ -11,6 +11,9 @@ dissolve_spdf <- function(spdf, dissolve_field){
   if (!is.character(dissolve_field)) {
     stop("dissolve field must be a character string")
   }
+  if (length(dissolve_field) > 1) {
+    stop("dissolve field must be a character string")
+  }
   if (!(dissolve_field %in% names(spdf@data))) {
     stop(dissolve_field, " does not occur in the names of spdf@data")
   }
