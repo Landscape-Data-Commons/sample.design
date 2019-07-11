@@ -1,41 +1,141 @@
-    }
-  }
 ## GetClosestPts - select the existing pts that spatially best matches the dispersion of a new GRTS draw.
-GetClosestPts<-function(apts,stratafield)
-{
+#########TO derive the best spatial balance, skip the above call to NN and do the following.
+##          This was designed for/is most useful whenever you are selecting x revisit points per stratum from a e.g. 5-yr design.
+##          See selectpts.R which derives the number of points per strata and extracts the points. However, sometimes the original
+##          design is not balanced, so selectpts.r output is very unbalanced.  Here we skip the extraction portion of selectpts.r and
+##          do what we can to ID the best set of existing points (most spatially balanced) given a 'template' GRTS example (LayerN), where this
+##          template has the exact number of points we want by strata.
+get_closest <- function(existing_points_spdf,
+                        template_points,
+                        strata_spdf = NULL,
+                        stratafield = NULL,
+                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 
-  rel<-NULL
-  names(apts)[names(apts)==stratafield]<-"THESTRATA"
-  slist<-unique(apts$THESTRATA)
-  for(k in slist) {
-    checkE<-apts[apts$CODE==1 & apts$THESTRATA==k ,]
-    checkN<-apts[apts$CODE==2 & apts$THESTRATA==k ,]
-    checkE$USED<-0
+  # Reproject if necessary
+  if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
+    stop("existing_points_spdf must be a spatial points data frame")
+  }
+  if (!identical(projection, existing_points_spdf@proj4string)) {
+    existing_points_spdf <- sp::spTransform(existing_points_spdf,
+                                            projection)
+  }
+  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
+    stop("template_points_spdf must be a spatial points data frame")
+  }
+  if (!identical(projection, existing_points_spdf@proj4string)) {
+    template_points <- sp::spTransform(template_points,
+                                       projection)
+  }
 
-    for(i in 1:nrow(checkN) ) {
-      mdist<-99999999999
-      savej<-0
-      for(j in 1:nrow(checkE) ) {
-        if(checkE$USED[j]!=1) {
-          dist<- (checkN$XMETERS[i] - checkE$XMETERS[j])*   (checkN$XMETERS[i] - checkE$XMETERS[j])
-          dist<-dist+ ( (checkN$YMETERS[i] - checkE$YMETERS[j])*  (checkN$YMETERS[i] - checkE$YMETERS[j]) )
-          if(dist<mdist) {
-            mdist<-dist
-            savej<-j
-          }## dist<
-        }## checkE$USED
-      }## for j
-      checkE$USED[savej]<-1
-    }## for i
-    checkE<-checkE[checkE$USED==1 ,]
-    if(k==slist[1]){
-      rel<-checkE
-    }else {
-      rel<-rbind(rel,checkE)
+  # What to do about stratafield
+  if (!is.null(stratafield)) {
+    if (!is.character(stratafield)) {
+      stop("stratafield must be a character string")
     }
-  } ## for k
-  rel$USED<-NULL
-  return(rel)
+    if (length(stratafield) > 1) {
+      stop("stratafield must be a character string")
+    }
+    if (is.null(strata_spdf)) {
+      if (!(stratafield %in% names(template_points@data))) {
+        stop("The variable ", stratafield, " does not appear in template_points_spdf@data.")
+      }
+      if (!(stratafield %in% names(existing_points_spdf@data))) {
+        stop("The variable ", stratafield, " does not appear in existing_points_spdf@data.")
+      }
+      # Sorry for the inconsistencies but "MEMBERSHIP" is trying to get away from the assumption that these will be stratifications
+      # And I'm so, so tired. I'll come back to clean this up later, or so I'm currently telling myself at the end of a ten hour day
+      points_spdf@data[["MEMBERSHIP"]] <- points_spdf@data[[stratafield]]
+    }
+
+  } else {
+    points_spdf@data[["MEMBERSHIP"]] <- "frame"
+  }
+
+  # If there is a set of stratification polygons, use them!
+  if (!is.null(strata_spdf)) {
+    if (!(class(strata_spdf) %in% "SpatialPolygonsDataFrame")) {
+      stop("strata_spdf must be a spatial polygons data frame.")
+    }
+    if (!identical(projection, strata_spdf@proj4string)) {
+      strata_spdf <- sp::spTransform(strata_spdf,
+                                     projection)
+    }
+    if (!(stratafield %in% names(strata_spdf@data))) {
+      stop("The variable ", stratafield, " does not appear in strata_spdf.")
+    }
+
+    # This just puts the strata into the points
+    existing_points_spdf@data[["MEMBERSHIP"]] <- sp::over(x = existing_points_spdf,
+                                                                 y = strata_spdf)[[stratafield]]
+    template_points@data[["MEMBERSHIP"]] <- sp::over(x = template_points,
+                                                            y = strata_spdf)[[stratafield]]
+  }
+
+
+  strata <- unique(points_spdf@data[["MEMBERSHIP"]])
+
+  # By stratum!
+  stata_selections <- lapply(X = strata,
+                             template_points_spdf = template_points,
+                             existing_points_spdf = existing_points_spdf,
+                             FUN = function(X, template_points_spdf, existing_points_spdf){
+                               stratum <- X
+                               existing_points_stratum <- existing_points_spdf[existing_points_spdf@data[["MEMBERSHIP"]] == stratum, ]
+                               template_points_stratum <- template_points_spdf[template_points_spdf@data[["MEMBERSHIP"]] == stratum, ]
+
+                               # No points have been picked yet!
+                               existing_points_stratum@data[["PICKED"]] <- FALSE
+
+                               # We'll go through each new point in turn
+                               # This means that each point won't even look at any existing points already flagged as "PICKED"
+                               for(template_point in 1:nrow(template_points_stratum)) {
+                                 # The x and y components for the current template point
+                                 template_point_x <- template_points_stratum@data[template_point, "XMETERS"]
+                                 template_point_y <- template_points_stratum@data[template_point, "YMETERS"]
+
+                                 # This is the index of the existing point being used
+                                 # We don't use this until every point has been tested
+                                 use_index <- 0
+
+                                 # Which points haven't been flagged as used yet?
+                                 unused_indices <- (1:nrow(existing_points_stratum))[existing_points_stratum@data[["PICKED"]]]
+
+                                 # These are going to be the squares of the distances from the current new point to every unused existing point
+                                 # Basically, this is the Pythagorean theorem without the sqaure root step because why do unnecessary math?
+                                 distances <- sapply(X = unused_indices,
+                                                     comparison_x = template_point_x,
+                                                     comparison_y = template_point_y,
+                                                     points_spdf = existing_points_stratum,
+                                                     FUN = function(X, comparison_x, comparison_y, points_spdf){
+                                                       x_component <- (comparison_x - points_spdf@data[X, "XMETERS"])^2
+                                                       y_component <- (comparison_y - points_spdf@data[X, "YMETERS"])^2
+                                                       return(x_component + y_component)
+                                                     })
+
+                                 index_closest <- unused_indices[which(min(distances), distances)]
+
+                                 existing_points_stratum$USED[index_closest] <- TRUE
+                               }
+
+                               # Only keep the points that are flagged as picked
+                               output <- existing_points_stratum[existing_points_stratum@data[["PICKED"]], ]
+                               output@data[["PICKED"]] <- NULL
+                               return(output)
+                             })
+
+  # Each stratum's points are a separate SPDF in the list, so let's mash 'em together
+  output <- do.call(rbind,
+                    strata_selections)
+
+  # If we just had to add an identity, hide that fact
+  if (is.null(stratafield)) {
+    output@data[["MEMBERSHIP"]] <- NULL
+  } else {
+    # Otherwise name that membership field according to what the user called it
+    names(output@data)[names(output@data) == "MEMBERSHIP"] <- stratafield
+  }
+
+  return(output)
 }
 #############################################################################################
 ## FindClosest() - the work-horse that determines the unique New points that are the closest to existing points.
