@@ -1,11 +1,13 @@
-## GetClosestPts - select the existing pts that spatially best matches the dispersion of a new GRTS draw.
-#########TO derive the best spatial balance, skip the above call to NN and do the following.
-##          This was designed for/is most useful whenever you are selecting x revisit points per stratum from a e.g. 5-yr design.
-##          See selectpts.R which derives the number of points per strata and extracts the points. However, sometimes the original
-##          design is not balanced, so selectpts.r output is very unbalanced.  Here we skip the extraction portion of selectpts.r and
-##          do what we can to ID the best set of existing points (most spatially balanced) given a 'template' GRTS example (LayerN), where this
-##          template has the exact number of points we want by strata.
-get_closest <- function(existing_points_spdf,
+#' Select points that most closely approximate the distribution of another set of points
+#' @description Sometimes you have a large collection of points which are not randomly distributed or spatially balanced and you would like a subset that more or less do. Given a template of points that are distributed the way you would like, this will return the closest existing point to each. This can be done taking into account membership in a group, either by having assigned it as a variable in both sets of points or by providing polygons that can be used to assign membership. By default, no stratification/membership is taken into account.
+#' @param existing_points Spatial Points Data Frame. The points you would like to select from by comparing against \code{template_points}.
+#' @param template_points  Spatial Points Data Frame. The points you would like to compare against \code{existing_points} in order to select a subset of those that most closely resemble the distribution of the template points.
+#' @param strata_spdf Spatial Polygons Data Frame. Polygons assigned a variable with a name \code{stratafield} that contains the membership information (e.g. strata) to assign to \code{existing_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.
+#' @param stratafield Character string. If \code{strata_spdf} is not \code{NULL}, the name of the variable in \code{strata_spdf@@data} that contains the membership information. Otherwise, the name of the variable in both \code{template_points@@data} and \code{existing_points@@data} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{NULL}.
+#' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @return A spatial polygons data frame made by trimming \code{existing_points} down to the points that most closely approximate the distribution of \code{template_points} while also containing the same number of points as \code{template_points}. It will be in the projection specified by \code{projection}.
+#' @export
+get_closest <- function(existing_points,
                         template_points,
                         strata_spdf = NULL,
                         stratafield = NULL,
