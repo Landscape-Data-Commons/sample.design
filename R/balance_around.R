@@ -120,7 +120,7 @@ get_closest <- function(existing_points,
 
                                  index_closest <- unused_indices[which(min(distances), distances)]
 
-                                 existing_points_stratum$USED[index_closest] <- TRUE
+                                 existing_points_stratum[index_closest, "PICKED"] <- TRUE
                                }
 
                                # Only keep the points that are flagged as picked
