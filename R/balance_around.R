@@ -19,7 +19,7 @@ get_closest <- function(existing_points,
   }
   if (!identical(projection, existing_points@proj4string)) {
     existing_points <- sp::spTransform(existing_points,
-                                            projection)
+                                       projection)
   }
   if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
     stop("template_points must be a spatial points data frame")
@@ -72,9 +72,9 @@ get_closest <- function(existing_points,
 
     # This just puts the strata into the points
     existing_points@data[["MEMBERSHIP"]] <- sp::over(x = existing_points,
-                                                                 y = strata_spdf)[[stratafield]]
+                                                     y = strata_spdf)[[stratafield]]
     template_points@data[["MEMBERSHIP"]] <- sp::over(x = template_points,
-                                                            y = strata_spdf)[[stratafield]]
+                                                     y = strata_spdf)[[stratafield]]
   }
 
 
