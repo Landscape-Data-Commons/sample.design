@@ -12,19 +12,23 @@ get_closest <- function(existing_points_spdf,
                         projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 
   # Reproject if necessary
-  if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
-    stop("existing_points_spdf must be a spatial points data frame")
+  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
+    stop("existing_points must be a spatial points data frame")
   }
-  if (!identical(projection, existing_points_spdf@proj4string)) {
-    existing_points_spdf <- sp::spTransform(existing_points_spdf,
+  if (!identical(projection, existing_points@proj4string)) {
+    existing_points <- sp::spTransform(existing_points,
                                             projection)
   }
   if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
-    stop("template_points_spdf must be a spatial points data frame")
+    stop("template_points must be a spatial points data frame")
   }
-  if (!identical(projection, existing_points_spdf@proj4string)) {
+  if (!identical(projection, template_points@proj4string)) {
     template_points <- sp::spTransform(template_points,
                                        projection)
+  }
+
+  if (nrow(template_points@data) < nrow(existing_points@data)) {
+    stop("There are more points in existing_points than template_points")
   }
 
   # What to do about stratafield
@@ -37,10 +41,10 @@ get_closest <- function(existing_points_spdf,
     }
     if (is.null(strata_spdf)) {
       if (!(stratafield %in% names(template_points@data))) {
-        stop("The variable ", stratafield, " does not appear in template_points_spdf@data.")
+        stop("The variable ", stratafield, " does not appear in template_points@data.")
       }
-      if (!(stratafield %in% names(existing_points_spdf@data))) {
-        stop("The variable ", stratafield, " does not appear in existing_points_spdf@data.")
+      if (!(stratafield %in% names(existing_points@data))) {
+        stop("The variable ", stratafield, " does not appear in existing_points@data.")
       }
       # Sorry for the inconsistencies but "MEMBERSHIP" is trying to get away from the assumption that these will be stratifications
       # And I'm so, so tired. I'll come back to clean this up later, or so I'm currently telling myself at the end of a ten hour day
@@ -65,7 +69,7 @@ get_closest <- function(existing_points_spdf,
     }
 
     # This just puts the strata into the points
-    existing_points_spdf@data[["MEMBERSHIP"]] <- sp::over(x = existing_points_spdf,
+    existing_points@data[["MEMBERSHIP"]] <- sp::over(x = existing_points,
                                                                  y = strata_spdf)[[stratafield]]
     template_points@data[["MEMBERSHIP"]] <- sp::over(x = template_points,
                                                             y = strata_spdf)[[stratafield]]
@@ -76,12 +80,12 @@ get_closest <- function(existing_points_spdf,
 
   # By stratum!
   stata_selections <- lapply(X = strata,
-                             template_points_spdf = template_points,
-                             existing_points_spdf = existing_points_spdf,
-                             FUN = function(X, template_points_spdf, existing_points_spdf){
+                             template_points = template_points,
+                             existing_points = existing_points,
+                             FUN = function(X, template_points, existing_points){
                                stratum <- X
-                               existing_points_stratum <- existing_points_spdf[existing_points_spdf@data[["MEMBERSHIP"]] == stratum, ]
-                               template_points_stratum <- template_points_spdf[template_points_spdf@data[["MEMBERSHIP"]] == stratum, ]
+                               existing_points_stratum <- existing_points[existing_points@data[["MEMBERSHIP"]] == stratum, ]
+                               template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
 
                                # No points have been picked yet!
                                existing_points_stratum@data[["PICKED"]] <- FALSE
