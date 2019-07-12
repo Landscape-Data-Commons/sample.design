@@ -158,63 +158,71 @@ keep_farthest <- function(existing_points,
                           target = NULL,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # TODO: Sanitize
-  if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
-    stop("existing_points_spdf must be a spatial points data frame")
+  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
+    stop("existing_points must be a spatial points data frame")
   }
-  if (nrow(existing_points_spdf@data) < 1) {
-    stop("There are no points in existing_points_spdf")
+  if (!identical(projection, existing_points@proj4string)) {
+    existing_points <- sp::spTransform(existing_points,
+                                       projection)
   }
-  if (!(class(new_points_spdf) %in% "SpatialPointsDataFrame")) {
-    stop("new_points_spdf must be a spatial points data frame")
+  if (nrow(existing_points@data) < 1) {
+    stop("There are no points in existing_points")
   }
-  if (nrow(new_points_spdf@data) < 1) {
-    stop("There are no points in new_points_spdf")
+  if (!(class(new_points) %in% "SpatialPointsDataFrame")) {
+    stop("new_points must be a spatial points data frame")
+  }
+  if (!identical(projection, new_points@proj4string)) {
+    new_points <- sp::spTransform(new_points,
+                                  projection)
+  }
+  if (nrow(new_points@data) < 1) {
+    stop("There are no points in new_points")
   }
 
   if (is.null(target)) {
-    target <- nrow(new_points_spdf@data)
+    target <- nrow(new_points@data)
   }
 
-  if (target <= nrow(existing_points_spdf@data)) {
+  if (target <= nrow(existing_points@data)) {
     stop("The target number of points is less than or equal to the number of existing points.")
   }
 
-  common_varnames <- unique(c(names(existing_points_spdf@data)[!(names(existing_points_spdf@data) %in% names(new_points_spdf@data))],
-                              names(new_points_spdf@data)[!(names(new_points_spdf@data) %in% names(existing_points_spdf@data))]))
+  common_varnames <- unique(c(names(existing_points@data)[!(names(existing_points@data) %in% names(new_points@data))],
+                              names(new_points@data)[!(names(new_points@data) %in% names(existing_points@data))]))
 
   if (length(common_varnames) < 1) {
-    stop("There are no variables in common between existing_points_spdf and new_points_spdf. There must be at least one")
+    stop("There are no variables in common between existing_points and new_points. There must be at least one")
   }
 
-  if (length(names(existing_points_spdf@data)) != length(common_varnames) | length(names(new_points_spdf@data)) != length(common_varnames)) {
-    message("Not all variables are in common between existing_points_spdf and new_points_spdf")
+  if (length(names(existing_points@data)) != length(common_varnames) | length(names(new_points@data)) != length(common_varnames)) {
+    message("Not all variables are in common between existing_points and new_points")
   }
 
-  existing_points_spdf <- existing_points_spdf[, common_varnames]
-  new_points_spdf <- new_points_spdf[, common_varnames]
+  existing_points <- existing_points[, common_varnames]
+  new_points <- new_points[, common_varnames]
 
   # How many of each point type are there? We'll use these for the loops
-  n_existing <- nrow(existing_points_spdf@data)
-  n_new <- nrow(new_points_spdf)
+  n_existing <- nrow(existing_points@data)
+  n_new <- nrow(new_points)
 
   # Get some common info added to these
-  existing_points_spdf@data[["TYPE"]] <- "EXISTING"
-  existing_points_spdf@data[["INDEX"]] <- 1:n_existing
-  new_points_spdf@data[["TYPE"]] <- "NEW"
-  new_points_spdf@data[["INDEX"]] <- 1:n_new
+  existing_points@data[["TYPE"]] <- "EXISTING"
+  existing_points@data[["INDEX"]] <- 1:n_existing
+  new_points@data[["TYPE"]] <- "NEW"
+  new_points@data[["INDEX"]] <- 1:n_new
 
   # Combine the two sets of points, making sure the existing points come first!!!
-  combined_points_spdf <- rbind(existing_points_spdf[, c("INDEX", "TYPE")],
-                                new_points_spdf[, c("INDEX", "TYPE")])
+  combined_points <- rbind(existing_points[, c("INDEX", "TYPE")],
+                           new_points[, c("INDEX", "TYPE")])
 
   # Add the coordinates
-  combined_points_spdf <- get_coords(combined_points_spdf,
-                                     x_var = "XMETERS",
-                                     y_var = "YMETERS",
-                                     projection = sp::CRS("+proj=aea"))
+  combined_points <- get_coords(combined_points,
+                                x_var = "XMETERS",
+                                y_var = "YMETERS",
+                                projection = sp::CRS("+proj=aea"))
 
   # Get a distance matrix
-  distance_matrix <- dist_matrix(dataframe = combined_points_spdf@data,
+  distance_matrix <- dist_matrix(dataframe = combined_points@data,
                                  x_var = "XMETERS",
                                  y_var = "YMETERS")
 
@@ -285,8 +293,8 @@ keep_farthest <- function(existing_points,
   }
 
   # Now that we have our indices to remove, let's do it as we combine points
-  output <- rbind(existing_points_spdf[, common_varnames],
-                  new_points_spdf[-removal_indices, common_varnames])
+  output <- rbind(existing_points[, common_varnames],
+                  new_points[-removal_indices, common_varnames])
 
   return(output)
 }
@@ -300,31 +308,29 @@ keep_farthest <- function(existing_points,
 #' @param projection CRS object. The projection to force on the spatial objects. Defaults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial points data frame containing all the points from \code{existing_points_spdf} and the selected points from \code{new_points_spdf}. The projection will match \code{projection}.
 #' @export
-balance_around <- function(existing_points_spdf,		## Name of existing points shapefile
-                           new_points_spdf,		## Name of New points shapefile
-                           stratafield = NULL,  	## Name of the stratum field in the ingested point files.  If set, then points will be balanced on a stratum by stratum basis.
-                           ## If stratafield=NA, then ingested point files are assumed to represent an entire frame and spatial balance is based on the entire
-                           ## collection of existing and New points.
+balance_around <- function(existing_points,
+                           new_points,
+                           stratafield = NULL,
                            projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # TODO: Sanitization (including reprojection)
 
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
   existing_pts_spdf@data[["TYPE"]] <- "EXISTING"
-  new_points_spdf@data[["TYPE"]] <- "NEW"
+  new_points@data[["TYPE"]] <- "NEW"
 
   # Add in the fields that the points don't have for easy combination
-  missing_vars_new <- names(existing_points_spdf@data)[!(names(existing_points_spdf@data) %in% names(new_points_spdf@data))]
-  new_points_spdf@data[, missing_vars_new] <- NA
-  missing_vars_existing <- names(new_points_spdf@data)[!(names(new_points_spdf@data) %in% names(existing_points_spdf@data))]
-  existing_points_spdf@data[, missing_vars_existing] <- NA
+  missing_vars_new <- names(existing_points@data)[!(names(existing_points@data) %in% names(new_points@data))]
+  new_points@data[, missing_vars_new] <- NA
+  missing_vars_existing <- names(new_points@data)[!(names(new_points@data) %in% names(existing_points@data))]
+  existing_points@data[, missing_vars_existing] <- NA
 
   # Bind the 2 point files together
-  pts <- rbind(existing_points_spdf, new_points_spdf)
+  pts <- rbind(existing_points, new_points)
 
   # What are the existing points' indices?
-  extant_indices <- 1:nrow(existing_points_spdf@data)
+  extant_indices <- 1:nrow(existing_points@data)
   # Which are the new points' indices?
-  new_indices <- (nrow(existing_points_spdf@data) + 1):(nrow(existing_points_spdf@data) + nrow(new_points_spdf@data))
+  new_indices <- (nrow(existing_points@data) + 1):(nrow(existing_points@data) + nrow(new_points@data))
 
   # Rename the date that the plot was sampled to "PREVDATE"
   pts@data[["PREVDATE"]] <- pts@data[["DATEVISITE"]]
@@ -340,14 +346,14 @@ balance_around <- function(existing_points_spdf,		## Name of existing points sha
                   "PREVDATE")]
 
   # Make these all NA for the new points
-  new_points_spdf@data[new_indices, "PLOTID"] <- NA
-  new_points_spdf@data[new_indices, "PLOTKEY"] <- NA
-  new_points_spdf@data[new_indices, "PRIMARYKEY"] <- NA
-  new_points_spdf@data[new_indices, "PROJECTNAM"] <- NA
-  new_points_spdf@data[new_indices, "PREVDATE"] <- NA
+  new_points@data[new_indices, "PLOTID"] <- NA
+  new_points@data[new_indices, "PLOTKEY"] <- NA
+  new_points@data[new_indices, "PRIMARYKEY"] <- NA
+  new_points@data[new_indices, "PROJECTNAM"] <- NA
+  new_points@data[new_indices, "PREVDATE"] <- NA
 
   # Determine the number of existing points
-  extant <- nrow(existing_points_spdf@data)
+  extant <- nrow(existing_points@data)
 
   # Add coordinates to the combined points for distance calculations
   pts <- get_coords(pts,
