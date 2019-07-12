@@ -291,7 +291,6 @@ keep_farthest <- function(existing_points_spdf,
 #' @param existing_points_spdf Spatial ponits data frame. The existing points that will be balanced around.
 #' @param new_points_spdf Spatial points data frame. The points that will be compared against the existing points and selected from to create a balanced design.
 #' @param stratafield Character string. The name of the variable in common between \code{existing_points_spdf} and \code{new_points_spdf} that contains stratum identities. This is used to balance by stratum. If \code{NULL} then balancing will not take strata into account. Defaults to \code{NULL}.
-#' @param option Somethingorother
 #' @param projection CRS object. The projection to force on the spatial objects. Defaults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial points data frame containing all the points from \code{existing_points_spdf} and the selected points from \code{new_points_spdf}. The projection will match \code{projection}.
 #' @export
