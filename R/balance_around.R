@@ -94,7 +94,7 @@ get_closest <- function(existing_points,
 
                                # We'll go through each new point in turn
                                # This means that each point won't even look at any existing points already flagged as "PICKED"
-                               for(template_point in 1:nrow(template_points_stratum)) {
+                               for (template_point in 1:nrow(template_points_stratum)) {
                                  # The x and y components for the current template point
                                  template_point_x <- template_points_stratum@data[template_point, "XMETERS"]
                                  template_point_y <- template_points_stratum@data[template_point, "YMETERS"]
