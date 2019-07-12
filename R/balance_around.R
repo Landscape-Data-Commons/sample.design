@@ -142,114 +142,126 @@ get_closest <- function(existing_points_spdf,
 ## FindClosest() - the work-horse that determines the unique New points that are the closest to existing points.
 ##                 After identifying these points, eliminates them from the combined points file (apts).
 
-  ## Best to loop.  If shared points, keep the closest and increment the row index for the !closest.  Keep looping until no more shared pts.
-
-  if(extant>1) {
-    z<-as.numeric(disto[1,])		## Start with the closest
-  }else z<-as.numeric(disto[1])
-
-  zindex<-NULL
-  delta<-nrow(apts)-extant
-  zindex[1:delta]<-1			## Row index for each column (each existing GRTS pts); we start with row index ==1 (the closest)
-
-  resolve<-1			## while loop continues until we have identified N unique New points, where N is the no. of existing GRTS points
-  while(resolve) {
-    resolve<-0
-    for(i in 1:length(z)){
-      tr<-0
-      for(j in 1:length(z)) {
-        if(i!=j) {
-          if(z[i]==z[j]){		## Shared point (i.e., the closest New point is the same for 2 of the existing GRTS pts)
-            resolve<-1
-            tr<-1
-            dist1<-dist[zindex[i],i]
-            dist2<-dist[zindex[j],j]
-            #print(paste(i,dist1,j,dist2,sep=" "))
-            if(dist1<dist2) {			## Find the existing GRTS pt !closest to this New point, increment row index, then set
-              ## z$VAR to the point accession number (of the New pts) of the next closest
-              zindex[j]<-zindex[j]+1
-              z[j]=as.numeric(disto[zindex[j],j])		## Pick up the next closest point.  row index is in zindex[]
-            }else {
-              zindex[i]<-zindex[i]+1
-              z[i]=as.numeric(disto[zindex[i],i])
-            }
-          }
-        }
-      }
-      #if(tr)print(paste("Not Unique ",z[i],sep=" "))
-    }
 keep_farthest <- function(existing_points_spdf,
                           new_points_spdf){
   # TODO: Sanitize
   if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
     stop("existing_points_spdf must be a spatial points data frame")
   }
+  if (nrow(existing_points_spdf@data) < 1) {
+    stop("There are no points in existing_points_spdf")
+  }
+  if (!(class(new_points_spdf) %in% "SpatialPointsDataFrame")) {
+    stop("new_points_spdf must be a spatial points data frame")
+  }
+  if (nrow(new_points_spdf@data) < 1) {
+    stop("There are no points in new_points_spdf")
   }
 
-  apts$DELETE<-0
-  for(i in y) {
-    apts$DELETE[i+extant]<-1
+  common_varnames <- unique(c(names(existing_points_spdf@data)[!(names(existing_points_spdf@data) %in% names(new_points_spdf@data))],
+                              names(new_points_spdf@data)[!(names(new_points_spdf@data) %in% names(existing_points_spdf@data))]))
+
+  if (length(common_varnames) < 1) {
+    stop("There are no variables in common between existing_points_spdf and new_points_spdf. There must be at least one")
   }
 
-  apts<-apts[apts$DELETE==0 ,]
-  apts$DELETE<-NULL
+  if (length(names(existing_points_spdf@data)) != length(common_varnames) | length(names(new_points_spdf@data)) != length(common_varnames)) {
+    message("Not all variables are in common between existing_points_spdf and new_points_spdf")
+  }
 
-  return(apts)
-}
-##########################################################################################
-NN<-function(apts,extant,stratafield)	# Derive New points that are closest to existing GRTS points, such that a New point is selected only once.
-  # Then eliminates these New points to produce an expanded, balanced design.
-{
+  existing_points_spdf <- existing_points_spdf[, common_varnames]
+  new_points_spdf <- new_points_spdf[, common_varnames]
 
-  if(is.na(stratafield)) {						## If NA, then we are dealing with just 1 frame area - all points will be considered
-    a<-dist_matrix(apts)		## Matrix of distances among every point.
-    a[a == 0] <- Inf
-    ret<-GenDistLists(a,extant,apts)	## Generate the distance and New-point accession order lists for further processing
-    dist<-ret[,1:extant]			## The 1:extant columns are Euclidean distance
-    disto<-ret[,(extant+1):(extant*2)]	## The extant+1:extant*2 columns are the accession numbers of New points, where the accession number
-    ## in apts is actually the number plus extant (e.g., accession = 9 is actually 9 + 52 when
-    ## there are 52 existing GRTS points).
-    ## Find the unique list of New points that are closest to each existing GRTS point, then eliminate them from apts
-    apts<-FindClosest(apts,dist,disto,extant)
-  }else {								## else Balance by strata
-    savepts<-NULL
-    names(apts)[names(apts)==stratafield]<-"THESTRATA"
-    slist<-unique(apts$THESTRATA)
-    for(i in slist) {
-      tr<-0
-      checkE<-apts[apts$CODE==1 & apts$THESTRATA==i ,]		## Compare number of existing and new points by strata
-      checkN<-apts[apts$CODE==2 & apts$THESTRATA==i ,]
-      if(nrow(checkE)>0) {		## Any existing points?
-        if(nrow(checkN)>nrow(checkE)) {			## The number of New points must be > number of existing points, else nothing to do here
-          Spts<-rbind(checkE,checkN)		## Stratum pts file
-          a<-dist_matrix(Spts)		## All of the remaining dups the processing described directly above, but here its by stratum
-          a[a == 0] <- Inf
-          extant<-nrow(checkE)
-          ret=GenDistLists(a,extant,Spts)
-          dist<-ret[,1:extant]
-          disto<-ret[,(extant+1):(extant*2)]
-          Spts<-FindClosest(Spts,dist,disto,extant)
-          #Spts$THESTRATA<-NULL		## clean up
-          tr<-1
-        }
-      } # if nrow(checkE)
+  # How many of each point type are there? We'll use these for the loops
+  n_existing <- nrow(existing_points_spdf@data)
+  n_new <- nrow(new_points_spdf)
 
-      if(!tr) {			## Ensures we carry-over all the existing pts and/or all New points that were not eliminated
-        if(nrow(checkE)>0)Spts<-checkE
-        if(nrow(checkN)>0)Spts<-checkN
-        if(nrow(checkE)>0 & nrow(checkN)>0)Spts<-rbind(checkE,checkN)
-        #Spts$THESTRATA<-NULL
-      }
-      if(is.null(savepts)) {
-        savepts<-Spts
-      }else {
-        savepts<-rbind(savepts,Spts)
-      }
+  # Get some common info added to these
+  existing_points_spdf@data[["TYPE"]] <- "EXISTING"
+  existing_points_spdf@data[["INDEX"]] <- 1:n_existing
+  new_points_spdf@data[["TYPE"]] <- "NEW"
+  new_points_spdf@data[["INDEX"]] <- 1:n_new
+
+  # Combine the two sets of points, making sure the existing points come first!!!
+  combined_points_spdf <- rbind(existing_points_spdf[, c("INDEX", "TYPE")],
+                                new_points_spdf[, c("INDEX", "TYPE")])
+
+  # Add the coordinates
+  combined_points_spdf <- get_coords(combined_points_spdf,
+                                     x_var = "XMETERS",
+                                     y_var = "YMETERS",
+                                     projection = sp::CRS("+proj=aea"))
+
+  # Get a distance matrix
+  distance_matrix <- dist_matrix(dataframe = combined_points_spdf@data,
+                                 x_var = "XMETERS",
+                                 y_var = "YMETERS")
+
+  # Remove the columns for new points
+  distance_matrix <- distance_matrix[, -((n_existing + 1):(n_existing + n_new))]
+  # Remove the rows for existing points
+  distance_matrix <- distance_matrix[-(1:n_existing), ]
+
+  # Convert to a data frame
+  distance_df <- as.data.frame(distance_matrix,
+                               stringsAsFactors = FALSE)
+
+  # Add the new points indices
+  distance_df[["INDEX"]] <- 1:n_new
+
+  # And now we loop to remove all the closest new points
+  # The looping is so that we can remove points that are already tossed
+  # Each loop will:
+  # 1) Check for the new point(s) closest to an existing point
+  # 2) Store the index (or indices) from distance_df[["INDEX"]]
+  # 3) Remove that observation(s) from distance_df
+  # This will continue until the number of stored indices is equal to the number of existing points
+  # If the number to remove is overshot because the finale pass through the loop identifies multiple indices, we only take the first however we need
+  # The observations at the identified indices in the new points will be removed!
 
 
-    }## for i in slist
-    apts<-savepts
-  } #if else
+  # A vector to store the indices to chuck
+  removal_indices <- NULL
+  # Here's one we can mutilate over our iterations (always avoid violence to original data you may reference again!)
+  working_distance_df <- distance_df
+
+  while (n_removal_indices < n_existing) {
+    current_min <- min(working_distance_df)
+    # Get the indices from every column where that min occurs
+    # Each column is an existing point, so if we check every column for the value and store that index,
+    # those are the new points that are that distance from an existing point
+    current_indices <- sapply(X = 1:ncol(working_distance_df),
+                              value = current_min,
+                              distance_df = working_distance_df,
+                              FUN = function(X, value, distance_df){
+                                # Grab the column as a vector
+                                distances <- distance_df[[X]]
+                                if (value %in% distances) {
+                                  # Get the values from INDEX that correspond to the places where the value is found
+                                  # We're returning from INDEX because they won't change when we remove rows from working_distance_df
+                                  indices <- distance_df[which(value == distances), "INDEX"]
+                                  return(indices)
+                                } else {
+                                  return(NULL)
+                                }
+                              })
+    # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
+    current_indices <- unique(current_indices)
+
+    # Add those to the ones we're going to remove
+    removal_indices <- unique(c(removal_indices, current_indices))
+
+    if (!is.null(removal_indices)) {
+      # Make sure we don't overshoot our removal goal
+      removal_indices <- removal_indices[1:min(length(removal_indices, n_existing))]
+
+      # Remove them!
+      working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
+
+      # Update our tracking value
+      n_removal_indices <- length(removal_indices)
+    }
+  }
 
   # Now that we have our indices to remove, let's do it as we combine points
   output <- rbind(existing_points_spdf[, common_varnames],
