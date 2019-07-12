@@ -145,12 +145,18 @@ get_closest <- function(existing_points,
 }
 
 
-## FindClosest() - the work-horse that determines the unique New points that are the closest to existing points.
-##                 After identifying these points, eliminates them from the combined points file (apts).
-
-keep_farthest <- function(existing_points_spdf,
-                          new_points_spdf,
-                          target = NULL){
+#' Find and keep the points farthest from each other
+#' @description This will take a set of existing points and new points and combine them to create a set consisting of the existing points and the farthest new points. The original intended use case was to take a collection of sampling locations from one or more sample designs (\code{existing_points}) and use them as part of a new, spatially balanced sample design. The function takes a set of new, random, spatially balanced points (\code{new_points}) and determines the distance between each of them and each of the existing points. It then sequentially eliminates the new point closest to any existing point until the combined number of existing points and remaining points is equal to \code{target}.
+#' @param existing_points Spatial points data frame. These are the points that will all be included in the output points and the points against which \code{new_points} will be compared against.
+#' @param new_points Spatial points data frame. These are the points that may be included in the output. The number that will be is equal to \code{target - nrow(existing_points)}.
+#' @param target Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points)}.
+#' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @return A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
+#' @export
+keep_farthest <- function(existing_points,
+                          new_points,
+                          target = NULL,
+                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # TODO: Sanitize
   if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
     stop("existing_points_spdf must be a spatial points data frame")
