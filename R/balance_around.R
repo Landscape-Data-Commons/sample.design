@@ -362,8 +362,8 @@ balance_around <- function(existing_points,
                     projection = sp::CRS("+proj=aea"))
 
   # This determines the number of New points to eliminate, and eliminates the points
-    pts <- keep_farthest(existing_points_spdf = existing_points_spdf,
-                         new_points_spdf = new_points_spdf)
+  pts <- keep_farthest(existing_points = existing_points,
+                       new_points = new_points)
 
   # Time to tweak the new points that were kept
   new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
