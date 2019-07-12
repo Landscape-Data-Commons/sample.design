@@ -149,7 +149,8 @@ get_closest <- function(existing_points,
 ##                 After identifying these points, eliminates them from the combined points file (apts).
 
 keep_farthest <- function(existing_points_spdf,
-                          new_points_spdf){
+                          new_points_spdf,
+                          target = NULL){
   # TODO: Sanitize
   if (!(class(existing_points_spdf) %in% "SpatialPointsDataFrame")) {
     stop("existing_points_spdf must be a spatial points data frame")
@@ -162,6 +163,14 @@ keep_farthest <- function(existing_points_spdf,
   }
   if (nrow(new_points_spdf@data) < 1) {
     stop("There are no points in new_points_spdf")
+  }
+
+  if (is.null(target)) {
+    target <- nrow(new_points_spdf@data)
+  }
+
+  if (target <= nrow(existing_points_spdf@data)) {
+    stop("The target number of points is less than or equal to the number of existing points.")
   }
 
   common_varnames <- unique(c(names(existing_points_spdf@data)[!(names(existing_points_spdf@data) %in% names(new_points_spdf@data))],
@@ -231,7 +240,7 @@ keep_farthest <- function(existing_points_spdf,
   # Here's one we can mutilate over our iterations (always avoid violence to original data you may reference again!)
   working_distance_df <- distance_df
 
-  while (n_removal_indices < n_existing) {
+  while (n_removal_indices < (target - n_existing)) {
     current_min <- min(working_distance_df)
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
@@ -259,7 +268,7 @@ keep_farthest <- function(existing_points_spdf,
 
     if (!is.null(removal_indices)) {
       # Make sure we don't overshoot our removal goal
-      removal_indices <- removal_indices[1:min(length(removal_indices, n_existing))]
+      removal_indices <- removal_indices[1:min(length(removal_indices, (target - n_existing)))]
 
       # Remove them!
       working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
