@@ -371,7 +371,7 @@ balance_around <- function(existing_points,
   if (any(new_indices_remaining)) {
     plotids <- pts@data[new_indices_remaining, "PLOTID"]
     plotids <- gsub(plotids,
-                    pattern = "\d*$",
+                    pattern = "\\d*$",
                     replacement = "")
     pts@data[new_indices_remaining, "PLOTID"] <- paste0(plotids, 1:length(new_indices_remaining))
   }
