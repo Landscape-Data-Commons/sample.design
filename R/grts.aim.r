@@ -71,7 +71,7 @@ grts_aim <- function(design_object,
   sample_sites[["xcoord"]] <- sp::coordinates(sample_sites)[, 1]
   sample_sites[["ycoord"]] <- sp::coordinates(sample_sites)[, 2]
 
-  ## Dropping the extra fields from the master sample, just keeping the ones specific to the draw plus the master sample ID
+  ## Dropping the extra fields and renaming the remaining fields
   fields_relevant <- c("siteID", "stratum", "panel", "wgt", "xcoord", "ycoord")
   sample_sites@data <- sample_sites@data[, fields_relevant]
   names(sample_sites@data) <- c("PLOTID", "STRATUM", "PANEL", "IntPtWt", "xcoord", "ycoord")
