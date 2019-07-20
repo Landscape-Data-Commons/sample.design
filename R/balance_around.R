@@ -1,3 +1,180 @@
+#' Find optimal pairings from two sets based on their rankings
+#' @description For two sets of unique identifiers, given each member's ranked preference for every member of the other set, find optimal pairings. The two sets are referred to as \code{match_to} and \code{match_from}. All the members of \code{match_to} will be paired to members of \code{match_from}, but if there are more members of \code{match_from} than \code{match_to} there will be unpaired, discarded members of \code{match_from}. The inputs are two data frames, one where each observation is a unique combination of each member of \code{match_to} and \code{match_from} and the preference of that \code{match_to} member for \code{match_from}, numeric with lower values treated as more preferred. The other data frame contains the preferences of the \code{match_from} members for \code{match_to} members.
+#' @param match_to Data frame. The preferences of the members of the set to match to for the members of the set to match from. There must be one observation for each unique pairing between the two sets. The variable \code{match_to_idvar} must contain the identities of the members of the set to match to; \code{match_from_idvar}, the set to match from; and \code{match_to_rankvar} the rank preference of the MATCH FROM member for the MATCH FROM member.
+#' @param match_from Data frame. The preferences of the members of the set to match from for the members of the set to match to. There must be one observation for each unique pairing between the two sets. The variable \code{match_to_idvar} must contain the identities of the members of the set to match to; \code{match_from_idvar}, the set to match from; and \code{match_from_rankvar} the rank preference of the MATCH FROM member for the MATCH TO member.
+#' @param match_to_idvar Character string. The name of the variable in both \code{match_to} and \code{match_from} that contains the identities of the members in the set to match to. Defaults to \code{"match_to_id"}.
+#' @param match_from_idvar Character string. The name of the variable in both \code{match_to} and \code{match_from} that contains the identities of the members in the set to match from. Defaults to \code{"match_from_id"}.
+#' @param match_to_rankvar Character string. The name of the variable in \code{match_to} that contains the rank preference of the match to members for the match from members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_to_rank"}.
+#' @param match_from_rankvar Character string. The name of the variable in \code{match_from} that contains the rank preference of the match from members for the match to members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_from_rank"}.
+#' @return A data frame with the variables \code{match_to_id} and \code{match_from_id} containing the paired members of the two sets.
+#' @export
+ranked_sort <- function(match_to,
+                        match_from,
+                        match_to_idvar = "match_to_id",
+                        match_from_idvar = "match_from_id",
+                        match_to_rankvar = "match_to_rank",
+                        match_from_rankvar = "match_from_rank",
+                        iteration_limit = 10){
+  if (class(match_to) != "data.frame") {
+    stop("match_to must be a data frame.")
+  }
+  match_to_names <- names(match_to)
+  if (class(match_from) != "data.frame") {
+    stop("match_from must be a data frame.")
+  }
+  match_from_names <- names(match_from)
+
+  if (!all(match_to_idvar %in% match_to_names, match_to_idvar %in% match_from_names)) {
+    stop("The match_to_idvar, ", match_to_idvar, ", must appear in both match_to and match_from.")
+  }
+  if (!all(match_from_idvar %in% match_to_names, match_from_idvar %in% match_from_names)) {
+    stop("The match_from_idvar, ", match_from_idvar, ", must appear in both match_to and match_from.")
+  }
+  if (!(match_to_rankvar %in% match_to_names)) {
+    stop("The match_to_rankvar, ", match_to_rankvar, ", must appear in match_to.")
+  }
+  if (!(match_from_rankvar %in% match_from_names)) {
+    stop("The match_from_rankvar, ", match_from_rankvar, ", must appear in match_from.")
+  }
+
+  # Add the assigned variable, but set them all to FALSE for now because nothing's been assigned
+  match_to[["assigned"]] <- FALSE
+  match_from[["assigned"]] <- FALSE
+
+  # How many to match from?
+  n_matchfrom <- length(unique(match_from[[match_from_idvar]]))
+
+  # Make a tracker for whether the existing points have been confirmed
+  matchfrom_confirmed <- data.frame(matchfrom_id = unique(match_from[[match_from_idvar]]),
+                                    confirmed = FALSE)
+
+  # Have all the points been confirmed to be checked and assigned or rejected?
+  all_confirmed <- FALSE
+
+  # Limit how many loops can be made. This counter gets compared against iteration_limit
+  iterations <- 0
+
+  # If we have unconfirmed points then let's work on assigning them
+  # This may take a couple of passes
+  while (!all_confirmed & iterations < iteration_limit) {
+    # Get the still-unconfirmed existing points' indices
+    unconfirmed_existing_ids <- matchfrom_confirmed[!matchfrom_confirmed[["confirmed"]], "matchfrom_id"]
+
+    # Now work through those points!
+    for (current_id in unconfirmed_existing_ids) {
+      # This is used to flag that it's still unconfirmed
+      # It'll flip to TRUE if it gets assigned to or fails to qualify for assignment to any match_to point
+      current_id_unconfirmed <- TRUE
+
+      # Which rows in match_from correspond to this current point?
+      match_from_current_vector <- match_from[[match_from_idvar]] == current_id
+      # And in match_to?
+      match_to_current_vector <- match_to[[match_from_idvar]] == current_id
+
+      # Now to get the order of indices to work through to try to assign the point to
+      match_to_info <- match_from[match_from_current_vector, c(match_from_rankvar, match_to_idvar)]
+
+      # Work through the comparisons in rank order from most preferred match_to ID to least preferred.
+      # As soon as it qualifies, this while() will trip and it'll stop looking
+      # It'll also trip if it tries every ID and can't find anywhere for it
+      while (current_id_unconfirmed) {
+        for (rank_by_current in sort(match_to_info[[match_from_rankvar]])) {
+          # Get the match_to ID
+          current_match_to_id <- match_to_info[match_to_info[[match_from_rankvar]] == rank_by_current, match_to_idvar]
+
+          # Which rows in match_to correspond to this match_to ID?
+          match_to_match_to_vector <- match_to[[match_to_idvar]] == current_match_to_id
+          # And in match_from?
+          match_from_match_to_vector <- match_from[[match_to_idvar]] == current_match_to_id
+
+          # This is the row where the point and match_to point meet in match_to!
+          current_row_match_to <- match_to_current_vector & match_to_match_to_vector
+          # And in match_from
+          current_row_match_from <- match_from_current_vector & match_from_match_to_vector
+
+          # Is the match_to point paired off yet?
+          # We'll do this by treating T/F as 1/0 and finding the sum so that we can confirm that only one is TRUE
+          match_to_assigned_count <- sum(match_to[match_to_match_to_vector, "assigned"])
+
+          # If it's already has another point assigned
+          # There are also two separate checks to prevent multiple assignments from happening
+          if (match_to_assigned_count == 1 & current_id_unconfirmed & !any(match_to[match_to[[match_to_idvar]] == current_id, "assigned"])) {
+            # We're going to compare the preference of the MATCH_TO ID for the current and assigned MATCH_FROM IDS
+
+            # This is the rank for the index of the unconfirmed point
+            current_rank_by_match_to <- match_to[current_row_match_to, match_to_rankvar]
+
+            # This is the rank of the currently assigned point
+            comparison_row_match_to <- match_to[["assigned"]] & match_to_match_to_vector
+            comparison_rank_by_match_to <- match_to[comparison_row_match_to, match_to_rankvar]
+
+            # And the index for it in existing points
+            comparison_id <- match_to[comparison_row_match_to, match_from_idvar]
+
+            # Which rows in match_from correspond to this comparison point?
+            match_from_comparison_vector <- match_from[[match_from_idvar]] == comparison_id
+            # And in match_to?
+            match_to_comparison_vector <- match_to[[match_from_idvar]] == comparison_id
+
+            # This is the row where the comparison point and match_to point meet in match_to!
+            comparison_row_match_to <- match_to_comparison_vector & match_to_match_to_vector
+            # And in match_from
+            comparison_row_match_from <- match_from_comparison_vector & match_from_match_to_vector
+
+            # Compare the two
+            # If the current point is more highly ranked, assign it and unassign the point that's already attached
+            if (current_rank_by_match_to < comparison_rank_by_match_to) {
+              # For the already assigned point, set values to FALSE in both match_from and match_to
+              matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == comparison_id, "confirmed"] <- FALSE
+              match_from[comparison_row_match_from, "assigned"] <- FALSE
+              match_to[comparison_row_match_to, "assigned"] <- FALSE
+
+              # For the current point that's being assigned, set those values to TRUE
+              matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
+              match_from[current_row_match_from, "assigned"] <- TRUE
+              match_to[current_row_match_to, "assigned"] <- TRUE
+
+              # It's not unconfirmed anymore
+              current_id_unconfirmed <- FALSE
+            }
+          } else if (match_to_assigned_count == 0 & current_id_unconfirmed & !any(match_to[match_to[[match_to_idvar]] == current_id, "assigned"])) {
+            # There are TWO separate checks to prevent multiple assignments from happening
+            # If there isn't a point assigned yet, this point gets assigned
+            matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
+            match_from[current_row_match_from, "assigned"] <- TRUE
+            match_to[current_row_match_to, "assigned"] <- TRUE
+
+            # It's not unconfirmed anymore
+            current_id_unconfirmed <- FALSE
+          }
+        }
+
+        # If it doesn't qualify for any, it gets confirmed but not assigned
+        matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
+
+        # It's not unconfirmed anymore
+        current_id_unconfirmed <- FALSE
+      }
+    }
+
+    # Update whether every point is confirmed!
+    all_confirmed <- all(matchfrom_confirmed[["confirmed"]])
+
+    # Increment the iteration counter
+    iterations <- iterations + 1
+  }
+
+  # If we hit the iteration limit, something is wrong!!!!!!!!!!!
+  if (iterations >= iteration_limit) {
+    message("The iteration limit of ", iteration_limit, " has been reached without reaching an optimal solution. Check your rankings or use another method.")
+  }
+
+  # Time to return just the pairings!
+  output <- match_to[match_to[["assigned"]], c(match_to_idvar, match_from_idvar)]
+
+  return(output)
+}
+
 #' Select points that most closely approximate the distribution of another set of points
 #' @description Sometimes you have a large collection of points which are not randomly distributed or spatially balanced and you would like a subset that more or less do. Given a template of points that are distributed the way you would like, this will return the closest existing point to each. This can be done taking into account membership in a group, either by having assigned it as a variable in both sets of points or by providing polygons that can be used to assign membership. By default, no stratification/membership is taken into account. NOTA BENE: As currently implemented, the evaluation to select points occurs in the order of the points in \code{template_points} which means that the solution found may not be the optimal one, just the best for that order. If that's important to you, the "easiest" workaround is to run this several times with randomized \code{template_points} orders and to keep the result with the smallest mean distance between result points and the template points.
 #' @param existing_points Spatial Points Data Frame. The points you would like to select from by comparing against \code{template_points}.
