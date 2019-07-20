@@ -1,3 +1,74 @@
+#' Determine the preference of two sets of points for each other based on distance
+#' @description Given two spatial points data frames, compare the members of each against all the members of the other, ranking their "preference" for the compared points based on distance. By default this assigns higher preference for points that are closer.
+#' @param template_points Spatial points data frame. The first set of points to be used in the comparison.
+#' @param comparison_points Spatial points data frame. The second set of points to be used in the comparison.
+#' @return A named list of two data frames: \code{"template"} and \code{"comparison"}. Both data frames contain \code{template_index} (the indices of points in \code{template_points}) and \code{comparison_index} (the indices of points in \code{template_points}). Both data frames contain all unique combinations of the two sets of points. \code{"template"} contains a variable named \code{"rank_by_template"} which is the relative preference of the template point at that index for the comparison point at that index (lower values representing higher preference). \code{"comparison"} likewise has \code{"rank_by_comparison"} which is the preference of the comparison point for the template point.
+#' @export
+find_preferences <- function(template_points,
+                             comparison_points){
+  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
+    stop("template_points must be a data frame.")
+  }
+  if (!(class(comparison_points) %in% "SpatialPointsDataFrame")) {
+    stop("comparison_points must be a data frame.")
+  }
+
+  n_template <- nrow(template_points@data)
+  n_comparison <- nrow(comparison_points@data)
+
+  if (n_template < 1) {
+    stop("There are no points in template_points")
+  }
+  if (n_comparison < 1) {
+    stop("There are no points in comparison_points")
+  }
+
+  template_points@data[["source"]] <- "template"
+  comparison_points@data[["source"]] <- "comparison"
+
+  combined_points <- rbind(x = template_points[, "source"],
+                           y = comparison_points[, "source"])
+
+  combined_points <- get_coords(spdf = combined_points,
+                                x_var = "XMETERS",
+                                y_var = "YMETERS",
+                                projection = sp::CRS("+proj=aea"))
+
+  distance_matrix <- dist_matrix(dataframe = combined_points@data,
+                                 x_var = "XMETERS",
+                                 y_var = "YMETERS")
+
+  template_df <- do.call(rbind,
+                         lapply(X = 1:n_template,
+                                distance_matrix = distance_matrix,
+                                comparison_indices = (n_template + 1):(n_template + n_comparison),
+                                n_comparison = n_comparison,
+                                FUN = function(X, distance_matrix, comparison_indices, n_comparison){
+                                  distances <- distance_matrix[comparison_indices, X]
+                                  output <- data.frame(template_index = X,
+                                                       comparison_index = 1:n_comparison,
+                                                       rank_by_template = order(distance_matrix[comparison_indices, X]))
+                                  return(output)
+                                }))
+
+  comparison_df <- do.call(rbind,
+                           lapply(X = (n_template + 1):(n_template + n_comparison),
+                                  distance_matrix = distance_matrix,
+                                  template_indices = 1:n_template,
+                                  n_template = n_template,
+                                  FUN = function(X, distance_matrix, template_indices, n_template){
+                                    distances <- distance_matrix[template_indices, X]
+                                    output <- data.frame(comparison_index = X - n_template,
+                                                         template_index = 1:n_template,
+                                                         rank_by_comparison = order(distance_matrix[template_indices, X]))
+                                    return(output)
+                                  }))
+
+  output <- list(template = template_df,
+                 comparison = comparison_df)
+  return(output)
+}
+
 #' Find optimal pairings from two sets based on their rankings
 #' @description For two sets of unique identifiers, given each member's ranked preference for every member of the other set, find optimal pairings. The two sets are referred to as \code{match_to} and \code{match_from}. All the members of \code{match_to} will be paired to members of \code{match_from}, but if there are more members of \code{match_from} than \code{match_to} there will be unpaired, discarded members of \code{match_from}. The inputs are two data frames, one where each observation is a unique combination of each member of \code{match_to} and \code{match_from} and the preference of that \code{match_to} member for \code{match_from}, numeric with lower values treated as more preferred. The other data frame contains the preferences of the \code{match_from} members for \code{match_to} members.
 #' @param match_to Data frame. The preferences of the members of the set to match to for the members of the set to match from. There must be one observation for each unique pairing between the two sets. The variable \code{match_to_idvar} must contain the identities of the members of the set to match to; \code{match_from_idvar}, the set to match from; and \code{match_to_rankvar} the rank preference of the MATCH FROM member for the MATCH FROM member.
