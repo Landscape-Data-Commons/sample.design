@@ -502,13 +502,16 @@ keep_farthest <- function(existing_points,
   n_removal_indices <- 0
   # Here's one we can mutilate over our iterations (always avoid violence to original data you may reference again!)
   working_distance_df <- distance_df
+  # We'll be ignoring the index column because of course sequential ordinals starting at 1 are the smallest numbers in the matrix!
+  # The indices screw up min() results without removing this for the finding minimum evaluation step
+  index_colnum <- grep(names(distance_df), pattern = "INDEX")
 
   while (n_removal_indices < (target - n_existing)) {
-    current_min <- min(working_distance_df)
+    current_min <- min(working_distance_df[, -index_colnum])
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
     # those are the new points that are that distance from an existing point
-    current_indices <- sapply(X = 1:ncol(working_distance_df),
+    current_indices <- sapply(X = 1:(ncol(working_distance_df) - 1),
                               value = current_min,
                               distance_df = working_distance_df,
                               FUN = function(X, value, distance_df){
