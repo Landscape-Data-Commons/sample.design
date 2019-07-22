@@ -592,7 +592,7 @@ check_balance <- function(polygons_spdf,
   }
   if (!identical(projection, points_spdf@proj4string)) {
     points_spdf <- sp::spTransform(points_spdf,
-                                     projection)
+                                   projection)
   }
 
   if (!is.null(stratafield)) {
@@ -675,7 +675,7 @@ check_balance <- function(polygons_spdf,
                                       # Get just the points that fall in this stratum
                                       current_points <- points
                                       current_points@data[["STRATUM"]] <- sp::over(points,
-                                                                                     stratum_spdf)[["STRATUM"]]
+                                                                                   stratum_spdf)[["STRATUM"]]
                                       current_points <- points[!is.na(current_points@data[["STRATUM"]]), ]
 
                                       # If there are in fact points in the stratum, do the randomization test
