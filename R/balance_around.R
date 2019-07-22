@@ -499,6 +499,7 @@ keep_farthest <- function(existing_points,
 
   # A vector to store the indices to chuck
   removal_indices <- NULL
+  n_removal_indices <- 0
   # Here's one we can mutilate over our iterations (always avoid violence to original data you may reference again!)
   working_distance_df <- distance_df
 
