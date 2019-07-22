@@ -435,8 +435,8 @@ keep_farthest <- function(existing_points,
     stop("The target number of points is less than or equal to the number of existing points.")
   }
 
-  common_varnames <- unique(c(names(existing_points@data)[!(names(existing_points@data) %in% names(new_points@data))],
-                              names(new_points@data)[!(names(new_points@data) %in% names(existing_points@data))]))
+  common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
+                              names(new_points@data)[(names(new_points@data) %in% names(existing_points@data))]))
 
   if (length(common_varnames) < 1) {
     stop("There are no variables in common between existing_points and new_points. There must be at least one")
