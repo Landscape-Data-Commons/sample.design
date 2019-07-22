@@ -302,6 +302,7 @@ NN_mean <- function(dataframe,
 #' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
 #' @param type Numeric. Use \code{1} when polygons is a dissolved set of polygons and \code{2} when polygons is an undissolved set of polylines. Defaults to \code{1}
 #' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
+#' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
@@ -309,7 +310,8 @@ test_points <- function(number = 500,
                         points,
                         polygons,
                         type = 1,
-                        seed_number = 420){
+                        seed_number = 420,
+                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   if (number < 0) {
     stop("number must be a positive integer")
   }
@@ -322,6 +324,11 @@ test_points <- function(number = 500,
     stop("There's no geometry in points")
   }
 
+  if (!identical(projection, points@proj4string)) {
+    points <- sp::spTransform(points,
+                              projection)
+  }
+
   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
     stop("polygons must be a spatial polygons data frame")
   }
@@ -329,6 +336,10 @@ test_points <- function(number = 500,
   # We need to handle what to do if the geometry is empty
   if (length(polygons@polygons) < 1) {
     stop("There's no geometry in polygons")
+  }
+  if (!identical(projection, polygons@proj4string)) {
+    polygons <- sp::spTransform(polygons,
+                                projection)
   }
 
   # And if it's not dissolved, we'll do that!
@@ -400,7 +411,8 @@ test_points <- function(number = 500,
                           nn_means = nn_means,
                           polygons = polygons,
                           type = type,
-                          FUN = function(X, point_count, probability_distribution, nn_means, polygons, type){
+                          projection = projection,
+                          FUN = function(X, point_count, probability_distribution, nn_means, polygons, type, projection){
                             message("MASTER SEED NUMBER ", X)
 
                             # OKAY. So, we're going to implement NOT using a probability distribution
@@ -416,8 +428,8 @@ test_points <- function(number = 500,
                               # Translate from SpatialPoints to SpatialPointsDataFrame
                               # The ID number is just the order in which they were generated
                               rand_spdf <- sp::SpatialPointsDataFrame(coords = rand_spdf@coords,
-                                                                             data = data.frame(id = 1:nrow(rand_spdf@coords)))
-                              sp::proj4string(rand_spdf) <- polygons@proj4string
+                                                                      data = data.frame(id = 1:nrow(rand_spdf@coords)))
+                              sp::proj4string(rand_spdf) <- projection
                             } else {
                               # Pick up point_count * 2 points then check them out.
                               # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
