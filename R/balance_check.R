@@ -536,7 +536,7 @@ get_coords <- function(spdf,
 #' @export
 check_balance <- function(polygons_spdf,
                           points_spdf,
-                          reps = 500,
+                          reps = 100,
                           stratafield = NULL,
                           by_frame = TRUE,
                           seed_number = 420,
