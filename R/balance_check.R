@@ -395,6 +395,7 @@ test_points <- function(number = 500,
                           polygons = aoi_spdf,
                           type = type,
                           FUN = function(X, point_count, probability_distribution, nn_means, polygons, type){
+                            message("MASTER SEED NUMBER ", X)
                             # message("Seed ", X)
                             # Pick up point_count * 1.5 points then check them out.
                             # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
@@ -414,7 +415,6 @@ test_points <- function(number = 500,
                                                           polygons = polygons,
                                                           type = type,
                                                           FUN = function(X, probability_distribution, polygons, type){
-                                                            message("Current seed ", X)
                                                             # We set the seed number any time it might get triggered
                                                             # Use the seed number we generated for this iteration
                                                             set.seed(X)
