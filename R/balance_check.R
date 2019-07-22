@@ -580,6 +580,9 @@ check_balance <- function(polygons_spdf,
   # Add the coordinates so that we can do nearest neighbor calculations
   points_spdf <- get_coords(points_spdf)
 
+  # The frame output is assumed to be NULL
+  output_frame <- NULL
+
   # If requested, first analyze entire frame
   if(by_frame) {
     # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
@@ -603,11 +606,13 @@ check_balance <- function(polygons_spdf,
                                "p_arithmetic" = proportions_frame["p_arith"],
                                "p_geometric" = proportions_frame["p_geom"])
 
-  } else {
-    output_frame <- NULL
   }
 
   ######### Analyze by strata if requested
+
+  # Assume that there aren't strata analyses happening by default
+  output_strata <- NULL
+
   # If there's a stratification field and it exists in the spdf, get to work
   if(!is.null(stratafield)) {
     if (!(stratafield %in% names(polygons_spdf@data))) {
