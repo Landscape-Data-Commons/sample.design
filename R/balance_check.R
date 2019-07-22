@@ -409,6 +409,7 @@ test_points <- function(number = 500,
                                                     size = iterations)
 
                             # Generate the random points
+                            # Frankly, I'm not sure why Steve did it this way instead of like sf::st_sample()
                             rand_points <- do.call(rbind,
                                                    lapply(X = current_seeds,
                                                           probability_distribution = probability_distribution,
