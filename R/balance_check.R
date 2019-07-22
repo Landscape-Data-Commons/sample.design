@@ -299,16 +299,16 @@ NN_mean <- function(dataframe,
 #' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{3}.
 #' @param pts_spdf Spatial Points Data Frame. The points that are being compared against.
-#' @param aoi_spdf Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.
-#' @param type Numeric. Use \code{1} when aoi_spdf is a dissolved set of polygons and \code{2} when aoi_spdf is an undissolved set of polylines. Defaults to \code{1}
+#' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.
+#' @param type Numeric. Use \code{1} when polygons is a dissolved set of polygons and \code{2} when polygons is an undissolved set of polylines. Defaults to \code{1}
 #' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{pts_spdf} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
 test_points <- function(number = 500,
                         pts_spdf,
-                        aoi_spdf,
-                        type = 1, ## type ==2 for aquatic analysis where poly-lines are not dissolved, else 1 TOD
+                        polygons,
+                        type = 1,
                         seed_number = 420){
   if (number < 0) {
     stop("number must be a positive integer")
@@ -322,19 +322,19 @@ test_points <- function(number = 500,
     stop("There's no geometry in pts_spdf")
   }
 
-  if (!grepl(class(aoi_spdf), pattern = "^SpatialPolygons")) {
-    stop("aoi_spdf must be a spatial polygons data frame")
+  if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
+    stop("polygons must be a spatial polygons data frame")
   }
 
   # We need to handle what to do if the geometry is empty
-  if (length(aoi_spdf@polygons) < 1) {
-    stop("There's no geometry in aoi_spdf")
+  if (length(polygons@polygons) < 1) {
+    stop("There's no geometry in polygons")
   }
 
   # And if it's not dissolved, we'll do that!
-  if (length(aoi_spdf@polygons) > 1) {
-    message("The polygons in aoi_spdf need to be dissolved. Dissolving now.")
-    aoi_spdf <- methods::as(sf::st_combine(sf::st_as_sf(aoi_spdf)), "Spatial")
+  if (length(polygons@polygons) > 1) {
+    message("The polygons in polygons need to be dissolved. Dissolving now.")
+    polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
   }
 
 
@@ -361,25 +361,31 @@ test_points <- function(number = 500,
 
   # Generate the cumulative Prob Distribution!
   if (type == 1) {
-    if (!grepl(class(aoi_spdf), pattern = "^SpatialPolygons")) {
-      stop("aoi_spdf must be a spatial polygons data frame")
+    if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
+      stop("polygons must be a spatial polygons data frame")
     }
 
     # We need to handle what to do if the geometry is empty
-    if (length(aoi_spdf@polygons) < 1) {
-      stop("There's no geometry in aoi_spdf")
+    if (length(polygons@polygons) < 1) {
+      stop("There's no geometry in polygons")
     }
 
     # And if it's not dissolved, we'll do that!
-    if (length(aoi_spdf@polygons) > 1) {
-      message("The polygons in aoi_spdf need to be dissolved. Dissolving now.")
-      aoi_spdf <- methods::as(sf::st_combine(sf::st_as_sf(aoi_spdf)), "Spatial")
+    if (length(polygons@polygons) > 1) {
+      message("The polygons in polygons need to be dissolved. Dissolving now.")
+      polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
     }
 
-    probability_distribution <- extract_poly_area(aoi_spdf)
+    probability_distribution <- extract_poly_area(polygons)
   }
   if (type == 2) {
-    probability_distribution <- ExtractPolyAreaAquatic(aoi_spdf)
+    probability_distribution <- ExtractPolyAreaAquatic(polygons)
+  }
+  if (type == 3) {
+    # This is so we can generate random points with sf::st_sample()
+    # An approach that stands to be like an order of magnitude faster
+    probability_distribution <- NULL
+    polygons <- sf::st_sample(methods::as(polygons, "sf"))
   }
 
   # How many points we want.
@@ -392,82 +398,99 @@ test_points <- function(number = 500,
                           point_count = point_count,
                           probability_distribution = probability_distribution,
                           nn_means = nn_means,
-                          polygons = aoi_spdf,
+                          polygons = polygons,
                           type = type,
                           FUN = function(X, point_count, probability_distribution, nn_means, polygons, type){
                             message("MASTER SEED NUMBER ", X)
-                            # message("Seed ", X)
-                            # Pick up point_count * 2 points then check them out.
-                            # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
-                            # The extra pointcount helps to account for those non-overlapping points.
-                            # We drop any excess points anyway
-                            iterations <- round(point_count * 2)
 
-                            # Get our seed numbers for these iterations
-                            set.seed(X)
-                            current_seeds <- sample(1:99999,
-                                                    size = iterations)
+                            # OKAY. So, we're going to implement NOT using a probability distribution
+                            # This could be like a billion times more efficient
+                            if (is.null(probability_distribution)) {
+                              set.seed(X)
+                              # Generate a random set of points within the polygons
+                              rand_sf <- sf::st_sample(x = polygons,
+                                                       size = point_count,
+                                                       type = "random",
+                                                       exact = TRUE)
+                              rand_spdf <- methods::as(rand_sf, "Spatial")
+                              # Translate from SpatialPoints to SpatialPointsDataFrame
+                              # The ID number is just the order in which they were generated
+                              rand_spdf <- sp::SpatialPointsDataFrame(coords = rand_spdf@coords,
+                                                                             data = data.frame(id = 1:nrow(rand_spdf@coords)))
+                              sp::proj4string(rand_spdf) <- polygons@proj4string
+                            } else {
+                              # Pick up point_count * 2 points then check them out.
+                              # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
+                              # The extra pointcount helps to account for those non-overlapping points.
+                              # We drop any excess points anyway
+                              iterations <- round(point_count * 2)
 
-                            # Generate the random points
-                            # Frankly, I'm not sure why Steve did it this way instead of like sf::st_sample()
-                            rand_points <- do.call(rbind,
-                                                   lapply(X = current_seeds,
-                                                          probability_distribution = probability_distribution,
-                                                          polygons = polygons,
-                                                          type = type,
-                                                          FUN = function(X, probability_distribution, polygons, type){
-                                                            # We set the seed number any time it might get triggered
-                                                            # Use the seed number we generated for this iteration
-                                                            set.seed(X)
+                              # Get our seed numbers for these iterations
+                              set.seed(X)
+                              current_seeds <- sample(1:99999,
+                                                      size = iterations)
 
-                                                            # Get a uniform random variate for selecting a polygon. This gets compared against the cumulative frequency
-                                                            urv <- runif(1)
+                              # Generate the random points
+                              # Frankly, I'm not sure why Steve did it this way instead of like sf::st_sample()
+                              rand_points <- do.call(rbind,
+                                                     lapply(X = current_seeds,
+                                                            probability_distribution = probability_distribution,
+                                                            polygons = polygons,
+                                                            type = type,
+                                                            FUN = function(X, probability_distribution, polygons, type){
+                                                              # We set the seed number any time it might get triggered
+                                                              # Use the seed number we generated for this iteration
+                                                              set.seed(X)
 
-                                                            # Using the urv, determine the polygon number (opt) from the cumulative freq distribution
-                                                            poly_index <- select_from_distribution(dataframe = probability_distribution,
-                                                                                                   prob_var = "cum_freq",
-                                                                                                   id_var = "id",
-                                                                                                   value = urv)
+                                                              # Get a uniform random variate for selecting a polygon. This gets compared against the cumulative frequency
+                                                              urv <- runif(1)
 
-                                                            # If dissolved (as it should be for polygons), then always access polygons[[1]].
-                                                            if (type == 1) {
-                                                              poly <- aoi_spdf@polygons[[1]]@Polygons[[poly_index]]
-                                                            }
-                                                            # If not dissolved (a polylines situation) then things are different
-                                                            if (type == 2) {
-                                                              poly <- aoi_spdf@polygons[[poly_index]]@Polygons[[1]]
-                                                            }
+                                                              # Using the urv, determine the polygon number (opt) from the cumulative freq distribution
+                                                              poly_index <- select_from_distribution(dataframe = probability_distribution,
+                                                                                                     prob_var = "cum_freq",
+                                                                                                     id_var = "id",
+                                                                                                     value = urv)
 
-                                                            # MAKE IT REPRODUCIBLE!!!!
-                                                            set.seed(X)
+                                                              # If dissolved (as it should be for polygons), then always access polygons[[1]].
+                                                              if (type == 1) {
+                                                                poly <- polygons@polygons[[1]]@Polygons[[poly_index]]
+                                                              }
+                                                              # If not dissolved (a polylines situation) then things are different
+                                                              if (type == 2) {
+                                                                poly <- polygons@polygons[[poly_index]]@Polygons[[1]]
+                                                              }
 
-                                                            # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
-                                                            rand_point <- sp::spsample(poly,
-                                                                                       n = 1,
-                                                                                       type = "random"#,
-                                                                                       #bb = sp::bbox(poly)
-                                                                                       )
+                                                              # MAKE IT REPRODUCIBLE!!!!
+                                                              set.seed(X)
 
-                                                            return(rand_point)
-                                                          }))
+                                                              # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
+                                                              rand_point <- sp::spsample(poly,
+                                                                                         n = 1,
+                                                                                         type = "random"#,
+                                                                                         #bb = sp::bbox(poly)
+                                                              )
 
-                            # Translate from SpatialPoints to SpatialPointsDataFrame
-                            # The ID number is just the order in which they were generated
-                            rand_points_spdf <- sp::SpatialPointsDataFrame(coords = rand_points,
-                                                                           data = data.frame(id = 1:nrow(rand_points@coords)))
-                            sp::proj4string(rand_points_spdf) <- polygons@proj4string
+                                                              return(rand_point)
+                                                            }))
 
-                            # Find overlap!
-                            overlap <- sp::over(rand_points_spdf,
-                                                polygons)
+                              # Translate from SpatialPoints to SpatialPointsDataFrame
+                              # The ID number is just the order in which they were generated
+                              rand_points_spdf <- sp::SpatialPointsDataFrame(coords = rand_points,
+                                                                             data = data.frame(id = 1:nrow(rand_points@coords)))
+                              sp::proj4string(rand_points_spdf) <- polygons@proj4string
 
-                            # Only keep the points where there was spatial overlap
-                            rand_points_spdf <- rand_points_spdf[!is.na(overlap[[1]]), ]
+                              # Find overlap!
+                              overlap <- sp::over(rand_points_spdf,
+                                                  polygons)
 
-                            # In case we have more random points than needed, just pick the first nrow(pts_spdf) points.
-                            # We still have a fully random sample since we effectively store the random points by accession
-                            # and we elimiinate points from the bottom up.
-                            rand_spdf <- rand_points_spdf[1:point_count, ]
+                              # Only keep the points where there was spatial overlap
+                              rand_points_spdf <- rand_points_spdf[!is.na(overlap[[1]]), ]
+
+                              # In case we have more random points than needed, just pick the first nrow(pts_spdf) points.
+                              # We still have a fully random sample since we effectively store the random points by accession
+                              # and we elimiinate points from the bottom up.
+                              rand_spdf <- rand_points_spdf[1:point_count, ]
+                            }
 
                             # Add the x and y meters now
                             rand_spdf <- get_coords(spdf = rand_spdf,
@@ -594,7 +617,7 @@ check_balance <- function(polygons_spdf,
     ## Do randomization test
     proportions_frame <- test_points(number = reps,
                                      pts_spdf = points_spdf,
-                                     aoi_spdf = polygons_spdf,
+                                     polygons = polygons_spdf,
                                      type = 1,
                                      seed_number = seed_number)
 
@@ -654,7 +677,7 @@ check_balance <- function(polygons_spdf,
                                         ## Do randomization test
                                         proportions_stratum <- test_points(number = reps,
                                                                            pts_spdf = current_pts_spdf,
-                                                                           aoi_spdf = stratum_spdf,
+                                                                           polygons = stratum_spdf,
                                                                            type = 1,
                                                                            seed_number = seed_number)
 
