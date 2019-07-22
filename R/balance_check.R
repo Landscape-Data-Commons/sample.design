@@ -385,7 +385,7 @@ test_points <- function(number = 500,
     # This is so we can generate random points with sf::st_sample()
     # An approach that stands to be like an order of magnitude faster
     probability_distribution <- NULL
-    polygons <- sf::st_sample(methods::as(polygons, "sf"))
+    polygons <- methods::as(polygons, "sf")
   }
 
   # How many points we want.
