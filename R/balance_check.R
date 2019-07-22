@@ -397,9 +397,9 @@ test_points <- function(number = 500,
                           FUN = function(X, point_count, probability_distribution, nn_means, polygons, type){
                             message("MASTER SEED NUMBER ", X)
                             # message("Seed ", X)
-                            # Pick up point_count * 1.5 points then check them out.
+                            # Pick up point_count * 2 points then check them out.
                             # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
-                            # The 25% extra helps to account for those non-overlapping points.
+                            # The extra pointcount helps to account for those non-overlapping points.
                             # We drop any excess points anyway
                             iterations <- round(point_count * 2)
 
