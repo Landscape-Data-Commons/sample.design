@@ -298,28 +298,28 @@ NN_mean <- function(dataframe,
 #' Test points spatial balance against sets of random points
 #' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{3}.
-#' @param pts_spdf Spatial Points Data Frame. The points that are being compared against.
-#' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.
+#' @param points Spatial Points Data Frame. The points that are being compared against.
+#' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
 #' @param type Numeric. Use \code{1} when polygons is a dissolved set of polygons and \code{2} when polygons is an undissolved set of polylines. Defaults to \code{1}
 #' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
-#' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{pts_spdf} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
+#' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
 test_points <- function(number = 500,
-                        pts_spdf,
+                        points,
                         polygons,
                         type = 1,
                         seed_number = 420){
   if (number < 0) {
     stop("number must be a positive integer")
   }
-  if (!grepl(class(pts_spdf), pattern = "^SpatialPoints")) {
-    stop("pts_spdf must be a spatial points data frame")
+  if (!grepl(class(points), pattern = "^SpatialPoints")) {
+    stop("points must be a spatial points data frame")
   }
 
   # We need to handle what to do if the geometry is empty
-  if (nrow(pts_spdf) < 1) {
-    stop("There's no geometry in pts_spdf")
+  if (nrow(points) < 1) {
+    stop("There's no geometry in points")
   }
 
   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
@@ -344,7 +344,7 @@ test_points <- function(number = 500,
   projectionAL <- sp::CRS("+proj=aea")
 
   # Grab the point coordinates to calculate the mean nearest neighbor
-  pts_coords <- get_coords(pts_spdf,
+  pts_coords <- get_coords(points,
                            x_var = "XMETERS",
                            y_var = "YMETERS",
                            projection = projectionAL)@data
@@ -389,7 +389,7 @@ test_points <- function(number = 500,
   }
 
   # How many points we want.
-  point_count <- nrow(pts_spdf)
+  point_count <- nrow(points)
 
   # Generate the sets of points. We're doing it over a vector of seed numbers with length = number.
   # That means that each set of generated points has their own starting seed and are therefore unique
@@ -486,7 +486,7 @@ test_points <- function(number = 500,
                               # Only keep the points where there was spatial overlap
                               rand_points_spdf <- rand_points_spdf[!is.na(overlap[[1]]), ]
 
-                              # In case we have more random points than needed, just pick the first nrow(pts_spdf) points.
+                              # In case we have more random points than needed, just pick the first nrow(points) points.
                               # We still have a fully random sample since we effectively store the random points by accession
                               # and we elimiinate points from the bottom up.
                               rand_spdf <- rand_points_spdf[1:point_count, ]
@@ -616,7 +616,7 @@ check_balance <- function(polygons_spdf,
 
     ## Do randomization test
     proportions_frame <- test_points(number = reps,
-                                     pts_spdf = points_spdf,
+                                     points = points_spdf,
                                      polygons = polygons_spdf,
                                      type = 1,
                                      seed_number = seed_number)
@@ -650,9 +650,9 @@ check_balance <- function(polygons_spdf,
     output_strata <- do.call(rbind,
                              lapply(X = strata,
                                     strata_spdf = polygons_spdf,
-                                    pts_spdf = points_spdf,
+                                    points = points_spdf,
                                     seed_number = seed_number,
-                                    FUN = function(X, strata_spdf, pts_spdf, seed_number){
+                                    FUN = function(X, strata_spdf, points, seed_number){
                                       # For clarity
                                       stratum <- X
                                       message(stratum)
@@ -661,29 +661,29 @@ check_balance <- function(polygons_spdf,
                                       stratum_spdf <- strata_spdf[strata_spdf[["STRATUM"]] == stratum, ]
 
                                       # Get just the points that fall in this stratum
-                                      current_pts_spdf <- pts_spdf
-                                      current_pts_spdf@data[["STRATUM"]] <- sp::over(pts_spdf,
+                                      current_points <- points
+                                      current_points@data[["STRATUM"]] <- sp::over(points,
                                                                                      stratum_spdf)[["STRATUM"]]
-                                      current_pts_spdf <- pts_spdf[!is.na(current_pts_spdf@data[["STRATUM"]]), ]
+                                      current_points <- points[!is.na(current_points@data[["STRATUM"]]), ]
 
                                       # If there are in fact points in the stratum, do the randomization test
-                                      if (nrow(current_pts_spdf) > 0) {
+                                      if (nrow(current_points) > 0) {
 
                                         # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
-                                        nn_means_stratum <- NN_mean(current_pts_spdf@data,
+                                        nn_means_stratum <- NN_mean(current_points@data,
                                                                     x_var = "XMETERS",
                                                                     y_var = "YMETERS")
 
                                         ## Do randomization test
                                         proportions_stratum <- test_points(number = reps,
-                                                                           pts_spdf = current_pts_spdf,
+                                                                           points = current_points,
                                                                            polygons = stratum_spdf,
                                                                            type = 1,
                                                                            seed_number = seed_number)
 
                                         # Build the output data frame for the sample frame
                                         output <- data.frame("polygon" = stratum,
-                                                             "point_count" = nrow(current_pts_spdf),
+                                                             "point_count" = nrow(current_points),
                                                              "reps" = reps,
                                                              "mean_arithmetic" = nn_means_stratum[["arith_mean"]],
                                                              "mean_geometric" = nn_means_stratum[["geo_mean"]],
