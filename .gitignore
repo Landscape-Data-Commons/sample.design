@@ -7,3 +7,5 @@ scratchpad.R
 test_balance_refactor.R
 scratchpad_rastertopoly.R
 *.txt
+R/ranked_sort_scratchpad.R
+R/find_preferences_scratchpad.R
