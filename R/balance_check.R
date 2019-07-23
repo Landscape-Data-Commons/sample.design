@@ -420,10 +420,14 @@ test_points <- function(number = 500,
                             if (is.null(probability_distribution)) {
                               set.seed(X)
                               # Generate a random set of points within the polygons
-                              rand_sf <- sf::st_sample(x = polygons,
-                                                       size = point_count,
-                                                       type = "random",
-                                                       exact = TRUE)
+                              # quiet = TRUE doesn't seem to have an effect here, so I'm using suppressMessages()
+                              # Otherwise there are constant messages that "although coordinates are longitude/latitude, st_intersects assumes that they are planar"
+                              # I'm just noting in the documentation that working in polar regions or with truly huge polygons are the only times that's relevant
+                              rand_sf <- suppressMessages({sf::st_sample(x = polygons,
+                                                                         size = point_count,
+                                                                         type = "random",
+                                                                         exact = TRUE,
+                                                                         quiet = TRUE)})
                               rand_spdf <- methods::as(rand_sf, "Spatial")
                               # Translate from SpatialPoints to SpatialPointsDataFrame
                               # The ID number is just the order in which they were generated
