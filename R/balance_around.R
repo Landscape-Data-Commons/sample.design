@@ -261,25 +261,31 @@ get_closest <- function(existing_points,
                         stratafield = NULL,
                         projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 
-  # Reproject if necessary
+
   if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
     stop("existing_points must be a spatial points data frame")
+  }
+
+  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
+    stop("template_points must be a spatial points data frame")
+  }
+  if (nrow(template_points@data) < 1) {
+    stop("There are no points in template_points.")
+  }
+  if (nrow(existing_points@data) < 1) {
+    stop("There are no points in existing_points.")
+  }
+
+  # Reproject if necessary
+  if (!identical(projection, template_points@proj4string)) {
+    template_points <- sp::spTransform(template_points,
+                                       projection)
   }
   if (!identical(projection, existing_points@proj4string)) {
     existing_points <- sp::spTransform(existing_points,
                                        projection)
   }
-  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
-    stop("template_points must be a spatial points data frame")
-  }
-  if (!identical(projection, template_points@proj4string)) {
-    template_points <- sp::spTransform(template_points,
-                                       projection)
-  }
 
-  if (nrow(template_points@data) < nrow(existing_points@data)) {
-    stop("There are more points in existing_points than template_points")
-  }
 
   # What to do about stratafield
   if (!is.null(stratafield)) {
