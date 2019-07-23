@@ -521,28 +521,28 @@ test_points <- function(number = 100,
 
 
 #' Add coordinates to the data slot of a SpatialPointsDataFrame
-#' @param spdf A SpatialPointsDataFrame.
-#' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{spdf@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
-#' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{spdf@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
+#' @param points A SpatialPointsDataFrame.
+#' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
+#' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
 #' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.
-#' @return The SPDF provided as \code{spdf} with the coordinates added to \code{"x_var"} and \code{"y_var"}.
+#' @return The SPDF provided as \code{points} with the coordinates added to \code{@@data$x_var"} and \code{@@data$y_var}.
 #' @export
-get_coords <- function(spdf,
+get_coords <- function(points,
                        x_var = "XMETERS",
                        y_var = "YMETERS",
                        projection = CRS("+proj=aea")){
-  if (!grepl(class(spdf), pattern = "^SpatialPointsDataFrame")) {
-    stop("spdf must be a spatial points data frame")
+  if (!grepl(class(points), pattern = "^SpatialPointsDataFrame")) {
+    stop("points must be a spatial points data frame")
   }
   # Create a reprojected spdf to grab coords from
-  temp_spdf <- sp::spTransform(spdf,
+  temp_points <- sp::spTransform(points,
                                projection)
 
-  # Write them into the original spdf
-  spdf@data[[x_var]] <- temp_spdf@coords[, 1]
-  spdf@data[[y_var]] <- temp_spdf@coords[, 2]
+  # Write them into the original points
+  points@data[[x_var]] <- temp_points@coords[, 1]
+  points@data[[y_var]] <- temp_points@coords[, 2]
 
-  return(spdf)
+  return(points)
 }
 
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
