@@ -491,7 +491,7 @@ test_points <- function(number = 100,
                             }
 
                             # Add the x and y meters now
-                            rand_spdf <- get_coords(spdf = rand_spdf,
+                            rand_spdf <- get_coords(points = rand_spdf,
                                                     x_var = "XMETERS",
                                                     y_var = "YMETERS",
                                                     projection = projectionAL)
@@ -669,7 +669,7 @@ check_balance <- function(polygons,
                                     points = points,
                                     seed_number = seed_number,
                                     method = method,
-                                    FUN = function(X, strata, points, seed_number, method){
+                                    FUN = function(X, strata_polygons, points, seed_number, method){
                                       # For clarity
                                       stratum <- X
                                       message(stratum)
