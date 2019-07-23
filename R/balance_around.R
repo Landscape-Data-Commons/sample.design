@@ -341,47 +341,26 @@ get_closest <- function(existing_points,
                              template_points = template_points,
                              existing_points = existing_points,
                              FUN = function(X, template_points, existing_points){
+                               # Narrow it down to the points in the current stratum
                                stratum <- X
                                existing_points_stratum <- existing_points[existing_points@data[["MEMBERSHIP"]] == stratum, ]
                                template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
 
-                               # No points have been picked yet!
-                               existing_points_stratum@data[["PICKED"]] <- FALSE
+                               # What are their ranking of each other between template and comparison based on distance?
+                               preferences <- find_preferences(template_points = template_points_stratum,
+                                                               comparison_points = existing_points_stratum)
 
-                               # We'll go through each new point in turn
-                               # This means that each point won't even look at any existing points already flagged as "PICKED"
-                               for (template_point in 1:nrow(template_points_stratum)) {
-                                 # The x and y components for the current template point
-                                 template_point_x <- template_points_stratum@data[template_point, "XMETERS"]
-                                 template_point_y <- template_points_stratum@data[template_point, "YMETERS"]
+                               # What's the optimal solution for minimizing distances for pairing?
+                               sorting <- ranked_sort(match_to = preferences[["template"]],
+                                                      match_from = preferences[["comparison"]],
+                                                      match_to_idvar = "template_index",
+                                                      match_from_idvar = "comparison_index",
+                                                      match_to_rankvar = "rank_by_template",
+                                                      match_from_rankvar = "rank_by_comparison")
 
-                                 # This is the index of the existing point being used
-                                 # We don't use this until every point has been tested
-                                 use_index <- 0
+                               # Only keep the points that got paired with the template points
+                               output <- existing_points_stratum[sorting[["comparison_index"]], ]
 
-                                 # Which points haven't been flagged as used yet?
-                                 unused_indices <- (1:nrow(existing_points_stratum))[existing_points_stratum@data[["PICKED"]]]
-
-                                 # These are going to be the squares of the distances from the current new point to every unused existing point
-                                 # Basically, this is the Pythagorean theorem without the sqaure root step because why do unnecessary math?
-                                 distances <- sapply(X = unused_indices,
-                                                     comparison_x = template_point_x,
-                                                     comparison_y = template_point_y,
-                                                     points_spdf = existing_points_stratum,
-                                                     FUN = function(X, comparison_x, comparison_y, points_spdf){
-                                                       x_component <- (comparison_x - points_spdf@data[X, "XMETERS"])^2
-                                                       y_component <- (comparison_y - points_spdf@data[X, "YMETERS"])^2
-                                                       return(x_component + y_component)
-                                                     })
-
-                                 index_closest <- unused_indices[which(min(distances), distances)]
-
-                                 existing_points_stratum[index_closest, "PICKED"] <- TRUE
-                               }
-
-                               # Only keep the points that are flagged as picked
-                               output <- existing_points_stratum[existing_points_stratum@data[["PICKED"]], ]
-                               output@data[["PICKED"]] <- NULL
                                return(output)
                              })
 
