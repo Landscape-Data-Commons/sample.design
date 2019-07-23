@@ -298,7 +298,7 @@ NN_mean <- function(dataframe,
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{100}.
 #' @param points Spatial Points Data Frame. The points that are being compared against.
 #' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
-#' @param type Numeric. Use \code{1} when polygons is a dissolved set of polygons and \code{2} when polygons is an undissolved set of polylines. Defaults to \code{1}
+#' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
 #' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
 #' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
@@ -307,12 +307,17 @@ NN_mean <- function(dataframe,
 test_points <- function(number = 100,
                         points,
                         polygons,
-                        type = 1,
+                        method = "sample",
                         seed_number = 420,
                         projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   if (number < 0) {
     stop("number must be a positive integer")
   }
+
+  if (!(method %in% c("sample", "probability"))) {
+    stop("The argument method must either be 'sample' or 'probability'.")
+  }
+
   if (!grepl(class(points), pattern = "^SpatialPoints")) {
     stop("points must be a spatial points data frame")
   }
@@ -369,7 +374,7 @@ test_points <- function(number = 100,
 
 
   # Generate the cumulative Prob Distribution!
-  if (type == 1) {
+  if (method == "probability") {
     if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
       stop("polygons must be a spatial polygons data frame")
     }
@@ -391,6 +396,8 @@ test_points <- function(number = 100,
     probability_distribution <- ExtractPolyAreaAquatic(polygons)
   }
   if (type == 3) {
+
+  if (method == "sample") {
     # This is so we can generate random points with sf::st_sample()
     # An approach that stands to be like an order of magnitude faster
     probability_distribution <- NULL
@@ -410,7 +417,7 @@ test_points <- function(number = 100,
                           polygons = polygons,
                           type = type,
                           projection = projection,
-                          FUN = function(X, point_count, probability_distribution, nn_means, polygons, type, projection){
+                          FUN = function(X, point_count, probability_distribution, nn_means, polygons, projection){
                             message("MASTER SEED NUMBER ", X)
 
                             # OKAY. So, we're going to implement NOT using a probability distribution
@@ -450,8 +457,7 @@ test_points <- function(number = 100,
                                                      lapply(X = current_seeds,
                                                             probability_distribution = probability_distribution,
                                                             polygons = polygons,
-                                                            type = type,
-                                                            FUN = function(X, probability_distribution, polygons, type){
+                                                            FUN = function(X, probability_distribution, polygons){
                                                               # We set the seed number any time it might get triggered
                                                               # Use the seed number we generated for this iteration
                                                               set.seed(X)
@@ -466,13 +472,7 @@ test_points <- function(number = 100,
                                                                                                      value = urv)
 
                                                               # If dissolved (as it should be for polygons), then always access polygons[[1]].
-                                                              if (type == 1) {
-                                                                poly <- polygons@polygons[[1]]@Polygons[[poly_index]]
-                                                              }
-                                                              # If not dissolved (a polylines situation) then things are different
-                                                              if (type == 2) {
-                                                                poly <- polygons@polygons[[poly_index]]@Polygons[[1]]
-                                                              }
+                                                              poly <- polygons@polygons[[1]]@Polygons[[poly_index]]
 
                                                               # MAKE IT REPRODUCIBLE!!!!
                                                               set.seed(X)
@@ -569,6 +569,7 @@ get_coords <- function(spdf,
 #' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons_spdf} ignoring polygon identities. Defaults to \code{TRUE}.
 #' @param reps Numeric. The number of random draws to make to compare against \code{points}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points} contains more than a few dozen points. Defaults to \code{100}.
 #' @param seed_number Numeric. The number to supply to \code{set.seed()} for reproducibility. At multiple steps, this seed number may be used to generate additional seed numbers for function-internal use, but always reproducibly. Defaults to \code{420}.
+#' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
 #' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons_spdf@@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points_spdf} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points_spdf}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points_spdf}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points_spdf} is balanced.
 #' @export
@@ -578,12 +579,15 @@ check_balance <- function(polygons_spdf,
                           stratafield = NULL,
                           by_frame = TRUE,
                           seed_number = 420,
+                          method = "sample",
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 {
   # Reproject if necessary
   if (!(class(polygons_spdf) %in% "SpatialPolygonsDataFrame")) {
     stop("polygons_spdf must be a spatial polygons data frame")
+  if (!(method %in% c("sample", "probability"))) {
+    stop("The argument method must either be 'sample' or 'probability'.")
   }
   if (!identical(projection, polygons_spdf@proj4string)) {
     polygons_spdf <- sp::spTransform(polygons_spdf,
@@ -632,7 +636,7 @@ check_balance <- function(polygons_spdf,
     proportions_frame <- test_points(number = reps,
                                      points = points_spdf,
                                      polygons = polygons_spdf,
-                                     type = 1,
+                                     method = method,
                                      seed_number = seed_number)
 
     # Build the output data frame for the sample frame
@@ -667,6 +671,7 @@ check_balance <- function(polygons_spdf,
                                     points = points_spdf,
                                     seed_number = seed_number,
                                     FUN = function(X, strata_spdf, points, seed_number){
+                                    method = method,
                                       # For clarity
                                       stratum <- X
                                       message(stratum)
@@ -692,7 +697,7 @@ check_balance <- function(polygons_spdf,
                                         proportions_stratum <- test_points(number = reps,
                                                                            points = current_points,
                                                                            polygons = stratum_spdf,
-                                                                           type = 1,
+                                                                           method = method,
                                                                            seed_number = seed_number)
 
                                         # Build the output data frame for the sample frame
