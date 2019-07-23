@@ -567,24 +567,23 @@ check_balance <- function(polygons,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 
 {
-  # Reproject if necessary
-  if (!(class(polygons_spdf) %in% "SpatialPolygonsDataFrame")) {
-    stop("polygons_spdf must be a spatial polygons data frame")
   if (!(method %in% c("sample", "probability"))) {
     stop("The argument method must either be 'sample' or 'probability'.")
   }
-  if (!identical(projection, polygons_spdf@proj4string)) {
-    polygons_spdf <- sp::spTransform(polygons_spdf,
-                                     projection)
-  }
-  if (!(class(points_spdf) %in% "SpatialPointsDataFrame")) {
-    stop("points_spdf must be a spatial points data frame")
-  }
-  if (!identical(projection, points_spdf@proj4string)) {
-    points_spdf <- sp::spTransform(points_spdf,
-                                   projection)
-  }
 
+
+  if (!(class(polygons) %in% "SpatialPolygonsDataFrame")) {
+    stop("polygons must be a spatial polygons data frame")
+  }
+  if (nrow(polygons@data) < 1) {
+    stop("There are no data in polygons")
+  }
+  if (!(class(points) %in% "SpatialPointsDataFrame")) {
+    stop("points must be a spatial points data frame")
+  }
+  if (nrow(points@data) < 1) {
+    stop("There are no data in points")
+  }
   if (!is.null(stratafield)) {
     if (!is.character(stratafield)) {
       stop("stratafield must be a single character string or NULL")
@@ -603,6 +602,21 @@ check_balance <- function(polygons,
   if (floor(reps) != ceiling(reps)) {
     stop("reps must be a positive integer")
   }
+
+  if (is.null(stratafield) & !by_frame) {
+    stop("stratafield = NULL and by_frame = FALSE, so no check will be performed.")
+  }
+  # Reproject if necessary
+  if (!identical(projection, polygons@proj4string)) {
+    polygons <- sp::spTransform(polygons,
+                                     projection)
+  }
+  if (!identical(projection, points@proj4string)) {
+    points <- sp::spTransform(points,
+                                   projection)
+  }
+
+
   # Add the coordinates so that we can do nearest neighbor calculations
   points <- get_coords(points)
 
