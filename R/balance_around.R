@@ -304,11 +304,13 @@ get_closest <- function(existing_points,
       }
       # Sorry for the inconsistencies but "MEMBERSHIP" is trying to get away from the assumption that these will be stratifications
       # And I'm so, so tired. I'll come back to clean this up later, or so I'm currently telling myself at the end of a ten hour day
-      points_spdf@data[["MEMBERSHIP"]] <- points_spdf@data[[stratafield]]
+      template_points@data[["MEMBERSHIP"]] <- template_points@data[[stratafield]]
+      existing_points@data[["MEMBERSHIP"]] <- existing_points@data[[stratafield]]
     }
 
   } else {
-    points_spdf@data[["MEMBERSHIP"]] <- "frame"
+    template_points@data[["MEMBERSHIP"]] <- "frame"
+    existing_points@data[["MEMBERSHIP"]] <- "frame"
   }
 
   # If there is a set of stratification polygons, use them!
