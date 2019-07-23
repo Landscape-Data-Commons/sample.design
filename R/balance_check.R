@@ -379,17 +379,6 @@ test_points <- function(number = 100,
       stop("polygons must be a spatial polygons data frame")
     }
 
-    # We need to handle what to do if the geometry is empty
-    if (length(polygons@polygons) < 1) {
-      stop("There's no geometry in polygons")
-    }
-
-    # And if it's not dissolved, we'll do that!
-    if (length(polygons@polygons) > 1) {
-      message("The polygons in polygons need to be dissolved. Dissolving now.")
-      polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
-    }
-
     probability_distribution <- extract_poly_area(polygons)
   }
 
