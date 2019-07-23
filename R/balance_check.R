@@ -295,7 +295,7 @@ NN_mean <- function(dataframe,
 
 #' Test points spatial balance against sets of random points
 #' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
-#' @param number Numeric. The number of sets to generate to compare. Defaults to \code{3}.
+#' @param number Numeric. The number of sets to generate to compare. Defaults to \code{100}.
 #' @param points Spatial Points Data Frame. The points that are being compared against.
 #' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
 #' @param type Numeric. Use \code{1} when polygons is a dissolved set of polygons and \code{2} when polygons is an undissolved set of polylines. Defaults to \code{1}
@@ -304,7 +304,7 @@ NN_mean <- function(dataframe,
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
-test_points <- function(number = 500,
+test_points <- function(number = 100,
                         points,
                         polygons,
                         type = 1,
@@ -565,9 +565,9 @@ get_coords <- function(spdf,
 #' @description Given a set of points and the polygons used to draw them, test the spatial balance of the point by comparing them to randomly located points generated within the polygons
 #' @param polygons_spdf Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons_spdf@@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.
 #' @param points_spdf Spatial points data frame. The points to be tested for spatial balance.
-#' @param reps Numeric. The number of random draws to make to compare against \code{points_spdf}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points_spdf} contains more than a few dozen points. Defaults to \code{500}.
 #' @param stratafield Character string. The name of the variable in \code{polygons_spdf@@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.
 #' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons_spdf} ignoring polygon identities. Defaults to \code{TRUE}.
+#' @param reps Numeric. The number of random draws to make to compare against \code{points}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points} contains more than a few dozen points. Defaults to \code{100}.
 #' @param seed_number Numeric. The number to supply to \code{set.seed()} for reproducibility. At multiple steps, this seed number may be used to generate additional seed numbers for function-internal use, but always reproducibly. Defaults to \code{420}.
 #' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons_spdf@@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points_spdf} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points_spdf}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points_spdf}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points_spdf} is balanced.
