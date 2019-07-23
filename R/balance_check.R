@@ -654,8 +654,8 @@ check_balance <- function(polygons,
                                     strata_spdf = polygons,
                                     points = points,
                                     seed_number = seed_number,
-                                    FUN = function(X, strata_spdf, points, seed_number){
                                     method = method,
+                                    FUN = function(X, strata_spdf, points, seed_number, method){
                                       # For clarity
                                       stratum <- X
                                       message(stratum)
