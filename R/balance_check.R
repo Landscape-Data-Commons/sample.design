@@ -392,10 +392,6 @@ test_points <- function(number = 100,
 
     probability_distribution <- extract_poly_area(polygons)
   }
-  if (type == 2) {
-    probability_distribution <- ExtractPolyAreaAquatic(polygons)
-  }
-  if (type == 3) {
 
   if (method == "sample") {
     # This is so we can generate random points with sf::st_sample()
@@ -415,7 +411,6 @@ test_points <- function(number = 100,
                           probability_distribution = probability_distribution,
                           nn_means = nn_means,
                           polygons = polygons,
-                          type = type,
                           projection = projection,
                           FUN = function(X, point_count, probability_distribution, nn_means, polygons, projection){
                             message("MASTER SEED NUMBER ", X)
