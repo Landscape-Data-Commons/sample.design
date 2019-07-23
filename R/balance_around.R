@@ -314,16 +314,16 @@ get_closest <- function(existing_points,
   }
 
   # If there is a set of stratification polygons, use them!
-  if (!is.null(strata_spdf)) {
-    if (!(class(strata_spdf) %in% "SpatialPolygonsDataFrame")) {
-      stop("strata_spdf must be a spatial polygons data frame.")
+  if (!is.null(strata_polygons)) {
+    if (!(class(strata_polygons) %in% "SpatialPolygonsDataFrame")) {
+      stop("strata_polygons must be a spatial polygons data frame.")
     }
-    if (!identical(projection, strata_spdf@proj4string)) {
-      strata_spdf <- sp::spTransform(strata_spdf,
+    if (!identical(projection, strata_polygons@proj4string)) {
+      strata_polygons <- sp::spTransform(strata_polygons,
                                      projection)
     }
-    if (!(stratafield %in% names(strata_spdf@data))) {
-      stop("The variable ", stratafield, " does not appear in strata_spdf.")
+    if (!(stratafield %in% names(strata_polygons@data))) {
+      stop("The variable ", stratafield, " does not appear in strata_polygons.")
     }
 
     # This just puts the strata into the points
