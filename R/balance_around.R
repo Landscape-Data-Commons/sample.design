@@ -413,26 +413,28 @@ keep_farthest <- function(existing_points,
                           new_points,
                           target = NULL,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
-  # TODO: Sanitize
+
   if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
     stop("existing_points must be a spatial points data frame")
   }
-  if (!identical(projection, existing_points@proj4string)) {
-    existing_points <- sp::spTransform(existing_points,
-                                       projection)
-  }
+
   if (nrow(existing_points@data) < 1) {
     stop("There are no points in existing_points")
   }
   if (!(class(new_points) %in% "SpatialPointsDataFrame")) {
     stop("new_points must be a spatial points data frame")
   }
+  if (nrow(new_points@data) < 1) {
+    stop("There are no points in new_points")
+  }
+
+  if (!identical(projection, existing_points@proj4string)) {
+    existing_points <- sp::spTransform(existing_points,
+                                       projection)
+  }
   if (!identical(projection, new_points@proj4string)) {
     new_points <- sp::spTransform(new_points,
                                   projection)
-  }
-  if (nrow(new_points@data) < 1) {
-    stop("There are no points in new_points")
   }
 
   if (is.null(target)) {
