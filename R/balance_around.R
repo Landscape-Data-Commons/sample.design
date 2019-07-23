@@ -29,7 +29,7 @@ find_preferences <- function(template_points,
   combined_points <- rbind(x = template_points[, "source"],
                            y = comparison_points[, "source"])
 
-  combined_points <- get_coords(spdf = combined_points,
+  combined_points <- get_coords(points = combined_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
                                 projection = sp::CRS("+proj=aea"))
@@ -250,14 +250,14 @@ ranked_sort <- function(match_to,
 #' @description Sometimes you have a large collection of points which are not randomly distributed or spatially balanced and you would like a subset that more or less do. Given a template of points that are distributed the way you would like, this will return the closest existing point to each. This can be done taking into account membership in a group, either by having assigned it as a variable in both sets of points or by providing polygons that can be used to assign membership. By default, no stratification/membership is taken into account. NOTA BENE: As currently implemented, the evaluation to select points occurs in the order of the points in \code{template_points} which means that the solution found may not be the optimal one, just the best for that order. If that's important to you, the "easiest" workaround is to run this several times with randomized \code{template_points} orders and to keep the result with the smallest mean distance between result points and the template points.
 #' @param existing_points Spatial Points Data Frame. The points you would like to select from by comparing against \code{template_points}.
 #' @param template_points  Spatial Points Data Frame. The points you would like to compare against \code{existing_points} in order to select a subset of those that most closely resemble the distribution of the template points.
-#' @param strata_spdf Spatial Polygons Data Frame. Polygons assigned a variable with a name \code{stratafield} that contains the membership information (e.g. strata) to assign to \code{existing_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.
-#' @param stratafield Character string. If \code{strata_spdf} is not \code{NULL}, the name of the variable in \code{strata_spdf@@data} that contains the membership information. Otherwise, the name of the variable in both \code{template_points@@data} and \code{existing_points@@data} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{NULL}.
+#' @param strata_polygons Spatial Polygons Data Frame. Polygons assigned a variable with a name \code{stratafield} that contains the membership information (e.g. strata) to assign to \code{existing_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.
+#' @param stratafield Character string. If \code{strata_polygons} is not \code{NULL}, the name of the variable in \code{strata_polygons@@data} that contains the membership information. Otherwise, the name of the variable in both \code{template_points@@data} and \code{existing_points@@data} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{NULL}.
 #' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial polygons data frame made by trimming \code{existing_points} down to the points that most closely approximate the distribution of \code{template_points} while also containing the same number of points as \code{template_points}. It will be in the projection specified by \code{projection}.
 #' @export
 get_closest <- function(existing_points,
                         template_points,
-                        strata_spdf = NULL,
+                        strata_polygons = NULL,
                         stratafield = NULL,
                         projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 
@@ -289,7 +289,7 @@ get_closest <- function(existing_points,
     if (length(stratafield) > 1) {
       stop("stratafield must be a character string")
     }
-    if (is.null(strata_spdf)) {
+    if (is.null(strata_polygons)) {
       if (!(stratafield %in% names(template_points@data))) {
         stop("The variable ", stratafield, " does not appear in template_points@data.")
       }
@@ -320,9 +320,9 @@ get_closest <- function(existing_points,
 
     # This just puts the strata into the points
     existing_points@data[["MEMBERSHIP"]] <- sp::over(x = existing_points,
-                                                     y = strata_spdf)[[stratafield]]
+                                                     y = strata_polygons)[[stratafield]]
     template_points@data[["MEMBERSHIP"]] <- sp::over(x = template_points,
-                                                     y = strata_spdf)[[stratafield]]
+                                                     y = strata_polygons)[[stratafield]]
   }
 
 
