@@ -1,12 +1,12 @@
 #' Dissolve polygons in an SPDF by an identity variable
 #' @description Dissolve polygons together on an identity variable to produce an SPDF with one observation per identity.
-#' @param spdf Spatial Polygons Data Frame. The polygons to dissolve. Must have an identity variable with a name patching \code{dissolve_field}.
-#' @param dissolve_field Character string. The name of the variable in \code{spdf@@data} containing the polygon identities
-#' @return A spatial polygons data frame with one observation per unique identity in the original \code{spdf}. The associated data frame contains only the identities in a variable named using \code{dissolve_field}.
+#' @param polygons Spatial Polygons Data Frame. The polygons to dissolve. Must have an identity variable with a name patching \code{dissolve_field}.
+#' @param dissolve_field Character string. The name of the variable in \code{polygons@@data} containing the polygon identities
+#' @return A spatial polygons data frame with one observation per unique identity in the original \code{polygons}. The associated data frame contains only the identities in a variable named using \code{dissolve_field}.
 #' @export
-dissolve_spdf <- function(spdf, dissolve_field){
-  if (!grepl(class(spdf), pattern = "^SpatialPolygonsDataFrame")) {
-    stop("spdf must be a spatial polygons data frame")
+dissolve_polygons <- function(polygons, dissolve_field){
+  if (!grepl(class(polygons), pattern = "^SpatialPolygonsDataFrame")) {
+    stop("polygons must be a spatial polygons data frame")
   }
   if (!is.character(dissolve_field)) {
     stop("dissolve field must be a character string")
@@ -14,23 +14,23 @@ dissolve_spdf <- function(spdf, dissolve_field){
   if (length(dissolve_field) > 1) {
     stop("dissolve field must be a character string")
   }
-  if (!(dissolve_field %in% names(spdf@data))) {
-    stop(dissolve_field, " does not occur in the names of spdf@data")
+  if (!(dissolve_field %in% names(polygons@data))) {
+    stop(dissolve_field, " does not occur in the names of polygons@data")
   }
-  unique_ids <- as.character(unique(spdf@data[[dissolve_field]]))
+  unique_ids <- as.character(unique(polygons@data[[dissolve_field]]))
   poly_list <- lapply(X = unique_ids,
-                      spdf = spdf,
+                      polygons = polygons,
                       dissolve_field = dissolve_field,
-                      FUN = function(X, spdf, dissolve_field){
-                        spdf_current <- spdf[spdf@data[[dissolve_field]] == X, ]
-                        spdf_current <- methods::as(sf::st_combine(sf::st_as_sf(spdf_current)), "Spatial")
+                      FUN = function(X, polygons, dissolve_field){
+                        polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
+                        polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
                         df <- data.frame(id = X,
                                          stringsAsFactors = FALSE)
                         names(df) <- dissolve_field
-                        rownames(df) <- spdf_current@polygons[[1]]@ID
-                        spdf_current <- sp::SpatialPolygonsDataFrame(Sr = spdf_current,
+                        rownames(df) <- polygons_current@polygons[[1]]@ID
+                        polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
                                                                      data = df)
-                        return(spdf_current)
+                        return(polygons_current)
                       })
   output <- do.call(rbind,
                     poly_list)
@@ -47,7 +47,7 @@ dissolve_spdf <- function(spdf, dissolve_field){
 extract_poly_area <- function(polygons,
                               cum_freq = TRUE) {
   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
-    stop("spdf must be a spatial polygons data frame")
+    stop("polygons must be a spatial polygons data frame")
   }
 
   # We need to handle what to do if the geometry is empty
@@ -294,7 +294,7 @@ NN_mean <- function(dataframe,
 
 
 #' Test points spatial balance against sets of random points
-#' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
+#' @description Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{polygons} are not spatially balanced." Whatever is provided as \code{polygons} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{polygons}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{100}.
 #' @param points Spatial Points Data Frame. The points that are being compared against.
 #' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
@@ -656,7 +656,7 @@ check_balance <- function(polygons,
   # If there's a stratification field and it exists in the spdf, get to work
   if(!is.null(stratafield)) {
     if (!(stratafield %in% names(polygons@data))) {
-      stop(paste("The variable", stratafield, "does not appear in frame_spdf@data."))
+      stop(paste("The variable", stratafield, "does not appear in polygons@data."))
     }
 
     # Just to simplify things, make a STRATUM variable
@@ -665,22 +665,22 @@ check_balance <- function(polygons,
 
     output_strata <- do.call(rbind,
                              lapply(X = strata,
-                                    strata_spdf = polygons,
+                                    strata_polygons = polygons,
                                     points = points,
                                     seed_number = seed_number,
                                     method = method,
-                                    FUN = function(X, strata_spdf, points, seed_number, method){
+                                    FUN = function(X, strata, points, seed_number, method){
                                       # For clarity
                                       stratum <- X
                                       message(stratum)
 
                                       # Get just the relevant polygons
-                                      stratum_spdf <- strata_spdf[strata_spdf[["STRATUM"]] == stratum, ]
+                                      stratum_polygons <- strata_polygons[strata_polygons[["STRATUM"]] == stratum, ]
 
                                       # Get just the points that fall in this stratum
                                       current_points <- points
                                       current_points@data[["STRATUM"]] <- sp::over(points,
-                                                                                   stratum_spdf)[["STRATUM"]]
+                                                                                   stratum_polygons)[["STRATUM"]]
                                       current_points <- points[!is.na(current_points@data[["STRATUM"]]), ]
 
                                       # If there are in fact points in the stratum, do the randomization test
@@ -694,7 +694,7 @@ check_balance <- function(polygons,
                                         ## Do randomization test
                                         proportions_stratum <- test_points(number = reps,
                                                                            points = current_points,
-                                                                           polygons = stratum_spdf,
+                                                                           polygons = stratum_polygons,
                                                                            method = method,
                                                                            seed_number = seed_number)
 
