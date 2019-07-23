@@ -334,7 +334,8 @@ get_closest <- function(existing_points,
   }
 
 
-  strata <- unique(points_spdf@data[["MEMBERSHIP"]])
+  # What strata are there?
+  strata <- unique(c(existing_points@data[["MEMBERSHIP"]], template_points@data[["MEMBERSHIP"]]))
 
   # By stratum!
   stata_selections <- lapply(X = strata,
