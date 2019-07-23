@@ -473,21 +473,21 @@ test_points <- function(number = 100,
 
                               # Translate from SpatialPoints to SpatialPointsDataFrame
                               # The ID number is just the order in which they were generated
-                              rand_points_spdf <- sp::SpatialPointsDataFrame(coords = rand_points,
+                              rand_points <- sp::SpatialPointsDataFrame(coords = rand_points,
                                                                              data = data.frame(id = 1:nrow(rand_points@coords)))
-                              sp::proj4string(rand_points_spdf) <- polygons@proj4string
+                              sp::proj4string(rand_points) <- polygons@proj4string
 
                               # Find overlap!
-                              overlap <- sp::over(rand_points_spdf,
+                              overlap <- sp::over(rand_points,
                                                   polygons)
 
                               # Only keep the points where there was spatial overlap
-                              rand_points_spdf <- rand_points_spdf[!is.na(overlap[[1]]), ]
+                              rand_points <- rand_points[!is.na(overlap[[1]]), ]
 
                               # In case we have more random points than needed, just pick the first nrow(points) points.
                               # We still have a fully random sample since we effectively store the random points by accession
                               # and we elimiinate points from the bottom up.
-                              rand_spdf <- rand_points_spdf[1:point_count, ]
+                              rand_spdf <- rand_points[1:point_count, ]
                             }
 
                             # Add the x and y meters now
@@ -547,18 +547,18 @@ get_coords <- function(spdf,
 
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
 #' @description Given a set of points and the polygons used to draw them, test the spatial balance of the point by comparing them to randomly located points generated within the polygons
-#' @param polygons_spdf Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons_spdf@@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.
-#' @param points_spdf Spatial points data frame. The points to be tested for spatial balance.
-#' @param stratafield Character string. The name of the variable in \code{polygons_spdf@@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.
-#' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons_spdf} ignoring polygon identities. Defaults to \code{TRUE}.
+#' @param polygons Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons@@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.
+#' @param points Spatial points data frame. The points to be tested for spatial balance.
 #' @param reps Numeric. The number of random draws to make to compare against \code{points}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points} contains more than a few dozen points. Defaults to \code{100}.
+#' @param stratafield Character string. The name of the variable in \code{polygons@@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.
+#' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons} ignoring polygon identities. Defaults to \code{TRUE}.
 #' @param seed_number Numeric. The number to supply to \code{set.seed()} for reproducibility. At multiple steps, this seed number may be used to generate additional seed numbers for function-internal use, but always reproducibly. Defaults to \code{420}.
 #' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
 #' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
-#' @return A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons_spdf@@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points_spdf} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points_spdf}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points_spdf}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points_spdf} is balanced.
+#' @return A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons@@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points} is balanced.
 #' @export
-check_balance <- function(polygons_spdf,
-                          points_spdf,
+check_balance <- function(polygons,
+                          points,
                           reps = 100,
                           stratafield = NULL,
                           by_frame = TRUE,
@@ -592,8 +592,8 @@ check_balance <- function(polygons_spdf,
     if (length(stratafield) > 1) {
       stop("stratafield must be a single character string or NULL")
     }
-    if (!(stratafield %in% names(polygons_spdf@data))) {
-      stop(stratafield, " is not a variable in polygons_spdf@data or NULL")
+    if (!(stratafield %in% names(polygons@data))) {
+      stop(stratafield, " is not a variable in polygons@data or NULL")
     }
   }
 
@@ -604,7 +604,7 @@ check_balance <- function(polygons_spdf,
     stop("reps must be a positive integer")
   }
   # Add the coordinates so that we can do nearest neighbor calculations
-  points_spdf <- get_coords(points_spdf)
+  points <- get_coords(points)
 
   # The frame output is assumed to be NULL
   output_frame <- NULL
@@ -612,20 +612,20 @@ check_balance <- function(polygons_spdf,
   # If requested, first analyze entire frame
   if(by_frame) {
     # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
-    nn_means_all <- NN_mean(points_spdf@data,
+    nn_means_all <- NN_mean(points@data,
                             x_var = "XMETERS",
                             y_var = "YMETERS")
 
     ## Do randomization test
     proportions_frame <- test_points(number = reps,
-                                     points = points_spdf,
-                                     polygons = polygons_spdf,
+                                     points = points,
+                                     polygons = polygons,
                                      method = method,
                                      seed_number = seed_number)
 
     # Build the output data frame for the sample frame
     output_frame <- data.frame("polygon" = "Sample Frame",
-                               "point_count" = nrow(points_spdf),
+                               "point_count" = nrow(points),
                                "reps" = reps,
                                "mean_arithmetic" = nn_means_all["arith_mean"],
                                "mean_geometric" = nn_means_all["geo_mean"],
@@ -641,18 +641,18 @@ check_balance <- function(polygons_spdf,
 
   # If there's a stratification field and it exists in the spdf, get to work
   if(!is.null(stratafield)) {
-    if (!(stratafield %in% names(polygons_spdf@data))) {
+    if (!(stratafield %in% names(polygons@data))) {
       stop(paste("The variable", stratafield, "does not appear in frame_spdf@data."))
     }
 
     # Just to simplify things, make a STRATUM variable
-    polygons_spdf@data[["STRATUM"]] <- polygons_spdf@data[[stratafield]]
-    strata <- as.character(unique(polygons_spdf@data[["STRATUM"]]))
+    polygons@data[["STRATUM"]] <- polygons@data[[stratafield]]
+    strata <- as.character(unique(polygons@data[["STRATUM"]]))
 
     output_strata <- do.call(rbind,
                              lapply(X = strata,
-                                    strata_spdf = polygons_spdf,
-                                    points = points_spdf,
+                                    strata_spdf = polygons,
+                                    points = points,
                                     seed_number = seed_number,
                                     FUN = function(X, strata_spdf, points, seed_number){
                                     method = method,
