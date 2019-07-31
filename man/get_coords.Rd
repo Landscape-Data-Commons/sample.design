@@ -4,20 +4,20 @@
 \alias{get_coords}
 \title{Add coordinates to the data slot of a SpatialPointsDataFrame}
 \usage{
-get_coords(spdf, x_var = "XMETERS", y_var = "YMETERS",
+get_coords(points, x_var = "XMETERS", y_var = "YMETERS",
   projection = CRS("+proj=aea"))
 }
 \arguments{
-\item{spdf}{A SpatialPointsDataFrame.}
+\item{points}{A SpatialPointsDataFrame.}
 
-\item{x_var}{Character string. The name of the variable to add the x component of the coordinates to in \code{spdf@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.}
+\item{x_var}{Character string. The name of the variable to add the x component of the coordinates to in \code{points@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.}
 
-\item{y_var}{Character string. The name of the variable to add the y component of the coordinates to in \code{spdf@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.}
+\item{y_var}{Character string. The name of the variable to add the y component of the coordinates to in \code{points@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.}
 
 \item{projection}{CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.}
 }
 \value{
-The SPDF provided as \code{spdf} with the coordinates added to \code{"x_var"} and \code{"y_var"}.
+The SPDF provided as \code{points} with the coordinates added to \code{@data$x_var"} and \code{@data$y_var}.
 }
 \description{
 Add coordinates to the data slot of a SpatialPointsDataFrame

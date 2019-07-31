@@ -4,23 +4,26 @@
 \alias{test_points}
 \title{Test points spatial balance against sets of random points}
 \usage{
-test_points(number = 500, pts_spdf, aoi_spdf, type = 1,
-  seed_number = 420)
+test_points(number = 100, points, polygons, method = "sample",
+  seed_number = 420,
+  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 }
 \arguments{
-\item{number}{Numeric. The number of sets to generate to compare. Defaults to \code{3}.}
+\item{number}{Numeric. The number of sets to generate to compare. Defaults to \code{100}.}
 
-\item{pts_spdf}{Spatial Points Data Frame. The points that are being compared against.}
+\item{points}{Spatial Points Data Frame. The points that are being compared against.}
 
-\item{aoi_spdf}{Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{pts_spdf}.}
+\item{polygons}{Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.}
 
-\item{type}{Numeric. Use \code{1} when aoi_spdf is a dissolved set of polygons and \code{2} when aoi_spdf is an undissolved set of polylines. Defaults to \code{1}}
+\item{method}{Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.}
 
-\item{seed_number}{Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{1}.}
+\item{seed_number}{Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.}
+
+\item{projection}{CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
 }
 \value{
-Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{pts_spdf} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
+Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 }
 \description{
-Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{spdf} are not spatially balanced." Whatever is provided as \code{spdf} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{spdf}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
+Compare a set of points to sets of random points generated from the same polygon geometry and report back the proportion of random sets which had higher mean distance to nearest neighboring point. Assuming that a higher mean distance to nearest neighbor indicates greater spatial balance, this proportion can be treated as a "probabilty that the points in \code{polygons} are not spatially balanced." Whatever is provided as \code{polygons} will be dissolved without regard for the data slot, so if you want to test subsets of the polygons, each test will need to be a separate function call provided only the relevant subset as \code{polygons}, e.g. in the case of wanting to test individual strata stored as a single SPDF you would need to call this function for each stratum (probably in a \code{lapply()} or a loop).
 }

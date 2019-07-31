@@ -4,27 +4,29 @@
 \alias{check_balance}
 \title{Test to see if a set of points are spatially balanced within the polygons used to draw them}
 \usage{
-check_balance(polygons_spdf, points_spdf, reps = 500,
-  stratafield = NULL, by_frame = TRUE, seed_number = 420,
+check_balance(polygons, points, reps = 100, stratafield = NULL,
+  by_frame = TRUE, seed_number = 420, method = "sample",
   projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 }
 \arguments{
-\item{polygons_spdf}{Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons_spdf@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.}
+\item{polygons}{Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.}
 
-\item{points_spdf}{Spatial points data frame. The points to be tested for spatial balance.}
+\item{points}{Spatial points data frame. The points to be tested for spatial balance.}
 
-\item{reps}{Numeric. The number of random draws to make to compare against \code{points_spdf}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points_spdf} contains more than a few dozen points. Defaults to \code{500}.}
+\item{reps}{Numeric. The number of random draws to make to compare against \code{points}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points} contains more than a few dozen points. Defaults to \code{100}.}
 
-\item{stratafield}{Character string. The name of the variable in \code{polygons_spdf@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.}
+\item{stratafield}{Character string. The name of the variable in \code{polygons@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.}
 
-\item{by_frame}{Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons_spdf} ignoring polygon identities. Defaults to \code{TRUE}.}
+\item{by_frame}{Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons} ignoring polygon identities. Defaults to \code{TRUE}.}
 
 \item{seed_number}{Numeric. The number to supply to \code{set.seed()} for reproducibility. At multiple steps, this seed number may be used to generate additional seed numbers for function-internal use, but always reproducibly. Defaults to \code{420}.}
+
+\item{method}{Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.}
 
 \item{projection}{CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
 }
 \value{
-A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons_spdf@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points_spdf} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points_spdf}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points_spdf}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points_spdf}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points_spdf} is balanced.
+A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points} is balanced.
 }
 \description{
 Given a set of points and the polygons used to draw them, test the spatial balance of the point by comparing them to randomly located points generated within the polygons
