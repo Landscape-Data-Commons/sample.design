@@ -142,7 +142,7 @@ select_from_distribution <- function(dataframe,
 #' @param x Numeric vector. The values to calculate a geometric mean from
 #' @param na.rm Logical. If \code{TRUE} then \code{NA} values will be dropped from \code{x} before calculating the geometric mean. Defaults to \code{TRUE}
 #' @return The geometric mean as a single numeric value.
-#' @esport
+#' @export
 
 gm_mean <- function(x,
                     na.rm = TRUE) {
