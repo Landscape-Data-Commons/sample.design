@@ -38,7 +38,7 @@ terra_sample_frame <- function(spdf,
 
   spdf@data[["SAMPLE_FRAME_DESC"]] <- description
   spdf@data[["SAMPLE_FRAME_GROUP"]] <- group
-  spdf@data[["SAMPLE_FRAME_AREA_SQKM"]] <- add_area(spdf = spdf,
+  spdf@data[["SAMPLE_FRAME_AREA_SQKM"]] <- add_area(polygons = spdf,
                                                     area_ha = FALSE,
                                                     area_sqkm = TRUE,
                                                     area_acres = FALSE,
@@ -48,11 +48,18 @@ terra_sample_frame <- function(spdf,
   return(spdf)
 }
 
-terra_sample_points <- function(spdf){
+terra_sample_points <- function(spdf,
+                                strata_spdf,
+                                project_spdf,
+                                plotid_field){
 
+  input_spdf <- spdf
   # TERRA_PLOT_ID
+  spdf@data[["TERRA_PLOT_ID"]] <- NULL
   # PLOT_KEY
+  spdf@data[["PLOT_KEY"]] <- NULL
   # PLOT_NM
+  spdf@data[["PLOT_NM"]] <- input_spdf@data[[plotid_field]]
   # TERRA_PRJCT_AREA_ID
   # TERRA_CLSTR_ID
   # TERRA_STRTM_ID
@@ -66,7 +73,7 @@ terra_sample_points <- function(spdf){
   # MDCATY
   # SAMPLE_DSGN_ALGRTHM
   # PT_DRAW
-  over_vector <- grepl(spdf@data[["PANEL"]], pattern = "oversample", ignore.case = TRUE)
+  over_vector <- grepl(input_spdf@data[["PANEL"]], pattern = "oversample", ignore.case = TRUE)
   base_vector <- !over_vector
   spdf@data[["PT_DRAW"]][over_vector] <- "OVER"
   spdf@data[["PT_DRAW"]][base_vector] <- "BASE"

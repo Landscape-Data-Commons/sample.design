@@ -1,9 +1,9 @@
 Package: sample.design
 Type: Package
 Title: Generate Sample Designs for Assessment, Inventory, and Monitoring Projects
-Date: 2017-06-16
-Version: 0.1.5
-Authors@R: person("Nelson", "Stauffer", email = "nelson.stauffer@ars.usda.gov", role = c("aut", "cre"))
+Date: 2019-08-19
+Version: 0.7.5
+Authors@R: c(person(given = c("Nelson", "G."), family = "Stauffer", email = "nelson.stauffer@ars.usda.gov", role = c("aut", "cre")), person("Steve", "Garman", email = "sgarman@blm.gov", role = c("aut")))
 Description: Creates spatially balanced sample designs using a generalized random tessellation stratified either from imported feature classes or the BLM/JER AIM master sample points.
 Depends: R (>= 3.1.0)
 License: MIT License

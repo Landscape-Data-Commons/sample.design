@@ -3,7 +3,7 @@
 #' @description Creates a structured list that meets the requirements for a design object for \code{spsurvey::grts()} distributing points proportionally to strata based on their relative areas/abundances.
 #' @param spdf SpatialPointsDataFrame or data frame containing the possible sampling points being used or a SpatialPolygonsDataFrame of polygons describing the strata boundaries.
 #' @param stratum_field A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.
-#' @param panel_names A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("Year1", "Year2", "Year3", "Year4", "Year5")}.
+#' @param panel_names A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("1", "2", "3", "4", "5")}.
 #' @param panel_sample_size A numeric vector of the number of base points to be drawn in each panel. This must be the same length and in the same order as \code{panel_names} UNLESS all panels have the same number of base points in which case \code{panel_sample_size} optionally may be a single numeric value despite \code{panel_names} containing more than one value. Defaults to \code{c(50)}.
 #' @param points_min A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size. Defaults to \code{3}.
 #' @param oversample_proportion A numeric value between 0 and 1 representing the minimum relative proportion of oversample points to allocate per stratum per panel using the formula \code{panel_sample_size * min.oversample_proportion}. Defaults to \code{0.25}.
@@ -13,7 +13,7 @@
 
 allocate_panels <- function(spdf,
                             stratum_field = "stratum",
-                            panel_names = c("Year1", "Year2", "Year3", "Year4", "Year5"),
+                            panel_names = c("1", "2", "3", "4", "5"),
                             panel_sample_size = 50,
                             points_min = 3,
                             oversample_proportion = 0.25,
@@ -117,6 +117,12 @@ read_panels <- function(dataframe,
                         oversample_field = NULL,
                         oversample_proportion = 0.25,
                         oversample_min = 3) {
+  # Create a vector of panel names from the variable names if there isn't one yet
+  # This assumes that there are no variables other than stratum, oversample, and panels!!!
+  if (is.null(panel_names)) {
+    message("No panel_names vector was provided. Guessing panel names from data frame variables.")
+    panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
+  }
 
   # For each stratum, make the design list specifying number of sample points per panel and the oversample count
   design <- lapply(X = dataframe[[stratum_field]],
@@ -140,12 +146,7 @@ read_panels <- function(dataframe,
                                             pattern = "^X",
                                             replacement = "")
                      names(dataframe)[names_damaged_indices] <- names_repaired
-                     # Create a vector of panel names from the variable names if there isn't one yet
-                     # This assumes that there are no variables other than stratum, oversample, and panels!!!
-                     if (is.null(panel_names)) {
-                       message("No panel_names vector was provided. Guessing panel names from data frame variables.")
-                       panel_names <- names(dataframe)[!(names(dataframe) %in% c(stratum_field, oversample_field))]
-                     }
+
                      # Get just the relevant variables in the current data frame for the stratum
                      variables_relevant <- names(dataframe)[names(dataframe) %in% c(stratum_field, panel_names, oversample_field)]
                      df_current <- dataframe[dataframe[[stratum_field]] == X, variables_relevant]
