@@ -4,20 +4,20 @@
 \alias{attribute_shapefile}
 \title{Attributing a spatial data frame using another spatial data frame}
 \usage{
-attribute_shapefile(spdf1, spdf2, attributefield = NULL,
+attribute_shapefile(spdf1, source_geometry, attributefield = NULL,
   newfield = NULL)
 }
 \arguments{
-\item{spdf1}{A SpatialPoints/PolygonsDataFrame containing the geometry to add an attribute to}
+\item{spdf1}{Spatial points or polygon data frame. The geometry that the attribute will be added to.}
 
-\item{spdf2}{A SpatialPoints/PolygonsDataFrame containing the geometry to add an attribute from}
+\item{source_geometry}{Spatial polygons data frame. The polygons with the attribute to be added to \code{spdf1@data}.}
 
-\item{attributefield}{The name of the field in \code{spdf2} as a string containing the values to add to \code{spdf1}}
+\item{attributefield}{Character string. The name of the field in \code{source_geometry@data} containing the values to add to \code{spdf1@data}}
 
-\item{newfield}{The name of the field in \code{spdf1} as a string to add the values from \code{spdf2$attributefield} to. If NULL, the field will use \code{attributefield}. Defaults to NULL.}
+\item{newfield}{Optional character string. The name of the field in \code{spdf1@data} to add the values from \code{source_geometry@data$attributefield} to. If NULL, the field will use \code{attributefield}. Defaults to NULL.}
 }
 \value{
-The original SPDF spdf1 with the new field containing the values inherited from spdf2.
+The original SPDF spdf1 with the new field containing the values inherited from source_geometry.
 }
 \description{
 This function will take a SpatialPoints/PolygonsDataFrame and add one attribute fields from a second SpatialPoints/PolygonsDataFrame

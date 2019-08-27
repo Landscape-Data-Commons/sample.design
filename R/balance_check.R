@@ -525,7 +525,7 @@ test_points <- function(number = 100,
 #' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
 #' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
 #' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.
-#' @return The SPDF provided as \code{points} with the coordinates added to \code{@@data$x_var"} and \code{@@data$y_var}.
+#' @return The SPDF provided as \code{points} with the coordinates added to \code{@@data$x_var} and \code{@@data$y_var}.
 #' @export
 get_coords <- function(points,
                        x_var = "XMETERS",

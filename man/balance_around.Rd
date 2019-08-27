@@ -8,7 +8,7 @@ balance_around(existing_points, new_points, stratafield = NULL,
   projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
 }
 \arguments{
-\item{existing_points}{Spatial ponits data frame. The existing points that will be balanced around.}
+\item{existing_points}{Spatial points data frame. The existing points that will be balanced around.}
 
 \item{new_points}{Spatial points data frame. The points that will be compared against the existing points and selected from to create a balanced design.}
 

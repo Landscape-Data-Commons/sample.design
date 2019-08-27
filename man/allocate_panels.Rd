@@ -4,9 +4,8 @@
 \alias{allocate_panels}
 \title{Create a design object programmatically to use with \code{spsurvey::grts()}.}
 \usage{
-allocate_panels(spdf, stratum_field = "stratum",
-  panel_names = c("Year1", "Year2", "Year3", "Year4", "Year5"),
-  panel_sample_size = 50, points_min = 3,
+allocate_panels(spdf, stratum_field = "stratum", panel_names = c("1",
+  "2", "3", "4", "5"), panel_sample_size = 50, points_min = 3,
   oversample_proportion = 0.25, oversample_min = 3)
 }
 \arguments{
@@ -14,7 +13,7 @@ allocate_panels(spdf, stratum_field = "stratum",
 
 \item{stratum_field}{A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.}
 
-\item{panel_names}{A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("Year1", "Year2", "Year3", "Year4", "Year5")}.}
+\item{panel_names}{A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("1", "2", "3", "4", "5")}.}
 
 \item{panel_sample_size}{A numeric vector of the number of base points to be drawn in each panel. This must be the same length and in the same order as \code{panel_names} UNLESS all panels have the same number of base points in which case \code{panel_sample_size} optionally may be a single numeric value despite \code{panel_names} containing more than one value. Defaults to \code{c(50)}.}
 

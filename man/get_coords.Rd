@@ -17,7 +17,7 @@ get_coords(points, x_var = "XMETERS", y_var = "YMETERS",
 \item{projection}{CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.}
 }
 \value{
-The SPDF provided as \code{points} with the coordinates added to \code{@data$x_var"} and \code{@data$y_var}.
+The SPDF provided as \code{points} with the coordinates added to \code{@data$x_var} and \code{@data$y_var}.
 }
 \description{
 Add coordinates to the data slot of a SpatialPointsDataFrame
