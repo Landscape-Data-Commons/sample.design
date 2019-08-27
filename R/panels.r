@@ -72,10 +72,10 @@ allocate_panels <- function(spdf,
   workingframe[["PER.PANEL.OVERSAMPLE"]] <- ceiling(pmax(workingframe[["PER.PANEL.BASE"]] * oversample_proportion, oversample_min))
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
 
-  if (any(working.frame[["PER.PANEL.BASE"]] < 0)) {
+  if (any(workingframe[["PER.PANEL.BASE"]] < 0)) {
     stop("One or more strata ended up with a negative number of base points allocated. Check to make sure you aren't asking for too many points.")
   }
-  if (any(working.frame[["TOTAL.OVERSAMPLE"]] < 0)) {
+  if (any(workingframe[["TOTAL.OVERSAMPLE"]] < 0)) {
     stop("One or more strata ended up with a negative number of oversample points allocated. Check to make sure you aren't asking for too many points.")
   }
 
