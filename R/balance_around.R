@@ -45,10 +45,13 @@ find_preferences <- function(template_points,
                      x_var = "XMETERS",
                      y_var = "YMETERS")
 
+  template_indices <- 1:n_template
+  comparison_indices <- (n_template + 1):(n_template + n_comparison)
+
   template_df <- do.call(rbind,
-                         lapply(X = 1:n_template,
+                         lapply(X = template_indices,
                                 distance_matrix = distance_matrix,
-                                comparison_indices = (n_template + 1):(n_template + n_comparison),
+                                comparison_indices = comparison_indices,
                                 n_comparison = n_comparison,
                                 FUN = function(X, distance_matrix, comparison_indices, n_comparison){
                                   distances <- distance_matrix[comparison_indices, X]
@@ -59,9 +62,9 @@ find_preferences <- function(template_points,
                                 }))
 
   comparison_df <- do.call(rbind,
-                           lapply(X = (n_template + 1):(n_template + n_comparison),
+                           lapply(X = comparison_indices,
                                   distance_matrix = distance_matrix,
-                                  template_indices = 1:n_template,
+                                  template_indices = template_indices,
                                   n_template = n_template,
                                   FUN = function(X, distance_matrix, template_indices, n_template){
                                     distances <- distance_matrix[template_indices, X]
