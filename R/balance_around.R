@@ -203,9 +203,10 @@ ranked_sort <- function(match_to,
     matchto_matched_n <- sum(!is.na(matchto_pairs[["paired"]]))
   }
 
+
   # If we hit the iteration limit, something is wrong!!!!!!!!!!!
   if (iterations >= iteration_limit) {
-    message("The iteration limit of ", iteration_limit, " has been reached without reaching an optimal solution. Check your rankings or use another method.")
+    message("The iteration limit of ", iteration_limit, " has been reached without reaching an optimal solution. Check your rankings to make sure they make sense or use another method.")
   }
 
   # Time to return just the pairings!
