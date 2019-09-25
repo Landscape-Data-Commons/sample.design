@@ -367,7 +367,7 @@ get_closest <- function(existing_points,
 #' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
 #' @export
-keep_farthest <- function(existing_points,
+keep_farthest_old <- function(existing_points,
                           new_points,
                           target = NULL,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
@@ -524,6 +524,174 @@ keep_farthest <- function(existing_points,
 
   return(output)
 }
+
+keep_farthest <- function(existing_points,
+                          new_points,
+                          target = NULL,
+                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+
+  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
+    stop("existing_points must be a spatial points data frame")
+  }
+
+  if (nrow(existing_points@data) < 1) {
+    stop("There are no points in existing_points")
+  }
+  if (!(class(new_points) %in% "SpatialPointsDataFrame")) {
+    stop("new_points must be a spatial points data frame")
+  }
+  if (nrow(new_points@data) < 1) {
+    stop("There are no points in new_points")
+  }
+
+  if (!identical(projection, existing_points@proj4string)) {
+    existing_points <- sp::spTransform(existing_points,
+                                       projection)
+  }
+  if (!identical(projection, new_points@proj4string)) {
+    new_points <- sp::spTransform(new_points,
+                                  projection)
+  }
+
+  count_difference <- nrow(new_points@data) - nrow(existing_points@data)
+  if (is.null(target)) {
+    target <- count_difference
+  }
+  if (target > nrow(existing_points@data)) {
+    stop("The target number of points to return is greater than the number of points available")
+  }
+  if (target < 1) {
+    stop("The target number of points to return is less than 1")
+  }
+
+  if (target <= nrow(existing_points@data)) {
+    stop("The target number of points is less than or equal to the number of existing points.")
+  }
+
+  new_points_varnames <- names(new_points@data)
+  # common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
+  #                             names(new_points@data)[(names(new_points@data) %in% names(existing_points@data))]))
+  #
+  # if (length(common_varnames) < 1) {
+  #   stop("There are no variables in common between existing_points and new_points. There must be at least one")
+  # }
+
+  if (length(names(existing_points@data)) != length(common_varnames) | length(names(new_points@data)) != length(common_varnames)) {
+    message("Not all variables are in common between existing_points and new_points")
+  }
+
+  # existing_points <- existing_points[, common_varnames]
+  # new_points <- new_points[, common_varnames]
+
+  # How many of each point type are there? We'll use these for the loops
+  n_existing <- nrow(existing_points@data)
+  n_new <- nrow(new_points)
+
+  # Get some common info added to these
+  existing_points@data[["TYPE"]] <- "EXISTING"
+  existing_points@data[["INDEX"]] <- 1:n_existing
+  new_points@data[["TYPE"]] <- "NEW"
+  new_points@data[["INDEX"]] <- 1:n_new
+
+  # Combine the two sets of points, making sure the existing points come first!!!
+  combined_points <- rbind(existing_points[, c("INDEX", "TYPE")],
+                           new_points[, c("INDEX", "TYPE")])
+
+  # Add the coordinates
+  combined_points <- get_coords(combined_points,
+                                x_var = "XMETERS",
+                                y_var = "YMETERS",
+                                projection = sp::CRS("+proj=aea"))
+
+  # Get a distance matrix
+  distance_matrix <- dist_matrix(dataframe = combined_points@data,
+                                 x_var = "XMETERS",
+                                 y_var = "YMETERS")
+
+  # Remove the columns for new points
+  distance_matrix <- distance_matrix[, -((n_existing + 1):(n_existing + n_new))]
+  # Remove the rows for existing points
+  distance_matrix <- distance_matrix[-(1:n_existing), ]
+
+  # Convert to a data frame
+  distance_df <- as.data.frame(distance_matrix,
+                               stringsAsFactors = FALSE)
+
+  # Add the new points indices
+  distance_df[["INDEX"]] <- 1:n_new
+
+  # And now we loop to remove all the closest new points
+  # The looping is so that we can remove points that are already tossed
+  # Each loop will:
+  # 1) Check for the new point(s) closest to an existing point
+  # 2) Store the index (or indices) from distance_df[["INDEX"]]
+  # 3) Remove that observation(s) from distance_df
+  # This will continue until the number of stored indices is equal to the number of existing points
+  # If the number to remove is overshot because the finale pass through the loop identifies multiple indices, we only take the first however we need
+  # The observations at the identified indices in the new points will be removed!
+
+
+  # A vector to store the indices to chuck
+  removal_indices <- NULL
+  n_removal_indices <- 0
+  # Here's one we can mutilate over our iterations (always avoid violence to original data you may reference again!)
+  working_distance_df <- distance_df
+  # We'll be ignoring the index column because of course sequential ordinals starting at 1 are the smallest numbers in the matrix!
+  # The indices screw up min() results without removing this for the finding minimum evaluation step
+  index_colnum <- grep(names(distance_df), pattern = "INDEX")
+
+  while (n_removal_indices < (n_existing + n_new - target)) {
+    current_min <- min(working_distance_df[, -index_colnum])
+    # Get the indices from every column where that min occurs
+    # Each column is an existing point, so if we check every column for the value and store that index,
+    # those are the new points that are that distance from an existing point
+    current_indices <- sapply(X = 1:(ncol(working_distance_df) - 1),
+                              value = current_min,
+                              distance_df = working_distance_df,
+                              FUN = function(X, value, distance_df){
+                                # Grab the column as a vector
+                                distances <- distance_df[[X]]
+                                if (value %in% distances) {
+                                  # Get the values from INDEX that correspond to the places where the value is found
+                                  # We're returning from INDEX because they won't change when we remove rows from working_distance_df
+                                  indices <- distance_df[which(value == distances), "INDEX"]
+                                  return(indices)
+                                } else {
+                                  return(NULL)
+                                }
+                              })
+    # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
+    current_indices <- unique(current_indices)
+
+    # Add those to the ones we're going to remove
+    removal_indices <- unique(c(removal_indices, current_indices))
+    # Drop any NULLs
+    removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
+
+    if (!is.null(removal_indices)) {
+      # Make sure we don't overshoot our removal goal
+      removal_indices <- removal_indices[1:min(length(removal_indices), (target - n_existing))]
+
+      # Remove them!
+      working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
+
+      # Update our tracking value
+      n_removal_indices <- length(removal_indices)
+    }
+  }
+
+
+  # removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
+
+  # Now that we have our indices to remove, let's do it as we combine points
+  # The as.numeric() is because due to the NULL that's in there from the pre-loop setup removal_indices is a list, not a vector
+  # output <- rbind(existing_points[, common_varnames],
+  #                 new_points[-as.numeric(removal_indices), common_varnames])
+  output <- new_points[-as.numeric(removal_indices), new_point_varnames]
+
+  return(output)
+}
+
 
 
 #' Combine existing and new points to create a spatially balanced design
