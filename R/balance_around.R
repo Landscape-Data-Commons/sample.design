@@ -814,7 +814,7 @@ revisit_design <- function(existing_points,
                            polygons_stratavar = "stratum",
                            existing_stratavar = "stratum",
                            template_stratavar = "stratum",
-                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+                           projection = NULL){
   # SO MUCH SANITIZATION
   if (is.null(replacement_count) & is.null(keep_counts)) {
     stop("You must supply either a number of points to replace (allocated to strata by proportional area) or a named vector of counts per stratum as keep_counts")
@@ -843,11 +843,15 @@ revisit_design <- function(existing_points,
   }
 
   if (is.null(projection)) {
-    projection <- existing_points@proj4string
+    projection <- template_points@proj4string
+  } else {
+    if (class(projection) != "CRS") {
+      stop("projection must be a CRS object")
+    }
   }
 
-  if (!identical(existing_points@proj4string, projection)) {
-    existing_points <- sp::spTransform(existing_points, projection)
+  if (!identical(sub_points@proj4string, projection)) {
+    sub_points <- sp::spTransform(sub_points, projection)
   }
   if (!identical(template_points@proj4string, projection)) {
     template_points <- sp::spTransform(template_points, projection)
