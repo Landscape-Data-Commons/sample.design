@@ -117,6 +117,14 @@ read_panels <- function(dataframe,
                         oversample_field = NULL,
                         oversample_proportion = 0.25,
                         oversample_min = 3) {
+
+  if (class(dataframe) == "character") {
+    if (!file.exists(dataframe) | grepl(dataframe, pattern = "\\.csv$", ignore.case = TRUE)) {
+      stop("dataframe must either be a data frame or a filepath to a .CSV file")
+    }
+    dataframe <- read.csv(dataframe,
+                          stringsAsFactors = FALSE)
+  }
   # Create a vector of panel names from the variable names if there isn't one yet
   # This assumes that there are no variables other than stratum, oversample, and panels!!!
   if (is.null(panel_names)) {
