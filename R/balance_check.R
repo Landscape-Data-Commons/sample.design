@@ -150,8 +150,15 @@ gm_mean <- function(x,
     stop("x must be numeric")
   }
 
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  if (any(is.na(x))) {
+    warning("One or more values in x was NA")
+  }
+
   # Here's the math for a geometric mean, I guess
-  output <- exp(sum(log(x[x > 0]), na.rm = na.rm) / length(x))
+  output <- exp(sum(log(x[x > 0])) / length(x))
 
   return(output)
 }
