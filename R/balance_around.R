@@ -23,20 +23,22 @@ find_preferences <- function(template_points,
     stop("There are no points in comparison_points")
   }
 
+
   template_points@data[["source"]] <- "template"
-  comparison_points@data[["source"]] <- "comparison"
-
-  combined_points <- rbind(x = template_points[, "source"],
-                           y = comparison_points[, "source"])
-
-  combined_points <- get_coords(points = combined_points,
+  template_points <- get_coords(points = template_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
                                 projection = sp::CRS("+proj=aea"))
+  comparison_points@data[["source"]] <- "comparison"
+  comparison_points <- get_coords(points = comparison_points,
+                                  x_var = "XMETERS",
+                                  y_var = "YMETERS",
+                                  projection = sp::CRS("+proj=aea"))
 
-  distance_matrix <- dist_matrix(dataframe = combined_points@data,
-                                 x_var = "XMETERS",
-                                 y_var = "YMETERS")
+  distance_matrix <- dist_matrix(dataframe = rbind(template_points@data,
+                                      comparison_points@data),
+                     x_var = "XMETERS",
+                     y_var = "YMETERS")
 
   template_df <- do.call(rbind,
                          lapply(X = 1:n_template,
