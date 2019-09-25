@@ -5,7 +5,7 @@
 \title{Draw spatially balanced points with \code{spsurvey::grts()}, output in AIM format}
 \usage{
 grts_aim(design_object, design_name = "Design name",
-  source_frame = "sp.object", sp_object = NULL, in_shape = NULL,
+  source_frame = "sp.object", frame = NULL, in_shape = NULL,
   stratum_field = "STRATUM", seed_number = NULL)
 }
 \arguments{
@@ -15,7 +15,7 @@ grts_aim(design_object, design_name = "Design name",
 
 \item{source_frame}{Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp.object"}.}
 
-\item{sp_object}{If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.}
+\item{frame}{If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.}
 
 \item{in_shape}{If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in_shape}. Defaults to \code{NULL}.}
 

@@ -7,7 +7,7 @@
 ranked_sort(match_to, match_from, match_to_idvar = "match_to_id",
   match_from_idvar = "match_from_id",
   match_to_rankvar = "match_to_rank",
-  match_from_rankvar = "match_from_rank", iteration_limit = 10)
+  match_from_rankvar = "match_from_rank", iteration_limit = NULL)
 }
 \arguments{
 \item{match_to}{Data frame. The preferences of the members of the set to match to for the members of the set to match from. There must be one observation for each unique pairing between the two sets. The variable \code{match_to_idvar} must contain the identities of the members of the set to match to; \code{match_from_idvar}, the set to match from; and \code{match_to_rankvar} the rank preference of the MATCH FROM member for the MATCH FROM member.}
