@@ -120,22 +120,11 @@ ranked_sort <- function(match_to,
     stop("The match_from_rankvar, ", match_from_rankvar, ", must appear in match_from.")
   }
 
-  # Add the assigned variable, but set them all to FALSE for now because nothing's been assigned
-  match_to[["assigned"]] <- FALSE
-  match_from[["assigned"]] <- FALSE
-
-  # How many to match from?
   # How many to match from and to?
   # We care because we'll reference to see if the looping is done
   n_matchfrom <- length(unique(match_from[[match_from_idvar]]))
   n_matchto <- length(unique(match_to[[match_to_idvar]]))
 
-  # Make a tracker for whether the existing points have been confirmed
-  matchfrom_confirmed <- data.frame(matchfrom_id = unique(match_from[[match_from_idvar]]),
-                                    confirmed = FALSE)
-
-  # Have all the points been confirmed to be checked and assigned or rejected?
-  all_confirmed <- FALSE
   if (is.null(iteration_limit)) {
     iteration_limit <- max(n_matchfrom, n_matchto)
   } else {
@@ -148,116 +137,71 @@ ranked_sort <- function(match_to,
   }
 
   # Limit how many loops can be made. This counter gets compared against iteration_limit
+  # Here are the two data frames of pairs
+  # Since nothing is paired yet, their partners are NA rather than id values
+  matchfrom_pairs <- data.frame(id = unique(match_from[[match_from_idvar]]),
+                                paired = NA,
+                                stringsAsFactors = FALSE)
+  matchto_pairs <- data.frame(id = unique(match_to[[match_to_idvar]]),
+                              paired = NA,
+                              stringsAsFactors = FALSE)
+
+  # Initializing these. Each pass through the while() will update these two values
+  # It stops once the number of points matched from one of these groups is the same as the number of points in that group
+  matchfrom_matched_n <- sum(!is.na(matchfrom_pairs[["paired"]]))
+  matchto_matched_n <- sum(!is.na(matchto_pairs[["paired"]]))
+
+  # This is just a panic option. If somehow the while() wouldn't exit otherwise, we set a limit on iterations
   iterations <- 0
 
-  # If we have unconfirmed points then let's work on assigning them
-  # This may take a couple of passes
-  while (!all_confirmed & iterations < iteration_limit) {
-    # Get the still-unconfirmed existing points' indices
-    unconfirmed_existing_ids <- matchfrom_confirmed[!matchfrom_confirmed[["confirmed"]], "matchfrom_id"]
+  # This while() will keep the process running as long as not all the points have been paired
+  # and we haven't hit the iteration limit.
+  while ((n_matchfrom > matchfrom_matched_n & n_matchto > matchto_matched_n) & iterations < iteration_limit) {
+    # Get the match_from ID that we'll work on. It's the first one that isn't already paired
+    current_matchfrom_id <- matchfrom_pairs[is.na(matchfrom_pairs[["paired"]]), "id"][1]
+    # It's unpaired. We use this so that once it finds a suitable partner the loop will stop searching
+    current_unassigned <- TRUE
 
-    # Now work through those points!
-    for (current_id in unconfirmed_existing_ids) {
-      # This is used to flag that it's still unconfirmed
-      # It'll flip to TRUE if it gets assigned to or fails to qualify for assignment to any match_to point
-      current_id_unconfirmed <- TRUE
+    # Find out how it feels about the other set of points
+    current_preferences <- match_from[match_from[[match_from_idvar]] == current_matchfrom_id, ]
+    # And get those other point IDs in order of preference to work through
+    current_preferred_order <- current_preferences[current_preferences[[match_from_rankvar]], match_to_idvar]
 
-      # Which rows in match_from correspond to this current point?
-      match_from_current_vector <- match_from[[match_from_idvar]] == current_id
-      # And in match_to?
-      match_to_current_vector <- match_to[[match_from_idvar]] == current_id
-
-      # Now to get the order of indices to work through to try to assign the point to
-      match_to_info <- match_from[match_from_current_vector, c(match_from_rankvar, match_to_idvar)]
-
-      # Work through the comparisons in rank order from most preferred match_to ID to least preferred.
-      # As soon as it qualifies, this while() will trip and it'll stop looking
-      # It'll also trip if it tries every ID and can't find anywhere for it
-      while (current_id_unconfirmed) {
-        for (rank_by_current in sort(match_to_info[[match_from_rankvar]])) {
-          # Get the match_to ID
-          current_match_to_id <- match_to_info[match_to_info[[match_from_rankvar]] == rank_by_current, match_to_idvar]
-
-          # Which rows in match_to correspond to this match_to ID?
-          match_to_match_to_vector <- match_to[[match_to_idvar]] == current_match_to_id
-          # And in match_from?
-          match_from_match_to_vector <- match_from[[match_to_idvar]] == current_match_to_id
-
-          # This is the row where the point and match_to point meet in match_to!
-          current_row_match_to <- match_to_current_vector & match_to_match_to_vector
-          # And in match_from
-          current_row_match_from <- match_from_current_vector & match_from_match_to_vector
-
-          # Is the match_to point paired off yet?
-          # We'll do this by treating T/F as 1/0 and finding the sum so that we can confirm that only one is TRUE
-          match_to_assigned_count <- sum(match_to[match_to_match_to_vector, "assigned"])
-
-          # If it's already has another point assigned
-          # There are also two separate checks to prevent multiple assignments from happening
-          if (match_to_assigned_count == 1 & current_id_unconfirmed & !any(match_to[match_to[[match_to_idvar]] == current_id, "assigned"])) {
-            # We're going to compare the preference of the MATCH_TO ID for the current and assigned MATCH_FROM IDS
-
-            # This is the rank for the index of the unconfirmed point
-            current_rank_by_match_to <- match_to[current_row_match_to, match_to_rankvar]
-
-            # This is the rank of the currently assigned point
-            comparison_row_match_to <- match_to[["assigned"]] & match_to_match_to_vector
-            comparison_rank_by_match_to <- match_to[comparison_row_match_to, match_to_rankvar]
-
-            # And the index for it in existing points
-            comparison_id <- match_to[comparison_row_match_to, match_from_idvar]
-
-            # Which rows in match_from correspond to this comparison point?
-            match_from_comparison_vector <- match_from[[match_from_idvar]] == comparison_id
-            # And in match_to?
-            match_to_comparison_vector <- match_to[[match_from_idvar]] == comparison_id
-
-            # This is the row where the comparison point and match_to point meet in match_to!
-            comparison_row_match_to <- match_to_comparison_vector & match_to_match_to_vector
-            # And in match_from
-            comparison_row_match_from <- match_from_comparison_vector & match_from_match_to_vector
-
-            # Compare the two
-            # If the current point is more highly ranked, assign it and unassign the point that's already attached
-            if (current_rank_by_match_to < comparison_rank_by_match_to) {
-              # For the already assigned point, set values to FALSE in both match_from and match_to
-              matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == comparison_id, "confirmed"] <- FALSE
-              match_from[comparison_row_match_from, "assigned"] <- FALSE
-              match_to[comparison_row_match_to, "assigned"] <- FALSE
-
-              # For the current point that's being assigned, set those values to TRUE
-              matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
-              match_from[current_row_match_from, "assigned"] <- TRUE
-              match_to[current_row_match_to, "assigned"] <- TRUE
-
-              # It's not unconfirmed anymore
-              current_id_unconfirmed <- FALSE
-            }
-          } else if (match_to_assigned_count == 0 & current_id_unconfirmed & !any(match_to[match_to[[match_to_idvar]] == current_id, "assigned"])) {
-            # There are TWO separate checks to prevent multiple assignments from happening
-            # If there isn't a point assigned yet, this point gets assigned
-            matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
-            match_from[current_row_match_from, "assigned"] <- TRUE
-            match_to[current_row_match_to, "assigned"] <- TRUE
-
-            # It's not unconfirmed anymore
-            current_id_unconfirmed <- FALSE
+    # Work through the potential pairings
+    for (current_matchto_id in current_preferred_order) {
+      # Only bother to even compare if it doesn't have a more preferred partner yet
+      if (current_unassigned) {
+        # Does the potential partner already have a point?
+        current_matchto_id_pair <- matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"]
+        # If no, pair them off
+        if (is.na(current_matchto_id_pair)) {
+          matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
+          matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"] <- current_matchto_id
+          # It's no longer unassigned
+          current_unassigned <- FALSE
+        } else {
+          # If yes, find out how much it prefers the pair it's a part of
+          matchto_preference_already <- match_to[match_to[[match_to_idvar]] == current_matchto_id & match_to[[match_from_idvar]] == current_matchto_id_pair, match_to_rankvar]
+          # And how much it prefers the point we're working on
+          matchto_preference_current <- match_to[match_to[[match_to_idvar]] == current_matchto_id & match_to[[match_from_idvar]] == current_matchfrom_id, match_to_rankvar]
+          # If it likes the point we're asking about more, then pair them
+          if (matchto_preference_current < matchto_preference_already) {
+            matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
+            matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"] <- current_matchto_id
+            # Make sure that its previous partner is flagged as unpaired!
+            matchto_pairs[matchto_pairs[["id"]] == current_matchto_id_pair, "paired"] <- NA
+            # It's no longer unassigned
+            current_unassigned <- FALSE
           }
         }
-
-        # If it doesn't qualify for any, it gets confirmed but not assigned
-        matchfrom_confirmed[matchfrom_confirmed[["matchfrom_id"]] == current_id, "confirmed"] <- TRUE
-
-        # It's not unconfirmed anymore
-        current_id_unconfirmed <- FALSE
       }
     }
 
-    # Update whether every point is confirmed!
-    all_confirmed <- all(matchfrom_confirmed[["confirmed"]])
-
-    # Increment the iteration counter
+    # Increment the iterations
     iterations <- iterations + 1
+    # Update the numbers of matches made
+    matchfrom_matched_n <- sum(!is.na(matchfrom_pairs[["paired"]]))
+    matchto_matched_n <- sum(!is.na(matchto_pairs[["paired"]]))
   }
 
   # If we hit the iteration limit, something is wrong!!!!!!!!!!!
