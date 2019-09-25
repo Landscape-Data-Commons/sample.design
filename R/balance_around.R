@@ -56,8 +56,9 @@ find_preferences <- function(template_points,
                                 FUN = function(X, distance_matrix, comparison_indices, n_comparison){
                                   distances <- distance_matrix[comparison_indices, X]
                                   output <- data.frame(template_index = X,
-                                                       comparison_index = 1:n_comparison,
-                                                       rank_by_template = order(distance_matrix[comparison_indices, X]))
+                                                       comparison_index = 1:n_comparison)
+                                  output <- output[order(distances), ]
+                                  output[["rank_by_template"]] <- 1:nrow(output)
                                   return(output)
                                 }))
 
@@ -69,8 +70,9 @@ find_preferences <- function(template_points,
                                   FUN = function(X, distance_matrix, template_indices, n_template){
                                     distances <- distance_matrix[template_indices, X]
                                     output <- data.frame(comparison_index = X - n_template,
-                                                         template_index = 1:n_template,
-                                                         rank_by_comparison = order(distance_matrix[template_indices, X]))
+                                                         template_index = 1:n_template)
+                                    output <- output[order(distances), ]
+                                    output[["rank_by_comparison"]] <- 1:nrow(output)
                                     return(output)
                                   }))
 
