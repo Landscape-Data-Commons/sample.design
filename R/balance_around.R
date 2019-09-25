@@ -23,6 +23,11 @@ find_preferences <- function(template_points,
     stop("There are no points in comparison_points")
   }
 
+  if (!identical(template_points@proj4string, comparison_points@proj4string)) {
+    warning("comparison_points and template_points aren't in the same projection. Reprojecting comparison_points to match.")
+    comparison_points <- sp::spTransform(comparison_points,
+                                         CRSobj = template_points@proj4string)
+  }
 
   template_points@data[["source"]] <- "template"
   template_points <- get_coords(points = template_points,
