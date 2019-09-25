@@ -85,7 +85,7 @@ ranked_sort <- function(match_to,
                         match_from_idvar = "match_from_id",
                         match_to_rankvar = "match_to_rank",
                         match_from_rankvar = "match_from_rank",
-                        iteration_limit = 10){
+                        iteration_limit = NULL){
   if (class(match_to) != "data.frame") {
     stop("match_to must be a data frame.")
   }
@@ -121,6 +121,16 @@ ranked_sort <- function(match_to,
 
   # Have all the points been confirmed to be checked and assigned or rejected?
   all_confirmed <- FALSE
+  if (is.null(iteration_limit)) {
+    iteration_limit <- max(n_matchfrom, n_matchto)
+  } else {
+    if (!is.numeric(iteration_limit)) {
+      stop("The maximum number of iterations given as iteration_limit must be numeric")
+    }
+    if (iteration_limit < 0) {
+      stop("The maximum number of iterations given as iteration_limit must be positive")
+    }
+  }
 
   # Limit how many loops can be made. This counter gets compared against iteration_limit
   iterations <- 0
