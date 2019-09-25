@@ -173,7 +173,7 @@ draw <- function(design_name = "design",
   ## The use the design object to draw points
   output <- grts_aim(design_object = design_object,
                      design_name = design_name,
-                     sp_object = population_spdf,
+                     frame = population_spdf,
                      stratum_field = stratum_field,
                      seed_number = seed_number)
 

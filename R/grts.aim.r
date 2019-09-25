@@ -4,7 +4,7 @@
 #' @param design_object A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.
 #' @param design_name A character string of the name to use for the design, often the name of the project.
 #' @param source_frame Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp.object"}.
-#' @param sp_object If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.
+#' @param frame If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.
 #' @param in_shape If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in_shape}. Defaults to \code{NULL}.
 #' @param stratum_field A character string representing the name of the variable in either \code{sp_object} or \code{in_shape} containing the strata names matching those in \code{design_object}. Defaults to \code{"STRATUM"}.
 #' @param seed_number An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.
@@ -13,7 +13,7 @@
 grts_aim <- function(design_object,
                      design_name = "Design name",
                      source_frame = "sp.object",
-                     sp_object = NULL,
+                     frame = NULL,
                      in_shape = NULL,
                      stratum_field = "STRATUM",
                      seed_number = NULL
@@ -21,9 +21,9 @@ grts_aim <- function(design_object,
   if (!is.null(seed_number)) {
     set.seed(seed_number)
   }
-  if (!is.null(sp_object)) {
+  if (!is.null(frame)) {
     source_frame <- "sp.object"
-    if (!(stratum_field %in% names(sp_object))) {
+    if (!(stratum_field %in% names(frame))) {
       stop("The variable stratum_field was not found in sp_object. Check case and spelling.")
     }
   } else if (!is.null(in_shape)) {
@@ -32,7 +32,7 @@ grts_aim <- function(design_object,
   } else {
     stop("Provide either an SPDF as sp_object or a filepath to a shapefile as in_shape.")
   }
-  if (source_frame == "sp.object" & is.null(sp_object)) {
+  if (source_frame == "sp.object" & is.null(frame)) {
     stop("Please provide an SPDF as sp_object.")
   }
   if (source_frame == "shapefile" & is.null(in_shape)) {
@@ -40,7 +40,7 @@ grts_aim <- function(design_object,
   }
 
   # Set type.frame value depending on type of spdf
-  type_frame <- switch(class(sp_object),
+  type_frame <- switch(class(frame),
                        "SpatialPolygonsDataFrame" = {"area"},
                        "SpatialPointsDataFrame" = {"finite"})
 
@@ -49,15 +49,15 @@ grts_aim <- function(design_object,
                                  DesignID = design_name,
                                  type.frame = type_frame,
                                  src.frame = source_frame,
-                                 sp.object = sp_object,
+                                 sp.object = frame,
                                  in.shape = in_shape,
                                  stratum = stratum_field,
                                  shapefile = FALSE
   )
 
   ## Assign projection info to the sample sites SPDF
-  if (!is.null(sp_object)) {
-    sp::proj4string(sample_sites) <- sp_object@proj4string
+  if (!is.null(frame)) {
+    sp::proj4string(sample_sites) <- frame@proj4string
   } else {
     sp::proj4string(sample_sites) <- rgdal::readOGR(dsn = gsub(in_shape,
                                                                pattern = "/([A-z]|[0-9])+$",
