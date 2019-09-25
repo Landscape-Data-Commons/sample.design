@@ -209,8 +209,17 @@ ranked_sort <- function(match_to,
     message("The iteration limit of ", iteration_limit, " has been reached without reaching an optimal solution. Check your rankings to make sure they make sense or use another method.")
   }
 
-  # Time to return just the pairings!
-  output <- match_to[match_to[["assigned"]], c(match_to_idvar, match_from_idvar)]
+  names(matchfrom_pairs) <- c("match_from_id", "match_to_id")
+  names(matchto_pairs) <- c("match_to_id", "match_from_id")
+
+  # Return the complete set of pairs (so, not the one that had more points)
+  if (!any(is.na(matchfrom_pairs[["match_to_id"]]))) {
+    output <- matchfrom_pairs[, c("match_from_id", "match_to_id")]
+  } else if (!any(is.na(matchto_pairs[["match_from_id"]]))) {
+    output <- matchto_pairs[, c("match_from_id", "match_to_id")]
+  } else {
+    stop("Something went wrong and there are still points in both match_to and match_from without partners. I don't know what to tell you?")
+  }
 
   return(output)
 }
