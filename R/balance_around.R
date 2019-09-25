@@ -125,7 +125,10 @@ ranked_sort <- function(match_to,
   match_from[["assigned"]] <- FALSE
 
   # How many to match from?
+  # How many to match from and to?
+  # We care because we'll reference to see if the looping is done
   n_matchfrom <- length(unique(match_from[[match_from_idvar]]))
+  n_matchto <- length(unique(match_to[[match_to_idvar]]))
 
   # Make a tracker for whether the existing points have been confirmed
   matchfrom_confirmed <- data.frame(matchfrom_id = unique(match_from[[match_from_idvar]]),
