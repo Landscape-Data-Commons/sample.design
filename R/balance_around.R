@@ -136,7 +136,6 @@ ranked_sort <- function(match_to,
     }
   }
 
-  # Limit how many loops can be made. This counter gets compared against iteration_limit
   # Here are the two data frames of pairs
   # Since nothing is paired yet, their partners are NA rather than id values
   matchfrom_pairs <- data.frame(id = unique(match_from[[match_from_idvar]]),
