@@ -804,30 +804,30 @@ balance_around <- function(existing_points,
 #' @param projection Optional CRS object. The projection to force all spatial objects into, e.g. \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}. If \code{NULL} then the projection from \code{template_points@@proj4string} will be used. Defaults to \code{NULL}.
 #' @return A spatial points data frame of the \code{template_points} with points from \code{sub_points} substituted in. It will be in the projection specified by \code{projection}.
 #' @export
-revisit_design <- function(existing_points,
+combine_designs <- function(sub_points,
                            template_points,
-                           existing_idvar = "plotid",
+                           sub_idvar = "plotid",
                            template_idvar = "plotid",
                            replacement_count = NULL,
-                           keep_counts = NULL,
+                           sub_counts = NULL,
                            strata_polygons = NULL,
                            polygons_stratavar = "stratum",
-                           existing_stratavar = "stratum",
+                           sub_stratavar = "stratum",
                            template_stratavar = "stratum",
                            projection = NULL){
   # SO MUCH SANITIZATION
-  if (is.null(replacement_count) & is.null(keep_counts)) {
-    stop("You must supply either a number of points to replace (allocated to strata by proportional area) or a named vector of counts per stratum as keep_counts")
+  if (is.null(replacement_count) & is.null(sub_counts)) {
+    stop("You must supply either a number of points to replace (allocated to strata by proportional area) or a named vector of counts per stratum as sub_counts")
   }
 
-  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
-    stop("existing_points must be a spatial points data frame")
+  if (!(class(sub_points) %in% "SpatialPointsDataFrame")) {
+    stop("sub_points must be a spatial points data frame")
   }
-  if (!(existing_idvar %in% names(existing_points@data))) {
-    stop("The variable ", existing_idvar, " does not appear in existing_points@data")
+  if (!(sub_idvar %in% names(sub_points@data))) {
+    stop("The variable ", sub_idvar, " does not appear in sub_points@data")
   } else {
-    if (length(unique(existing_points@data[[existing_idvar]])) != nrow(existing_points@data)) {
-      stop("The variable ", existing_idvar, " does not contain unique identifiers in existing_points")
+    if (length(unique(sub_points@data[[sub_idvar]])) != nrow(sub_points@data)) {
+      stop("The variable ", sub_idvar, " does not contain unique identifiers in sub_points")
     }
   }
 
@@ -858,21 +858,21 @@ revisit_design <- function(existing_points,
   }
 
   if (is.null(strata_polygons)) {
-    if (xor(is.null(existing_stratavar), is.null(template_stratavar))) {
-      stop("You must either provide the stratification variables for both existing_points and template_points (for a stratified approach without strata polygons) or neither (for a non-stratified approach).")
+    if (xor(is.null(sub_stratavar), is.null(template_stratavar))) {
+      stop("You must either provide the stratification variables for both sub_points and template_points (for a stratified approach without strata polygons) or neither (for a non-stratified approach).")
     }
-    if (is.null(existing_stratavar) & is.null(template_stratavar)) {
-      existing_points@data[["MEMBERSHIP"]] <- "frame"
+    if (is.null(sub_stratavar) & is.null(template_stratavar)) {
+      sub_points@data[["MEMBERSHIP"]] <- "frame"
       template_points@data[["MEMBERSHIP"]] <- "frame"
-      existing_stratavar <- template_stratavar <- "MEMBERSHIP"
+      sub_stratavar <- template_stratavar <- "MEMBERSHIP"
     } else {
-      if (!(existing_stratavar %in% names(existing_points@data))) {
-        stop("The variable", existing_stratavar, "does not occur in existing_points@data")
+      if (!(sub_stratavar %in% names(sub_points@data))) {
+        stop("The variable", sub_stratavar, "does not occur in sub_points@data")
       }
       if (!(template_stratavar %in% names(template_points@data))) {
         stop("The variable", template_stratavar, "does not occur in template_points@data")
       }
-      existing_points@data[["MEMBERSHIP"]] <- existing_points@data[[existing_stratavar]]
+      sub_points@data[["MEMBERSHIP"]] <- sub_points@data[[sub_stratavar]]
       template_points@data[["MEMBERSHIP"]] <- template_points@data[[template_stratavar]]
     }
   } else {
@@ -886,40 +886,40 @@ revisit_design <- function(existing_points,
       strata_polygons <- sp::spTransform(strata_polygons, projection)
     }
 
-    if (is.null(existing_stratavar) & is.null(template_stratavar)) {
-      warning("Ignoring existing_stratavar and template_stratavar in favor of strata_polygons")
+    if (is.null(sub_stratavar) & is.null(template_stratavar)) {
+      warning("Ignoring sub_stratavar and template_stratavar in favor of strata_polygons")
     }
 
-    existing_points[["MEMBERSHIP"]] <- sp::over(x = existing_points,
+    sub_points[["MEMBERSHIP"]] <- sp::over(x = sub_points,
                                                 y = strata_polygons)[[polygons_stratavar]]
     template_points[["MEMBERSHIP"]] <- sp::over(x = template_points,
                                                 y = strata_polygons)[[polygons_stratavar]]
   }
 
-  if (any(is.na(existing_points@data[["MEMBERSHIP"]])) | any(is.na(template_points@data[["MEMBERSHIP"]]))) {
+  if (any(is.na(sub_points@data[["MEMBERSHIP"]])) | any(is.na(template_points@data[["MEMBERSHIP"]]))) {
     warning("Excluding points that have no stratification membership")
-    existing_points <- existing_points[is.na(existing_points[["MEMBERSHIP"]]), ]
+    sub_points <- sub_points[is.na(sub_points[["MEMBERSHIP"]]), ]
     template_points <- template_points[is.na(template_points[["MEMBERSHIP"]]), ]
   }
 
   # What strata are there?
-  strata <- unique(c(existing_points@data[["MEMBERSHIP"]], template_points@data[["MEMBERSHIP"]]))
+  strata <- unique(c(sub_points@data[["MEMBERSHIP"]], template_points@data[["MEMBERSHIP"]]))
 
-  if (!is.null(keep_counts)) {
-    if (!all(names(keep_counts) %in% strata)) {
-      stop("Not all strata named in keep_counts are associated with the points")
+  if (!is.null(sub_counts)) {
+    if (!all(names(sub_counts) %in% strata)) {
+      stop("Not all strata named in sub_counts are associated with the points")
     }
-    if (!all(strata %in% names(keep_counts))) {
-      stop("Not all strata associated with the points are found in keep_counts")
+    if (!all(strata %in% names(sub_counts))) {
+      stop("Not all strata associated with the points are found in sub_counts")
     }
     if (!is.null(replacement_count)) {
-      warning("Provided both replacement_count and keep_counts. Using keep_counts")
+      warning("Provided both replacement_count and sub_counts. Using sub_counts")
       replacement_count <- NULL
     }
   }
 
 
-  # Make keep_counts, a named vector of how many points per stratum to pull
+  # Make sub_counts, a named vector of how many points per stratum to pull
   # This is based on proportional allocation
   if (!is.null(replacement_count)) {
     allocation <- allocate_panels(spdf = template_points,
@@ -930,30 +930,30 @@ revisit_design <- function(existing_points,
                                   oversample_proportion = 0,
                                   oversample_min = 0)
 
-    keep_counts <- sapply(X = strata,
+    sub_counts <- sapply(X = strata,
                           allocation = allocation,
                           FUN = function(X, allocation){
                             allocation[[X]][["panel"]]["revisit"]
                           })
 
-    names(keep_counts) <- strata
+    names(sub_counts) <- strata
   }
 
 
   # By stratum!
   strata_selections <- lapply(X = strata,
                               template_points = template_points,
-                              existing_points = existing_points,
-                              keep_counts = keep_counts,
-                              FUN = function(X, template_points, existing_points, keep_counts){
+                              sub_points = sub_points,
+                              sub_counts = sub_counts,
+                              FUN = function(X, template_points, sub_points, sub_counts){
                                 # Narrow it down to the points in the current stratum
                                 stratum <- X
-                                existing_points_stratum <- existing_points[existing_points@data[["MEMBERSHIP"]] == stratum, ]
+                                sub_points_stratum <- sub_points[sub_points@data[["MEMBERSHIP"]] == stratum, ]
                                 template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
 
                                 # What are their ranking of each other between template and comparison based on distance?
                                 preferences <- find_preferences(template_points = template_points_stratum,
-                                                                comparison_points = existing_points_stratum)
+                                                                comparison_points = sub_points_stratum)
 
                                 # What's the optimal solution for minimizing distances for pairing?
                                 sorting <- ranked_sort(match_to = preferences[["template"]],
@@ -964,7 +964,7 @@ revisit_design <- function(existing_points,
                                                        match_from_rankvar = "rank_by_comparison")
 
                                 # Get a data frame of the paired IDs
-                                pairs <- data.frame(existing_id = existing_points_stratum[sorting[["comparison_index"]], existing_idvar],
+                                pairs <- data.frame(sub_id = sub_points_stratum[sorting[["comparison_index"]], sub_idvar],
                                                     template_id = template_points_stratum[sorting[["template_index"]], template_idvar],
                                                     stringsAsFactors = FALSE)
 
@@ -982,17 +982,17 @@ revisit_design <- function(existing_points,
                                 # And remove optional variables
                                 pairs <- pairs[, !grepl(names(pairs), pattern = "_optional$")]
 
-                                # Now we'll keep the n closest where n is the value in keep_counts for this stratum
+                                # Now we'll keep the n closest where n is the value in sub_counts for this stratum
                                 # First up is the distance between these pairs (apply() was acting up, so sapply() it is)
                                 pairs[["distance"]] <- sapply(X = 1:nrow(pairs),
                                                               df = pairs,
                                                               FUN = function(X, df){
-                                                                (df[X, "existing_xcoord"] - df[X, "template_xcoord"])^2 + (df[X, "existing_ycoord"] - df[X, "template_ycoord"])^2
+                                                                (df[X, "sub_xcoord"] - df[X, "template_xcoord"])^2 + (df[X, "sub_ycoord"] - df[X, "template_ycoord"])^2
                                                               })
 
                                 pairs <- pairs[order(pairs[["distance"]]), ]
 
-                                n_keep <- keep_counts[[stratum]]
+                                n_keep <- sub_counts[[stratum]]
 
                                 if (n_keep > nrow(pairs)) {
                                   stop("Attempting to keep ", n_keep, " points in ", stratum, " but only ", nrow(pairs), " plot pairs are available.")
@@ -1011,15 +1011,15 @@ revisit_design <- function(existing_points,
   names(template_df)[names(template_df) == template_idvar] <- "template_plotid"
 
   merged_points <- merge(x = template_df,
-                         y = strata_selection_df[, c("existing_plotid", "template_plotid", "existing_xcoord", "existing_ycoord")],
+                         y = strata_selection_df[, c("sub_plotid", "template_plotid", "sub_xcoord", "sub_ycoord")],
                          by.x = "template_plotid",
                          by.y = "template_plotid",
                          all.x = TRUE)
 
   output_df <- merged_points
   output_df[["plotid"]] <- output_df[["template_plotid"]]
-  output_df[["revisit"]] <- !is.na(output_df[["existing_plotid"]])
-  output_df[output_df[["revisit"]], c("plotid", "xcoord", "ycoord")] <- output_df[output_df[["revisit"]], c("existing_plotid", "existing_xcoord", "existing_ycoord")]
+  output_df[["revisit"]] <- !is.na(output_df[["sub_plotid"]])
+  output_df[output_df[["revisit"]], c("plotid", "xcoord", "ycoord")] <- output_df[output_df[["revisit"]], c("sub_plotid", "sub_xcoord", "sub_ycoord")]
 
   output_spdf <- sp::SpatialPointsDataFrame(coords = output_df[, c("xcoord", "ycoord")],
                                             data = output_df[, c("order_number", "plotid", "revisit")],
