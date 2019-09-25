@@ -542,12 +542,17 @@ get_coords <- function(points,
     stop("points must be a spatial points data frame")
   }
   # Create a reprojected spdf to grab coords from
-  temp_points <- sp::spTransform(points,
-                               projection)
-
-  # Write them into the original points
-  points@data[[x_var]] <- temp_points@coords[, 1]
-  points@data[[y_var]] <- temp_points@coords[, 2]
+  if (!identical(points@proj4string, projection)) {
+    temp_points <- sp::spTransform(points,
+                                   projection)
+    # Write them into the original points
+    points@data[[x_var]] <- temp_points@coords[, 1]
+    points@data[[y_var]] <- temp_points@coords[, 2]
+  } else {
+    # Write them into the original points
+    points@data[[x_var]] <- points@coords[, 1]
+    points@data[[y_var]] <- points@coords[, 2]
+  }
 
   return(points)
 }
