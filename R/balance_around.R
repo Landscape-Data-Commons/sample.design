@@ -98,6 +98,10 @@ ranked_sort <- function(match_to,
                         match_to_rankvar = "match_to_rank",
                         match_from_rankvar = "match_from_rank",
                         iteration_limit = NULL){
+  # Just as a heads up, I am not proud of the variable names in this function, particularly inside the while().
+  # They're definitely on the confusing side, but I promise this is an improvement over
+  # what I called them at first.
+
   if (class(match_to) != "data.frame") {
     stop("match_to must be a data frame.")
   }
@@ -125,6 +129,7 @@ ranked_sort <- function(match_to,
   n_matchfrom <- length(unique(match_from[[match_from_idvar]]))
   n_matchto <- length(unique(match_to[[match_to_idvar]]))
 
+  # For if we get in an endless loop, we'll have a way to hit the brakes
   if (is.null(iteration_limit)) {
     iteration_limit <- max(n_matchfrom, n_matchto)
   } else {
