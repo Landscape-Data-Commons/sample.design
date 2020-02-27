@@ -193,7 +193,7 @@ ranked_sort <- function(match_to,
             matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
             matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"] <- current_matchto_id
             # Make sure that its previous partner is flagged as unpaired!
-            matchto_pairs[matchto_pairs[["id"]] == current_matchto_id_pair, "paired"] <- NA
+            matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchto_id_pair, "paired"] <- NA
             # It's no longer unassigned
             current_unassigned <- FALSE
           }
