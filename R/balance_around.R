@@ -411,26 +411,23 @@ keep_farthest_old <- function(existing_points,
   if (target > nrow(existing_points@data)) {
     stop("The target number of points to return is greater than the number of points available")
   }
-
-  common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
-                              names(new_points@data)[(names(new_points@data) %in% names(existing_points@data))]))
-
-  if (length(common_varnames) < 1) {
-    stop("There are no variables in common between existing_points and new_points. There must be at least one")
   if (target < 1) {
     stop("The target number of points to return is less than 1")
   }
 
-  if (length(names(existing_points@data)) != length(common_varnames) | length(names(new_points@data)) != length(common_varnames)) {
-    message("Not all variables are in common between existing_points and new_points")
   # I don't think this matters????
   # if (target <= nrow(existing_points@data)) {
   #   stop("The target number of points is less than or equal to the number of existing points.")
   # }
+
+  existing_point_vars <- names(existing_points@data)
+  new_point_vars <- names(new_points@data)
+  if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
+    message("existing_points and new_points must have all the same variables as each other")
+  } else {
+    existing_points@data <- existing_points@data[, new_point_vars]
   }
 
-  existing_points <- existing_points[, common_varnames]
-  new_points <- new_points[, common_varnames]
 
 
   # Get some common info added to these
