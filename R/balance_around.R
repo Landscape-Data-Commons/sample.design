@@ -527,10 +527,9 @@ keep_farthest_old <- function(existing_points,
 
   # removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
 
-  # Now that we have our indices to remove, let's do it as we combine points
+  # Now that we have our indices to remove, let's do it
   # The as.numeric() is because due to the NULL that's in there from the pre-loop setup removal_indices is a list, not a vector
-  output <- rbind(existing_points[, common_varnames],
-                  new_points[-as.numeric(removal_indices), common_varnames])
+  output <- new_points[-as.numeric(removal_indices), new_point_vars]
 
   return(output)
 }
