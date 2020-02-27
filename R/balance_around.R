@@ -372,7 +372,7 @@ get_closest <- function(existing_points,
 #' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
 #' @return A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
 #' @export
-keep_farthest_old <- function(existing_points,
+keep_farthest <- function(existing_points,
                           new_points,
                           target = NULL,
                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
@@ -534,10 +534,10 @@ keep_farthest_old <- function(existing_points,
   return(output)
 }
 
-keep_farthest <- function(existing_points,
-                          new_points,
-                          target = NULL,
-                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+keep_farthest_old <- function(existing_points,
+                              new_points,
+                              target = NULL,
+                              projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
 
   if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
     stop("existing_points must be a spatial points data frame")
@@ -562,35 +562,27 @@ keep_farthest <- function(existing_points,
                                   projection)
   }
 
-  count_difference <- nrow(new_points@data) - nrow(existing_points@data)
   if (is.null(target)) {
-    target <- count_difference
-  }
-  if (target > nrow(existing_points@data)) {
-    stop("The target number of points to return is greater than the number of points available")
-  }
-  if (target < 1) {
-    stop("The target number of points to return is less than 1")
+    target <- nrow(new_points@data)
   }
 
   if (target <= nrow(existing_points@data)) {
     stop("The target number of points is less than or equal to the number of existing points.")
   }
 
-  new_points_varnames <- names(new_points@data)
-  # common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
-  #                             names(new_points@data)[(names(new_points@data) %in% names(existing_points@data))]))
-  #
-  # if (length(common_varnames) < 1) {
-  #   stop("There are no variables in common between existing_points and new_points. There must be at least one")
-  # }
+  common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
+                              names(new_points@data)[(names(new_points@data) %in% names(existing_points@data))]))
+
+  if (length(common_varnames) < 1) {
+    stop("There are no variables in common between existing_points and new_points. There must be at least one")
+  }
 
   if (length(names(existing_points@data)) != length(common_varnames) | length(names(new_points@data)) != length(common_varnames)) {
     message("Not all variables are in common between existing_points and new_points")
   }
 
-  # existing_points <- existing_points[, common_varnames]
-  # new_points <- new_points[, common_varnames]
+  existing_points <- existing_points[, common_varnames]
+  new_points <- new_points[, common_varnames]
 
   # How many of each point type are there? We'll use these for the loops
   n_existing <- nrow(existing_points@data)
@@ -694,9 +686,8 @@ keep_farthest <- function(existing_points,
 
   # Now that we have our indices to remove, let's do it as we combine points
   # The as.numeric() is because due to the NULL that's in there from the pre-loop setup removal_indices is a list, not a vector
-  # output <- rbind(existing_points[, common_varnames],
-  #                 new_points[-as.numeric(removal_indices), common_varnames])
-  output <- new_points[-as.numeric(removal_indices), new_point_varnames]
+  output <- rbind(existing_points[, common_varnames],
+                  new_points[-as.numeric(removal_indices), common_varnames])
 
   return(output)
 }
