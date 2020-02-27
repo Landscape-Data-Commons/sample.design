@@ -470,7 +470,8 @@ keep_farthest_old <- function(existing_points,
   # 2) Store the index (or indices) from distance_df[["INDEX"]]
   # 3) Remove that observation(s) from distance_df
   # This will continue until the number of stored indices is equal to the number of existing points
-  # If the number to remove is overshot because the finale pass through the loop identifies multiple indices, we only take the first however we need
+  # If the number to remove is overshot because the finale pass through the loop identifies multiple indices,
+  # we only take the first however we need
   # The observations at the identified indices in the new points will be removed!
 
 
