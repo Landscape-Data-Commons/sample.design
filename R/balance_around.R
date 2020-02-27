@@ -692,8 +692,6 @@ keep_farthest_old <- function(existing_points,
   return(output)
 }
 
-
-
 #' Combine existing and new points to create a spatially balanced design
 #' @param existing_points Spatial points data frame. The existing points that will be balanced around.
 #' @param new_points Spatial points data frame. The points that will be compared against the existing points and selected from to create a balanced design.
