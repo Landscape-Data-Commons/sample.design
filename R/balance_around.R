@@ -408,9 +408,8 @@ keep_farthest_old <- function(existing_points,
   if (is.null(target)) {
     target <- count_difference
   }
-
-  if (target <= nrow(existing_points@data)) {
-    stop("The target number of points is less than or equal to the number of existing points.")
+  if (target > nrow(existing_points@data)) {
+    stop("The target number of points to return is greater than the number of points available")
   }
 
   common_varnames <- unique(c(names(existing_points@data)[(names(existing_points@data) %in% names(new_points@data))],
@@ -418,10 +417,16 @@ keep_farthest_old <- function(existing_points,
 
   if (length(common_varnames) < 1) {
     stop("There are no variables in common between existing_points and new_points. There must be at least one")
+  if (target < 1) {
+    stop("The target number of points to return is less than 1")
   }
 
   if (length(names(existing_points@data)) != length(common_varnames) | length(names(new_points@data)) != length(common_varnames)) {
     message("Not all variables are in common between existing_points and new_points")
+  # I don't think this matters????
+  # if (target <= nrow(existing_points@data)) {
+  #   stop("The target number of points is less than or equal to the number of existing points.")
+  # }
   }
 
   existing_points <- existing_points[, common_varnames]
