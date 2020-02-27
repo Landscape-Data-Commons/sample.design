@@ -73,7 +73,7 @@ allocate_panels <- function(spdf,
   workingframe[["TOTAL.OVERSAMPLE"]] <- workingframe[["PER.PANEL.OVERSAMPLE"]] * panel_count
 
   if (any(workingframe[["PER.PANEL.BASE"]] < 0)) {
-    stop("One or more strata ended up with a negative number of base points allocated. Check to make sure you aren't asking for too many points.")
+    stop("One or more strata ended up with a negative number of base points allocated. This usually happened if the minimum number of points per stratum is high enough that the minimum number of points exceeds the total points per panel. Check to make sure you aren't asking for too many points.")
   }
   if (any(workingframe[["TOTAL.OVERSAMPLE"]] < 0)) {
     stop("One or more strata ended up with a negative number of oversample points allocated. Check to make sure you aren't asking for too many points.")
