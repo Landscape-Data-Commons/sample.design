@@ -400,6 +400,11 @@ keep_farthest_old <- function(existing_points,
                                   projection)
   }
 
+  # How many of each point type are there? We'll use these for the loops
+  n_existing <- nrow(existing_points@data)
+  n_new <- nrow(new_points)
+
+  count_difference <- n_new - n_existing
   if (is.null(target)) {
     target <- count_difference
   }
@@ -422,9 +427,6 @@ keep_farthest_old <- function(existing_points,
   existing_points <- existing_points[, common_varnames]
   new_points <- new_points[, common_varnames]
 
-  # How many of each point type are there? We'll use these for the loops
-  n_existing <- nrow(existing_points@data)
-  n_new <- nrow(new_points)
 
   # Get some common info added to these
   existing_points@data[["TYPE"]] <- "EXISTING"
