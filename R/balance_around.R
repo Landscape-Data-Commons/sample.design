@@ -415,11 +415,6 @@ keep_farthest <- function(existing_points,
     stop("The target number of points to return is less than 1")
   }
 
-  # I don't think this matters????
-  # if (target <= nrow(existing_points@data)) {
-  #   stop("The target number of points is less than or equal to the number of existing points.")
-  # }
-
   existing_point_vars <- names(existing_points@data)
   new_point_vars <- names(new_points@data)
   if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
