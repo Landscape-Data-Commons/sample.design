@@ -500,6 +500,7 @@ keep_farthest <- function(existing_points,
                                 if (value %in% distances) {
                                   # Get the values from INDEX that correspond to the places where the value is found
                                   # We're returning from INDEX because they won't change when we remove rows from working_distance_df
+                                  # Whereas each time we drop rows, that changes the row number for the remaining points
                                   indices <- distance_df[which(value == distances), "INDEX"]
                                   return(indices)
                                 } else {
