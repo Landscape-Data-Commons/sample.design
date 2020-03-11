@@ -513,7 +513,7 @@ keep_farthest <- function(existing_points,
 
     # Add those to the ones we're going to remove
     removal_indices <- unique(c(removal_indices, current_indices))
-    # Drop any NULLs
+    # Drop any NULLs (shouldn't be necessary with the unlist(sapply()) above, but just to be safe)
     removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
 
     if (!is.null(removal_indices)) {
