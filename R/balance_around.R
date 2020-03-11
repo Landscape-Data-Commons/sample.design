@@ -415,13 +415,14 @@ keep_farthest <- function(existing_points,
     stop("The target number of points to return is less than 1")
   }
 
-  existing_point_vars <- names(existing_points@data)
   new_point_vars <- names(new_points@data)
-  if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
-    message("existing_points and new_points must have all the same variables as each other")
-  } else {
-    existing_points@data <- existing_points@data[, new_point_vars]
-  }
+  # existing_point_vars <- names(existing_points@data)
+
+  # if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
+  #   message("existing_points and new_points must have all the same variables as each other")
+  # } else {
+  #   existing_points@data <- existing_points@data[, new_point_vars]
+  # }
 
 
 
