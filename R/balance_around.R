@@ -489,7 +489,9 @@ keep_farthest <- function(existing_points,
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
     # those are the new points that are that distance from an existing point
-    current_indices <- sapply(X = 1:(ncol(working_distance_df) - 1),
+    # I've added an unlist() because sapply() will return a list instead of a vector when NULLs are present
+    # because a vector would drop the NULLs and the list will keep them. But I don't want them!!!!!!
+    current_indices <- unlist(sapply(X = 1:(ncol(working_distance_df) - 1),
                               value = current_min,
                               distance_df = working_distance_df,
                               FUN = function(X, value, distance_df){
