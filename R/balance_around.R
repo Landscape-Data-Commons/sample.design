@@ -535,7 +535,12 @@ keep_farthest <- function(existing_points,
 
   # Now that we have our indices to remove, let's do it
   # The as.numeric() is because due to the NULL that's in there from the pre-loop setup removal_indices is a list, not a vector
-  output <- new_points[-as.numeric(removal_indices), new_point_vars]
+  if (!is.null(removal_indices)) {
+    output <- new_points[-as.numeric(removal_indices), new_point_vars]
+  } else {
+    output <- new_points
+  }
+
 
   return(output)
 }
