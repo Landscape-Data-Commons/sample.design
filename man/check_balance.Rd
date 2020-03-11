@@ -4,9 +4,17 @@
 \alias{check_balance}
 \title{Test to see if a set of points are spatially balanced within the polygons used to draw them}
 \usage{
-check_balance(polygons, points, reps = 100, stratafield = NULL,
-  by_frame = TRUE, seed_number = 420, method = "sample",
-  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+check_balance(
+  polygons,
+  points,
+  reps = 100,
+  stratafield = NULL,
+  by_frame = TRUE,
+  seed_number = 420,
+  method = "sample",
+ 
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
 }
 \arguments{
 \item{polygons}{Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.}

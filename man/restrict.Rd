@@ -4,9 +4,14 @@
 \alias{restrict}
 \title{Restrict an SPDF with the option to inherit values from a Spatial Polygons Data Frame}
 \usage{
-restrict(spdf1 = NULL, spdf2 = NULL, inherit = FALSE,
-  inherit_field = NULL, ignore_case_inherit_field = FALSE,
-  bookend_inherit_field = FALSE)
+restrict(
+  spdf1 = NULL,
+  spdf2 = NULL,
+  inherit = FALSE,
+  inherit_field = NULL,
+  ignore_case_inherit_field = FALSE,
+  bookend_inherit_field = FALSE
+)
 }
 \arguments{
 \item{spdf1}{An SPDF to restrict.}

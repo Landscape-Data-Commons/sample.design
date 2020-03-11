@@ -4,11 +4,22 @@
 \alias{strat_panel.fcn}
 \title{Strata time}
 \usage{
-strat_panel.fcn(master_df, target_panel_size, wgt_var = "wgt_km",
-  wgt_units = "km", wgt_type = "Length", strata_var = NULL,
-  id_var = "site.id", x_var = "x.coord", y_var = "y.coord",
-  rerandomize = TRUE, prob_var = NULL, legacy_df = NULL,
-  legacy_first = FALSE, oversample_pct = NULL)
+strat_panel.fcn(
+  master_df,
+  target_panel_size,
+  wgt_var = "wgt_km",
+  wgt_units = "km",
+  wgt_type = "Length",
+  strata_var = NULL,
+  id_var = "site.id",
+  x_var = "x.coord",
+  y_var = "y.coord",
+  rerandomize = TRUE,
+  prob_var = NULL,
+  legacy_df = NULL,
+  legacy_first = FALSE,
+  oversample_pct = NULL
+)
 }
 \arguments{
 \item{master_df}{master sample data frame}

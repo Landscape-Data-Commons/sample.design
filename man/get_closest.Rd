@@ -4,9 +4,14 @@
 \alias{get_closest}
 \title{Select points that most closely approximate the distribution of another set of points}
 \usage{
-get_closest(existing_points, template_points, strata_polygons = NULL,
+get_closest(
+  existing_points,
+  template_points,
+  strata_polygons = NULL,
   stratafield = NULL,
-  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+ 
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
 }
 \arguments{
 \item{existing_points}{Spatial Points Data Frame. The points you would like to select from by comparing against \code{template_points}.}

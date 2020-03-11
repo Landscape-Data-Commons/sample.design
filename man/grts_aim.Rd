@@ -4,9 +4,15 @@
 \alias{grts_aim}
 \title{Draw spatially balanced points with \code{spsurvey::grts()}, output in AIM format}
 \usage{
-grts_aim(design_object, design_name = "Design name",
-  source_frame = "sp.object", frame = NULL, in_shape = NULL,
-  stratum_field = "STRATUM", seed_number = NULL)
+grts_aim(
+  design_object,
+  design_name = "Design name",
+  source_frame = "sp.object",
+  frame = NULL,
+  in_shape = NULL,
+  stratum_field = "STRATUM",
+  seed_number = NULL
+)
 }
 \arguments{
 \item{design_object}{A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.}

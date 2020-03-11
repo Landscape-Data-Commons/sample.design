@@ -4,8 +4,7 @@
 \alias{find_name}
 \title{Find names in an object matching a pattern}
 \usage{
-find_name(obj, name = "", ignore_case_name = FALSE, bookend,
-  multiple = FALSE)
+find_name(obj, name = "", ignore_case_name = FALSE, bookend, multiple = FALSE)
 }
 \arguments{
 \item{obj}{The named object (a data frame, Spatial Data Frame, list, etc.) to search for matching names.}

@@ -4,8 +4,13 @@
 \alias{balance_around}
 \title{Combine existing and new points to create a spatially balanced design}
 \usage{
-balance_around(existing_points, new_points, stratafield = NULL,
-  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+balance_around(
+  existing_points,
+  new_points,
+  stratafield = NULL,
+ 
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
 }
 \arguments{
 \item{existing_points}{Spatial points data frame. The existing points that will be balanced around.}

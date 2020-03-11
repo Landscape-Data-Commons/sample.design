@@ -4,13 +4,22 @@
 \alias{reallocate}
 \title{Reallocate points in an existing design_object.}
 \usage{
-reallocate(design_object = list(), stratum = character(),
-  grep_stratum = FALSE, ignore_case_stratum = FALSE,
-  bookend_stratum = FALSE, panels = c("Year1", "Year2", "Year3",
-  "Year4", "Year5"), grep_panels = FALSE, ignore_case_panels = FALSE,
-  bookend_panels = FALSE, base_point_change = NULL,
-  base_point_set = NULL, recalc_oversample = FALSE,
-  oversample_proportion = 0.25, oversample_min = 3)
+reallocate(
+  design_object = list(),
+  stratum = character(),
+  grep_stratum = FALSE,
+  ignore_case_stratum = FALSE,
+  bookend_stratum = FALSE,
+  panels = c("Year1", "Year2", "Year3", "Year4", "Year5"),
+  grep_panels = FALSE,
+  ignore_case_panels = FALSE,
+  bookend_panels = FALSE,
+  base_point_change = NULL,
+  base_point_set = NULL,
+  recalc_oversample = FALSE,
+  oversample_proportion = 0.25,
+  oversample_min = 3
+)
 }
 \arguments{
 \item{design_object}{A list structured according to the requirements of \code{spsurvey::grts()}. May be the output from \code{allocate.panels()}.}

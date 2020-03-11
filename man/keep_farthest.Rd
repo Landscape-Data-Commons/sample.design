@@ -4,15 +4,20 @@
 \alias{keep_farthest}
 \title{Find and keep the points farthest from each other}
 \usage{
-keep_farthest(existing_points, new_points, target = NULL,
-  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+keep_farthest(
+  existing_points,
+  new_points,
+  target = NULL,
+ 
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
 }
 \arguments{
 \item{existing_points}{Spatial points data frame. These are the points that will all be included in the output points and the points against which \code{new_points} will be compared against.}
 
 \item{new_points}{Spatial points data frame. These are the points that may be included in the output. The number that will be is equal to \code{target - nrow(existing_points)}.}
 
-\item{target}{Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points)}.}
+\item{target}{Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points) - nrow(existing_points)}.}
 
 \item{projection}{CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
 }

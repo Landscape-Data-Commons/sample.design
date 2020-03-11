@@ -4,8 +4,13 @@
 \alias{add_area}
 \title{Add areas to a Spatial Polygons Data Frame}
 \usage{
-add_area(polygons, area_ha = TRUE, area_sqkm = TRUE,
-  area_acres = TRUE, byid = TRUE)
+add_area(
+  polygons,
+  area_ha = TRUE,
+  area_sqkm = TRUE,
+  area_acres = TRUE,
+  byid = TRUE
+)
 }
 \arguments{
 \item{polygons}{Spatial Polygons Data Frame to calculate areas for}

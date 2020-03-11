@@ -4,9 +4,15 @@
 \alias{test_points}
 \title{Test points spatial balance against sets of random points}
 \usage{
-test_points(number = 100, points, polygons, method = "sample",
+test_points(
+  number = 100,
+  points,
+  polygons,
+  method = "sample",
   seed_number = 420,
-  projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
+ 
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+)
 }
 \arguments{
 \item{number}{Numeric. The number of sets to generate to compare. Defaults to \code{100}.}

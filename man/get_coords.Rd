@@ -4,8 +4,12 @@
 \alias{get_coords}
 \title{Add coordinates to the data slot of a SpatialPointsDataFrame}
 \usage{
-get_coords(points, x_var = "XMETERS", y_var = "YMETERS",
-  projection = CRS("+proj=aea"))
+get_coords(
+  points,
+  x_var = "XMETERS",
+  y_var = "YMETERS",
+  projection = CRS("+proj=aea")
+)
 }
 \arguments{
 \item{points}{A SpatialPointsDataFrame.}
