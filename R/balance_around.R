@@ -518,7 +518,7 @@ keep_farthest <- function(existing_points,
 
     if (!is.null(removal_indices)) {
       # Make sure we don't overshoot our removal goal
-      removal_indices <- removal_indices[1:min(length(removal_indices), (target - n_existing))]
+      removal_indices <- removal_indices[1:min(length(removal_indices), n_to_remove)]
 
       # Remove them!
       working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
