@@ -521,6 +521,8 @@ keep_farthest <- function(existing_points,
       removal_indices <- removal_indices[1:min(length(removal_indices), n_to_remove)]
 
       # Remove them!
+      # Note that this step should only end up removing the index/indices identified on this pass
+      # because the other indices in removal_indices have already been dropped on the pass they were identified
       working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
 
       # Update our tracking value
