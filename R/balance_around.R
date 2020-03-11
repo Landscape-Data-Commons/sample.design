@@ -480,7 +480,11 @@ keep_farthest <- function(existing_points,
   # The indices screw up min() results without removing this for the finding minimum evaluation step
   index_colnum <- grep(names(distance_df), pattern = "INDEX")
 
-  while (n_removal_indices < (n_existing + n_new - target)) {
+  # How many points do we need to drop?
+  n_to_remove <- n_new - target
+
+  # As long as we haven't found enough points to throw out, keep going!!!!!
+  while (n_removal_indices < n_to_remove) {
     current_min <- min(working_distance_df[, -index_colnum])
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
