@@ -506,8 +506,9 @@ keep_farthest <- function(existing_points,
                                 } else {
                                   return(NULL)
                                 }
-                              })
-    # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
+                              }))
+
+    # Make sure we have the uniques, in case a new point was equidistant from multiple existing points (UNLIKELY)
     current_indices <- unique(current_indices)
 
     # Add those to the ones we're going to remove
