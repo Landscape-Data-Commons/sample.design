@@ -408,7 +408,7 @@ keep_farthest <- function(existing_points,
   if (is.null(target)) {
     target <- count_difference
   }
-  if (target > nrow(existing_points@data)) {
+  if (target > n_new) {
     stop("The target number of points to return is greater than the number of points available")
   }
   if (target < 1) {
