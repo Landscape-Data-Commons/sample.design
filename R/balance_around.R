@@ -448,9 +448,9 @@ keep_farthest <- function(existing_points,
                                  y_var = "YMETERS")
 
   # Remove the columns for new points
-  distance_matrix <- distance_matrix[, -((n_existing + 1):(n_existing + n_new))]
+  distance_matrix <- as.matrix(distance_matrix[, -((n_existing + 1):(n_existing + n_new))])
   # Remove the rows for existing points
-  distance_matrix <- distance_matrix[-(1:n_existing), ]
+  distance_matrix <- as.matrix(distance_matrix[-(1:n_existing), ])
 
   # Convert to a data frame
   distance_df <- as.data.frame(distance_matrix,
