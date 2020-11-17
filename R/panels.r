@@ -28,10 +28,10 @@ allocate_panels <- function(spdf,
   if (class(spdf) == "SpatialPolygonsDataFrame") {
     df <- sample.design::add_area(polygons = spdf)@data
     df[["AREA"]] <- df[["AREA.HA"]]
-  }
-
-  if (class(spdf) == "SpatialPointsDataFrame") {
+  } else if (class(spdf) == "SpatialPointsDataFrame") {
     df <- spdf@data
+  } else {
+    df <- spdf
   }
 
   if (!(stratum_field %in% names(df))) {
