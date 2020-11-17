@@ -33,12 +33,12 @@ find_preferences <- function(template_points,
   template_points <- get_coords(points = template_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
-                                projection = sp::CRS("+proj=aea"))
+                                projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
   comparison_points@data[["source"]] <- "comparison"
   comparison_points <- get_coords(points = comparison_points,
                                   x_var = "XMETERS",
                                   y_var = "YMETERS",
-                                  projection = sp::CRS("+proj=aea"))
+                                  projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
   distance_matrix <- dist_matrix(dataframe = rbind(template_points@data,
                                       comparison_points@data),
@@ -444,7 +444,7 @@ keep_farthest <- function(existing_points,
   combined_points <- get_coords(combined_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
-                                projection = sp::CRS("+proj=aea"))
+                                projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
   # Get a distance matrix
   distance_matrix <- dist_matrix(dataframe = combined_points@data,
@@ -602,7 +602,7 @@ keep_farthest_old <- function(existing_points,
   combined_points <- get_coords(combined_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
-                                projection = sp::CRS("+proj=aea"))
+                                projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
   # Get a distance matrix
   distance_matrix <- dist_matrix(dataframe = combined_points@data,
@@ -750,7 +750,7 @@ balance_around <- function(existing_points,
   pts <- get_coords(pts,
                     x_var = "XMETERS",
                     y_var = "YMETERS",
-                    projection = sp::CRS("+proj=aea"))
+                    projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
   # This determines the number of New points to eliminate, and eliminates the points
   pts <- keep_farthest(existing_points = existing_points,

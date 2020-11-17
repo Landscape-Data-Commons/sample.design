@@ -362,7 +362,7 @@ test_points <- function(number = 100,
   # NAD83 CRS for projecting
   projectionNAD83 <- sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
   # Alber's equal area CRS for projecting
-  projectionAL <- sp::CRS("+proj=aea")
+  projectionAL <- sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
 
   # Grab the point coordinates to calculate the mean nearest neighbor
   pts_coords <- get_coords(points,
@@ -531,13 +531,13 @@ test_points <- function(number = 100,
 #' @param points A SpatialPointsDataFrame.
 #' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
 #' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
-#' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea")}, Albers equal area.
+#' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")}, Albers equal area.
 #' @return The SPDF provided as \code{points} with the coordinates added to \code{@@data$x_var} and \code{@@data$y_var}.
 #' @export
 get_coords <- function(points,
                        x_var = "XMETERS",
                        y_var = "YMETERS",
-                       projection = CRS("+proj=aea")){
+                       projection = CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")){
   if (!grepl(class(points), pattern = "^SpatialPointsDataFrame")) {
     stop("points must be a spatial points data frame")
   }
