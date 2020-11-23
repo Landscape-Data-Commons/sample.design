@@ -865,10 +865,10 @@ combine_designs <- function(sub_points,
       sub_stratavar <- template_stratavar <- "MEMBERSHIP"
     } else {
       if (!(sub_stratavar %in% names(sub_points@data))) {
-        stop("The variable", sub_stratavar, "does not occur in sub_points@data")
+        stop("The variable ", sub_stratavar, " does not occur in sub_points@data")
       }
       if (!(template_stratavar %in% names(template_points@data))) {
-        stop("The variable", template_stratavar, "does not occur in template_points@data")
+        stop("The variable ", template_stratavar, " does not occur in template_points@data")
       }
       sub_points@data[["MEMBERSHIP"]] <- sub_points@data[[sub_stratavar]]
       template_points@data[["MEMBERSHIP"]] <- template_points@data[[template_stratavar]]
