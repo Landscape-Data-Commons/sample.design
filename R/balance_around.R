@@ -226,6 +226,8 @@ ranked_sort <- function(match_to,
     stop("Something went wrong and there are still points in both match_to and match_from without partners. I don't know what to tell you?")
   }
 
+  names(output) <- c(match_from_idvar, match_to_idvar)
+
   return(output)
 }
 
