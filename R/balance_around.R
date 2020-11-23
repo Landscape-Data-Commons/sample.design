@@ -1018,16 +1018,20 @@ combine_designs <- function(sub_points,
   template_df <- template_df[, c("order_number", template_idvar, "xcoord", "ycoord")]
   names(template_df)[names(template_df) == template_idvar] <- "template_plotid"
 
+  # Because they now have prefixes
+  current_sub_idvar <- paste0("sub_", sub_idvar)
+  current_template_idvar <- paste0("template_", template_idvar)
+
   merged_points <- merge(x = template_df,
-                         y = strata_selection_df[, c("sub_plotid", "template_plotid", "sub_xcoord", "sub_ycoord")],
+                         y = strata_selection_df[, c(current_sub_idvar, current_template_idvar, "sub_xcoord", "sub_ycoord")],
                          by.x = "template_plotid",
-                         by.y = "template_plotid",
+                         by.y = current_template_idvar,
                          all.x = TRUE)
 
   output_df <- merged_points
-  output_df[["plotid"]] <- output_df[["template_plotid"]]
-  output_df[["revisit"]] <- !is.na(output_df[["sub_plotid"]])
-  output_df[output_df[["revisit"]], c("plotid", "xcoord", "ycoord")] <- output_df[output_df[["revisit"]], c("sub_plotid", "sub_xcoord", "sub_ycoord")]
+  output_df[["plotid"]] <- output_df[[current_template_idvar]]
+  output_df[["revisit"]] <- !is.na(output_df[[current_sub_idvar]])
+  output_df[output_df[["revisit"]], c("plotid", "xcoord", "ycoord")] <- output_df[output_df[["revisit"]], c(current_sub_idvar, "sub_xcoord", "sub_ycoord")]
 
   output_spdf <- sp::SpatialPointsDataFrame(coords = output_df[, c("xcoord", "ycoord")],
                                             data = output_df[, c("order_number", "plotid", "revisit")],
