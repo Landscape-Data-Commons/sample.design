@@ -979,6 +979,13 @@ combine_designs <- function(sub_points,
                                 names(pairs) <- gsub(names(pairs),
                                                      pattern = "_coords\\.x2$",
                                                      replacement = "_ycoord")
+                                # I don't know why the template var names changted, but this catches them if it happens
+                                names(pairs) <- gsub(names(pairs),
+                                                     pattern = "_X$",
+                                                     replacement = "_xcoord")
+                                names(pairs) <- gsub(names(pairs),
+                                                     pattern = "_Y$",
+                                                     replacement = "_ycoord")
 
                                 # And remove optional variables
                                 pairs <- pairs[, !grepl(names(pairs), pattern = "_optional$")]
