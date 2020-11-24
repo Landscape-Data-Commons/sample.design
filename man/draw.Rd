@@ -4,13 +4,22 @@
 \alias{draw}
 \title{A quick wrapper to execute simple designs}
 \usage{
-draw(design_name = "design", strata_spdf = NULL,
-  stratum_field = "STRATUM", sampleframe_spdf = NULL,
-  points_spdf = NULL, strata_lut = NULL, strata_lut_field = NULL,
-  design_object = NULL, panel_names = c("One", "Two", "Three", "Four",
-  "Five"), panel_sample_size = 50, points_min = 3,
-  oversample_proportion = 0.25, oversample_min = 3,
-  seed_number = NULL)
+draw(
+  design_name = "design",
+  strata_spdf = NULL,
+  stratum_field = "STRATUM",
+  sampleframe_spdf = NULL,
+  points_spdf = NULL,
+  strata_lut = NULL,
+  strata_lut_field = NULL,
+  design_object = NULL,
+  panel_names = c("One", "Two", "Three", "Four", "Five"),
+  panel_sample_size = 50,
+  points_min = 3,
+  oversample_proportion = 0.25,
+  oversample_min = 3,
+  seed_number = NULL
+)
 }
 \arguments{
 \item{design_name}{A character string of the name to use for the design, often the name of the project.}

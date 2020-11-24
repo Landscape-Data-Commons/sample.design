@@ -1,0 +1,474 @@
+---
+title: "Incorporating Revisits with combine_designs()"
+output:
+  rmarkdown::html_vignette:
+    keep_md: yes
+vignette: >
+  %\VignetteIndexEntry{incorporating_revisits}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  dev = c("png", "svg"),
+  dpi = 300
+)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(ggforce)
+library(sf)
+library(sample.design)
+```
+
+```{r setup, echo = FALSE, eval = TRUE}
+# Handcrafted polygons
+polygon_coords <- list("Grassland" = matrix(c(0, 100,
+                                              100, 100,
+                                              80, 75,
+                                              42, 62,
+                                              0, 0,
+                                              0, 100), 
+                                            ncol = 2,
+                                            byrow = TRUE),
+                       "Shrubland" = matrix(c(100, 100,
+                                              80, 75,
+                                              42, 62,
+                                              65, 20,
+                                              100, 0,
+                                              100, 100), 
+                                            ncol = 2,
+                                            byrow = TRUE),
+                       "Savanna" = matrix(c(0, 0,
+                                              42, 62,
+                                              65, 20,
+                                              100, 0,
+                                              0, 0), 
+                                            ncol = 2,
+                                            byrow = TRUE))
+
+# Turn the polygons into a data frame that ggplot will like
+polygon_coords_df <- do.call(rbind,
+                             lapply(X = names(polygon_coords),
+                                    matrices = polygon_coords,
+                                    FUN = function(X, matrices){
+                                      coords <- as.data.frame(matrices[[X]])
+                                      names(coords) <- c("x", "y")
+                                      coords[["stratum"]] <- X
+                                      return(coords)
+                                    }))
+
+# Then make that data frame into a polygon object
+polygons_polygon <- lapply(X = names(polygon_coords),
+                           polygon_coords = polygon_coords,
+                           FUN = function(X, polygon_coords){
+                             sp::Polygons(list(sp::Polygon(coords = polygon_coords[[X]])), 
+                                          ID = X)
+                           })
+
+# Then make the polygon object into a SpatialPolygons object
+polygons_spatialpolygon <- sp::SpatialPolygons(polygons_polygon,
+                                               proj4string = sp::CRS("+proj=aea"))
+
+# And finally make the SpatialPolygons into SpatialPolygonsDataFrame
+# This is so that I can use sp::over() to assign strata to the points
+polygons <- sp::SpatialPolygonsDataFrame(polygons_spatialpolygon, 
+                                         data.frame("stratum" = names(polygon_coords), 
+                                                    row.names = names(polygon_coords)))
+
+
+# Generate a nice set of random points for the example.
+# Pretend I actually made the template ones spatially balanced
+set.seed(42069)
+point_coords_df <- data.frame("x" = sample(x = 4 * (1:24), size = 20),
+                              "y" = sample(x = 4 * (1:24), size = 20),
+                              "type" = sample(x = c(rep("New", times = 13),
+                                                    rep("Sub", times = 7)),
+                                              size = 20))
+
+point_coords_df[["plotid"]] <- paste(point_coords_df[["type"]], 1:nrow(point_coords_df), sep = "-")
+
+# This is so that I can use sp::over() to assign strata to the points
+points <- sp::SpatialPointsDataFrame(coords = point_coords_df[, c("x", "y")],
+                                     data = point_coords_df[, c("plotid", "type")],
+                                     proj4string = sp::CRS("+proj=aea"))
+
+# Add in the strata
+points@data[["stratum"]] <- sp::over(x = points,
+                                     y = polygons)[["stratum"]]
+
+# Split these out like they were always two distinct things...........
+template_points <- points[points@data[["type"]] == "New", ]
+revisit_points <- points[points@data[["type"]] == "Sub", ]
+
+# Fin their preferences for one another
+preferences <- find_preferences(template_points = template_points,
+                                comparison_points = revisit_points)
+
+# Create the ggplotable data frame of point information
+# including the pairings which take into account strata
+point_coords_df_strata <- do.call(rbind,
+                                  lapply(X = unique(polygon_coords_df[["stratum"]]),
+                                         points = points,
+                                         point_coords_df = points_coords_df,
+                                         FUN = function(X, points, point_coords_df){
+                                           current_points <- points[points@data[["stratum"]] == X, ]
+                                           template_points <- current_points[current_points@data[["type"]] == "New", ]
+                                           revisit_points <- current_points[current_points@data[["type"]] == "Sub", ]
+                                           
+                                           preferences <- find_preferences(template_points = template_points,
+                                                                           comparison_points = revisit_points)
+                                           
+                                           pairs <- ranked_sort(match_to = preferences[["template"]],
+                                                                match_from = preferences[["comparison"]],
+                                                                match_to_idvar = "template_index",
+                                                                match_from_idvar = "comparison_index",
+                                                                match_to_rankvar = "rank_by_template",
+                                                                match_from_rankvar = "rank_by_comparison")
+                                           
+                                           pairs[["group"]] <- gsub(paste(X, 1:nrow(pairs)), pattern = "\\W", replacement = "")
+                                           pairs[["template_plotid"]] <- template_points@data[pairs[["match_to_id"]], "plotid"]
+                                           pairs[["revisit_plotid"]] <- revisit_points@data[pairs[["match_from_id"]], "plotid"]
+                                           
+                                           pairs_long <- tidyr::pivot_longer(data = pairs,
+                                                                             cols = c("template_plotid", "revisit_plotid"),
+                                                                             names_to = c("type", ".value"),
+                                                                             names_sep = "_")
+                                           pairs_long[["type"]] <- toupper(pairs_long[["type"]])
+                                           
+                                           current_points <- sp::merge(x = current_points,
+                                                                       y = pairs_long[, c("plotid", "group")],
+                                                                       by = "plotid",
+                                                                       all.x = TRUE)
+                                           
+                                           output <- cbind(current_points@data, current_points@coords)
+                                           
+                                           return(output)
+                                         }))
+
+
+# Now do the same for the unstratified!
+pairs <- ranked_sort(match_to = preferences[["template"]],
+                     match_from = preferences[["comparison"]],
+                     match_to_idvar = "template_index",
+                     match_from_idvar = "comparison_index",
+                     match_to_rankvar = "rank_by_template",
+                     match_from_rankvar = "rank_by_comparison")
+
+pairs[["group"]] <- 1:nrow(pairs)
+pairs[["template_plotid"]] <- template_points@data[pairs[["match_to_id"]], "plotid"]
+pairs[["revisit_plotid"]] <- revisit_points@data[pairs[["match_from_id"]], "plotid"]
+
+pairs_long <- tidyr::pivot_longer(data = pairs,
+                                  cols = c("template_plotid", "revisit_plotid"),
+                                  names_to = c("type", ".value"),
+                                  names_sep = "_")
+
+points <- sp::merge(x = points,
+                    y = pairs_long[, c("plotid", "group")],
+                    by = "plotid",
+                    all.x = TRUE)
+
+point_coords_df <- get_coords(points,
+                              x_var = "x",
+                              y_var = "y",
+                              projection = sp::CRS("+proj=aea"))@data
+```
+
+Create a new design that fits the needs of the project. This means making sure that it's appropriately stratified (or not) and that points are allocated to reflect the effort possible, *i.e.* all strata will be adequately sampled and there are sufficient oversample plots.
+
+Gather all the plot locations that have the potential to be revisited. The only information that *needs* to be associated with their geometry are their unique identifiers. It may be that the revisit points come from one or more stratification schemes that don't match the stratification of the new points. The new strata could already be assigned alongside the unique identifiers, but you can also use the stratification polygons associated with the new design to assign the membership.
+
+## Example
+```{r prep, eval = FALSE}
+# The filepath where all the spatial data are stored in this case
+filepath <- "C:/data/spatial"
+
+# This reads in a shapefile that already exists named "existing_sampled_plots"
+potential_substitution_points <- rgdal::readOGR(dsn = dsn,
+                                                layer = "existing_sampled_plots",
+                                                stringsAsFactors = FALSE)
+
+# This reads in the new design points, which had been saved as a shapefile
+new_points <- rgdal::readOGR(dsn = dsn,
+                                  layer = "new_points",
+                                  stringsAsFactors = FALSE)
+
+# This reads in the polygons used for the stratification in the new design
+strata_polys <- rgdal::readOGR(dsn = dsn,
+                               layer = "strata",
+                               stringsAsFactors = FALSE)
+```
+
+```{r overview_map, eval = TRUE, echo = FALSE}
+base_map <- ggplot(point_coords_df_strata,
+                   aes(x = x,
+                       y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               # fill = "white",
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        # legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum")
+```
+```{r base_map, echo = FALSE, eval = TRUE, out.width = "50%", out.extra = 'style="float:right; padding:10px"'}
+base_map
+```
+
+The major decision to be made is how many of the new design plots to replace with revisit plots. There are two available approaches to take.
+
+The first is to provide the total number of substitutions to make across all strata and the function will substitute proportionally by area, making sure at least one substitution takes place in each stratum. This is also the way to go if your design is not stratified because it will simply specify how many substitutions to make within the frame. So, for example, if there are three strata making up 25%, 25%, and 50% of the design area and you want to have 40 revisit plots in the design, then simply providing the number 40 would result in 10, 10, and 20 substitutions in the strata, respectively. The proportional area is calculated from the polygons provided or, if polygons aren't used, the per-stratum point counts in the new design.
+
+The other approach is to determine manually how many substitutions should happen in each stratum. This simply requires a named vector of substitution counts, one per stratum. So if the strata were Grassland, Shrubland, and Savanna the vector could be ``c("Grassland" = 10, "Shrubland" = 10, "Savanna" = 20)``.
+
+If the number of substitutions to make in a stratum exceeds the number of revisit plots available in that stratum, the function will stop and inform you which stratum and how many points are available. You can use that information to make a substitution vector as above that will actually work for your points.
+
+Once the allocation of substitutions is decided, you just need to call the function, giving it the points and substitution information, plus strata polygons if you're using them. Within each stratum, the function will use a ranked sort approach to find pairings of revisit points and new points that minimize the within-pair distances. From those pairings it makes the substitutions, using the pairs with the smallest distances.
+
+```{r sub, eval = FALSE}
+# This will use the stratification polygons to dictate the strata
+# and proportionally substitute 50 points total
+combined_design <- combine_designs(sub_points = potential_substitution_points,
+                                  template_points = new_design,
+                                  # These are the names of the variables with the unique identifiers
+                                  sub_idvar = "PLOT_ID",
+                                  template_idvar = "plotid",
+                                  # This will proportionally substitute 7 points of the 20
+                                  replacement_count = 7,
+                                  polys = strata_polys,
+                                  polys_stratavar = "stratum")
+```
+
+### Behind the scenes
+So what's actually happening in combine_designs? It takes a few steps in terms of processing.
+
+#### Determining membership
+First, the points are split up according to the grouping they belong to. That's determined either using sub_stratavar and template_stratavar if they've been provided or by comparing the points against polygons with ``sp::over()``. In the case of an unstratified situation or one where the template_points are stratified but the substitutions don't need to account for the stratification, not providing any information will result in assigning all points to a group called "frame" as in sample frame. This is important because the substitutions are made on a per-group basis.
+
+#### Deciding substitution counts
+This can be done manually as described above. You only need to provide a named numeric vector where the values are the number of substitutions to make and the names are the strata, *e.g* ``c("Grassland" = 10, "Shrubland" = 10, "Savanna" = 20)``.
+
+If done proportionally, then the function ``sample.design::allocate_panels()`` is used, asking for a single panel with a minimum of one point per stratum and no oversample points. This distributes the number of substitutions proportionally by area so that the larger strata get more substitutions, but it does not take into account the number of substitution points actually available, so it is possible to get an error. If that happens, you need to manually assign the counts.
+
+If you want to subsitute in all of the points in sub_points, don't provide any stratification information and use ``replacement_count = nrow(sub_points)``.
+
+#### The substitution process
+
+The points are paired in two steps. The first is to apply ``find_preference()`` which compares all the potential substitution points to all the template points and produces data frames of their preferences for each other based on distance, *e.g.* the point Sub-15 is closer to New-4 and New-1 than it is to New-14, and so ranks New-4 and New-1 more highly but the closest substitution point to New-14 is actually Sub-9 and so it ranks Sub-9 higher than it does Sub-15.
+
+```{r preferences, echo = FALSE, eval = TRUE}
+revisit_preferences <- preferences[["comparison"]]
+row.names(revisit_preferences) <- NULL
+revisit_preferences[["Substitution Point"]] <- revisit_points@data[revisit_preferences[["comparison_index"]], "plotid"]
+revisit_preferences[["New Point"]] <- template_points@data[revisit_preferences[["template_index"]], "plotid"]
+names(revisit_preferences)[names(revisit_preferences) == "rank_by_comparison"] <- "Rank by Distance"
+new_preferences <- preferences[["template"]]
+row.names(new_preferences) <- NULL
+revisit_preferences_relevant <- revisit_preferences[revisit_preferences[["Substitution Point"]] == "Sub-15", c("Substitution Point", "New Point", "Rank by Distance")]
+new_preferences[["Substitution Point"]] <- revisit_points@data[new_preferences[["comparison_index"]], "plotid"]
+new_preferences[["New Point"]] <- template_points@data[new_preferences[["template_index"]], "plotid"]
+names(new_preferences)[names(new_preferences) == "rank_by_template"] <- "Rank by Distance"
+new_preferences_relevant <- new_preferences[new_preferences[["New Point"]] == "New-14", c("New Point", "Substitution Point", "Rank by Distance")]
+
+
+kableExtra::kable_styling(kable_input = knitr::kable(revisit_preferences_relevant,
+                                                     row.names = FALSE),
+                          full_width = FALSE, position = "float_left")
+kableExtra::kable_styling(kable_input = knitr::kable(new_preferences_relevant,
+                                                     row.names = FALSE),
+                          full_width = FALSE, position = "float_right")
+ 
+# knitr::kable(x = list(revisit_preferences[revisit_preferences[["Substitution Point"]] == "Sub-15", c("Substitution Point", "New Point", "Rank by Distance")],
+                      # new_preferences[new_preferences[["New Point"]] == "New-14", c("New Point", "Substitution Point", "Rank by Distance")]),
+             # align = )
+```
+
+```{r additional_maps, echo = FALSE, eval = TRUE}
+point_coords_df[["stratification"]] <- "Ignoring strata"
+point_coords_df_strata[["stratification"]] <- "Respecting strata"
+point_coords_both <- rbind(point_coords_df, point_coords_df_strata)
+
+comparison_map <- ggplot(point_coords_both,
+                         aes(x = x,
+                             y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        # legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum") +
+  geom_mark_hull(data = point_coords_both,
+                 aes(filter = !is.na(group),
+                     group = group),
+                 expand = unit(-3, "mm"),
+                 radius = unit(1.5, "mm"),
+               size = 0.2) +
+  facet_col(~stratification)
+
+unstrata_map <- ggplot(point_coords_df,
+                   aes(x = x,
+                       y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        # legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum") +
+  geom_mark_hull(data = point_coords_df,
+                 aes(filter = !is.na(group),
+                     group = group))
+
+```
+
+The second step is to use the preferences in ``ranked_sort()`` to find the optimal pairings. What it does is goes through the substitution points and attempts to pair them with their preferred new point. If the new point doesn't have a partner yet, they're paired. If it does have a partner, however, then the new point's preferences are checked to see whether it prefers its current partner more than the substitution point looking to pair. If it prefers its current partner, then the substitution point moves on to check with its next most preferred new point. Otherwise, if the unpaired point is preferred, it becomes paired with the new point and the substitution point that had been paired previously becomes unpaired.
+
+This process continues for every unpaired substitution point until they all have partners or there are no remaining new points to be paired with. If there are more pairs than needed for that stratum, the pairings with the largest distances between them go unused. The end result should be pairs that optimize for minimum within-pair distances.
+
+Note that, as below, it is possible for strata boundaries to result in larger within-pair distances. This is normal and expected and necessary for controlling the number of substitutions per stratum, but may result in a less spatially balanced design once the substitutions have been made.
+```{r comparison_map, echo = FALSE, eval = TRUE, out.width = "95%"}
+comparison_map
+```
+
+#### Combination
+The pairings are joined to the original template point IDs and their coordinates with merge(), which produces one large data frame of the template points with associated substitution points where they should be inserted. This information is used to create a spatial points data frame from those IDs and coordinates, which is the final output.
+
+Note that the points that are substituted in will inherit their partner's place in the sampling order. For a GRTS design, this is conventionally in the plot ID, so that sampling locations are visited in ascending numeric order within a stratum, *e.g.* if the lowest-numbered sampling location in the Grassland stratum is Grassland-08, that would be the first point sampled in that stratum and if it's replace the new substituted point will also be the first sampled in that stratum regardless of what its original original sampling order was.
+
+```{r end_maps, echo = FALSE, eval = TRUE, out.width = "95%"}
+point_coords_df_strata[["fate"]] <- "Selected for use"
+point_coords_df_strata[point_coords_df_strata[["plotid"]] %in% pairs[["template_plotid"]], "fate"] <- "Replaced"
+
+base_map_results <- ggplot(point_coords_df_strata,
+                   aes(x = x,
+                       y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               # fill = "white",
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum")
+
+comparison_map_results <- ggplot(point_coords_df_strata,
+                                 aes(x = x,
+                                     y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum") +
+  geom_mark_hull(data = point_coords_df_strata,
+                 aes(filter = !is.na(group),
+                     group = group),
+                 expand = unit(-3, "mm"),
+                 radius = unit(1.5, "mm"),
+                 size = 0.2)
+
+result_map <-  ggplot(point_coords_df_strata[point_coords_df_strata[["fate"]] == "Selected for use", ],
+                      aes(x = x,
+                          y = y)) +
+  geom_polygon(data = polygon_coords_df,
+               aes(group = stratum,
+                   fill = stratum),
+               color = "gray50",
+               size = 0.2) +
+  scale_fill_manual(values = c("gray95", "gray90", "gray85")) +
+  # ggrepel::geom_text_repel(aes(label = plotid)) +
+  geom_point(aes(shape = as.factor(type)),
+             size = 1.1) +
+  scale_shape_manual(values = c(16, 1)) +
+  coord_fixed(xlim = c(0, 100),
+              ylim = c(0, 100)) +
+  theme(panel.background = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0), "mm"),
+        legend.position = "none",
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(shape = "Point Type",
+       fill = "Stratum")
+
+sequence_maps <- grid.arrange(base_map_results, comparison_map_results, result_map, nrow = 1)
+```

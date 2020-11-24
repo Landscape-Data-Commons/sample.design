@@ -4,8 +4,12 @@
 \alias{attribute_shapefile}
 \title{Attributing a spatial data frame using another spatial data frame}
 \usage{
-attribute_shapefile(spdf1, source_geometry, attributefield = NULL,
-  newfield = NULL)
+attribute_shapefile(
+  spdf1,
+  source_geometry,
+  attributefield = NULL,
+  newfield = NULL
+)
 }
 \arguments{
 \item{spdf1}{Spatial points or polygon data frame. The geometry that the attribute will be added to.}

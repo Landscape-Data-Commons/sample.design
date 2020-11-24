@@ -1,0 +1,43 @@
+---
+title: "Revisit Designs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{revisit_designs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+```{r setup}
+library(sample.design)
+```
+
+# Background
+Data collection on landscapes can be for a number of purposes, but can be grossly broken into assessing condition (temporally isolated snapshots of the landscape) or trend (information about the landscape integrated across time). When attempting to answer questions regarding trend, revisiting the same sampling locations repeatedly over time is one of the most powerful ways to get answers. However, sample designs may need to serve multiple purposes and often need to provide information on both condition and trend, which complicates the process.
+
+The simplest revisit scheme is obvious: revisit every sampled point at regular intervals. However, the need to sample other parts of the landscape over time as well means needing to figure out how to include new points over time and balance the amount of sampling effort that can be made between revisits and novel locations. Additionally, many designs may not have been explicitly intended to include revisits and so care needs to be taken in making decisions about which points will be revisited.
+
+# Selecting revisit locations
+In some cases, the locations sampled may be considered "representative" of the larger landscape based on professional judgement in which case hand-selecting which points to revisit can make sense. This approach is obviously biased, however, and should be very carefully considered. As long as the biases are known and taken into account, this can be a valid solution.
+
+There are ways to select points to revisit at random. Taking the points which were already sampled, you could ignore the spatial locations and do a simple random sampling of the points. This is sound, but runs the risk of introducing more spatial bias than already exists in the data because there are no controls on the spatial distribution of the results. If a design was originally created to be spatially balanced, then it makes sense to also attempt to make sure that the revisits occur in a balanced way.
+
+## Selection with a template
+One of the ways to create an approximately spatially balanced set of revisit points from a set of existing sampled locations is by trying to approximate a set of spatially balanced "template" points. All this requires is to draw a 
+
+``` {r select_balanced_revisits}
+sample_frame <- rgdal::readOGR(dsn = data_path,
+                               layer = "project_sample_frame")
+
+template_points <- spsurvey::grts()
+
+get_closest(existing_points = sampled_points,
+            template_points = new_points)
+```

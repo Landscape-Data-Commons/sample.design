@@ -4,9 +4,15 @@
 \alias{allocate_panels}
 \title{Create a design object programmatically to use with \code{spsurvey::grts()}.}
 \usage{
-allocate_panels(spdf, stratum_field = "stratum", panel_names = c("1",
-  "2", "3", "4", "5"), panel_sample_size = 50, points_min = 3,
-  oversample_proportion = 0.25, oversample_min = 3)
+allocate_panels(
+  spdf,
+  stratum_field = "stratum",
+  panel_names = c("1", "2", "3", "4", "5"),
+  panel_sample_size = 50,
+  points_min = 3,
+  oversample_proportion = 0.25,
+  oversample_min = 3
+)
 }
 \arguments{
 \item{spdf}{SpatialPointsDataFrame or data frame containing the possible sampling points being used or a SpatialPolygonsDataFrame of polygons describing the strata boundaries.}

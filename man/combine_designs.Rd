@@ -4,11 +4,19 @@
 \alias{combine_designs}
 \title{Select points that most closely approximate the distribution of another set of points and substitute them}
 \usage{
-combine_designs(sub_points, template_points, sub_idvar = "plotid",
-  template_idvar = "plotid", replacement_count = NULL,
-  sub_counts = NULL, strata_polygons = NULL,
-  polygons_stratavar = "stratum", sub_stratavar = "stratum",
-  template_stratavar = "stratum", projection = NULL)
+combine_designs(
+  sub_points,
+  template_points,
+  sub_idvar = "plotid",
+  template_idvar = "plotid",
+  replacement_count = NULL,
+  sub_counts = NULL,
+  strata_polygons = NULL,
+  polygons_stratavar = "stratum",
+  sub_stratavar = "stratum",
+  template_stratavar = "stratum",
+  projection = NULL
+)
 }
 \arguments{
 \item{sub_points}{Spatial Points Data Frame. The points you would like to substitute from by comparing against \code{template_points}.}

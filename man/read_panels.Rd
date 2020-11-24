@@ -4,9 +4,14 @@
 \alias{read_panels}
 \title{Use a data frame of strata and point counts to build a design object for \code{spsurvey::grts()}}
 \usage{
-read_panels(dataframe, stratum_field = "stratum", panel_names = NULL,
-  oversample_field = NULL, oversample_proportion = 0.25,
-  oversample_min = 3)
+read_panels(
+  dataframe,
+  stratum_field = "stratum",
+  panel_names = NULL,
+  oversample_field = NULL,
+  oversample_proportion = 0.25,
+  oversample_min = 3
+)
 }
 \arguments{
 \item{dataframe}{Data frame. This must have at least a variable for the strata identities and one variable for each panel, e.g. "Stratum", "Year1", "Year2", "Year3", where each row is a stratum and the number of points desired in each panel for that stratum.}

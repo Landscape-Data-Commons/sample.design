@@ -4,8 +4,12 @@
 \alias{select_from_distribution}
 \title{Select polygon from a probability distribution}
 \usage{
-select_from_distribution(dataframe, value, prob_var = "cum_freq",
-  id_var = "id")
+select_from_distribution(
+  dataframe,
+  value,
+  prob_var = "cum_freq",
+  id_var = "id"
+)
 }
 \arguments{
 \item{dataframe}{A data frame. Must contain an identity variable with a name matching \code{id_var} and a probability variable with a name matching \code{prob_var}. Will be sorted by ascending probability.}
