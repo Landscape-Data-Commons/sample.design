@@ -397,6 +397,8 @@ keep_farthest <- function(existing_points,
     existing_points <- sp::spTransform(existing_points,
                                        projection)
   }
+
+  # Putting aside the input new_points so we can
   if (!identical(projection, new_points@proj4string)) {
     new_points <- sp::spTransform(new_points,
                                   projection)
@@ -406,11 +408,12 @@ keep_farthest <- function(existing_points,
   n_existing <- nrow(existing_points@data)
   n_new <- nrow(new_points)
 
+  # Just in cae we're deciding the target count right now
   count_difference <- n_new - n_existing
   if (is.null(target)) {
     target <- count_difference
   }
-  if (target > nrow(existing_points@data)) {
+  if (target > nrow(new_points@data)) {
     stop("The target number of points to return is greater than the number of points available")
   }
   if (target < 1) {
@@ -426,7 +429,7 @@ keep_farthest <- function(existing_points,
   new_point_vars <- names(new_points@data)
   if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
     message("existing_points and new_points must have all the same variables as each other")
-  } else {
+  } else if (ncol(existing_points@data) > 1) {
     existing_points@data <- existing_points@data[, new_point_vars]
   }
 
@@ -459,6 +462,8 @@ keep_farthest <- function(existing_points,
   distance_matrix <- distance_matrix[-(1:n_existing), ]
 
   # Convert to a data frame
+  # SO!!!! Each row should represent a new point and each column represents an existing point
+  # That means that to find the new point closest to an existing point, you look for the minimum value in a column
   distance_df <- as.data.frame(distance_matrix,
                                stringsAsFactors = FALSE)
 
@@ -466,14 +471,15 @@ keep_farthest <- function(existing_points,
   distance_df[["INDEX"]] <- 1:n_new
 
   # And now we loop to remove all the closest new points
-  # The looping is so that we can remove points that are already tossed
+  # The looping is so that we don't get hung up on the same minimum distance
+  # and can remove progressively more distant points until we reach our goal
   # Each loop will:
   # 1) Check for the new point(s) closest to an existing point
   # 2) Store the index (or indices) from distance_df[["INDEX"]]
   # 3) Remove that observation(s) from distance_df
   # This will continue until the number of stored indices is equal to the number of existing points
-  # If the number to remove is overshot because the finale pass through the loop identifies multiple indices,
-  # we only take the first however we need
+  # If the number to remove is overshot because the final pass through the loop identifies multiple indices,
+  # we only take the first however-many-we-need
   # The observations at the identified indices in the new points will be removed!
 
 
@@ -485,13 +491,17 @@ keep_farthest <- function(existing_points,
   # We'll be ignoring the index column because of course sequential ordinals starting at 1 are the smallest numbers in the matrix!
   # The indices screw up min() results without removing this for the finding minimum evaluation step
   index_colnum <- grep(names(distance_df), pattern = "INDEX")
-
-  while (n_removal_indices < (n_existing + n_new - target)) {
+  # So, given the number of points we have and the target
+  n_indices_to_remove <- (n_new - target)
+  message("Aiming to drop ", n_indices_to_remove, " points")
+  while (n_removal_indices < n_indices_to_remove) {
+    message("Starting while() iteration with ", n_removal_indices, " indices to remove identified")
     current_min <- min(working_distance_df[, -index_colnum])
+    message("Current minimum distance is ", current_min)
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
     # those are the new points that are that distance from an existing point
-    current_indices <- sapply(X = 1:(ncol(working_distance_df) - 1),
+    current_indices <- unlist(sapply(X = 1:(ncol(working_distance_df) - 1),
                               value = current_min,
                               distance_df = working_distance_df,
                               FUN = function(X, value, distance_df){
@@ -505,21 +515,29 @@ keep_farthest <- function(existing_points,
                                 } else {
                                   return(NULL)
                                 }
-                              })
+                              }))
     # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
     current_indices <- unique(current_indices)
+    message("The current indices are: ", paste(current_indices, collapse = ", "))
+
+    # Remove the NULLs
+    # current_indices <- current_indices[!is.na(current_indices)]
 
     # Add those to the ones we're going to remove
     removal_indices <- unique(c(removal_indices, current_indices))
     # Drop any NULLs
-    removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
+    # removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
+
+    # Out of paranoia
+    removal_indices <- unlist(removal_indices)
+    message("The current full set of removal indices is: ", paste(removal_indices, collapse = ", "))
 
     if (!is.null(removal_indices)) {
       # Make sure we don't overshoot our removal goal
-      removal_indices <- removal_indices[1:min(length(removal_indices), (target - n_existing))]
+      removal_indices <- removal_indices[1:min(length(removal_indices), n_indices_to_remove)]
 
-      # Remove them!
-      working_distance_df <- working_distance_df[!(working_distance_df[["INDEX"]] %in% removal_indices), ]
+      # Removing that point so that we can identify a new minimum in the next pass
+      working_distance_df <- working_distance_df[!(working_distance_df[[index_colnum]] %in% removal_indices), ]
 
       # Update our tracking value
       n_removal_indices <- length(removal_indices)
