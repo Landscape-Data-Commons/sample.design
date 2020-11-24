@@ -902,9 +902,12 @@ combine_designs <- function(sub_points,
     template_points <- template_points[is.na(template_points[["MEMBERSHIP"]]), ]
   }
 
-  # What strata are there?
   # The as.character() is in case there are factors
-  strata <- unique(c(as.character(sub_points@data[["MEMBERSHIP"]]), as.character(template_points@data[["MEMBERSHIP"]])))
+  sub_points[["MEMBERSHIP"]] <- as.character(sub_points[["MEMBERSHIP"]])
+  template_points[["MEMBERSHIP"]] <- as.character(template_points[["MEMBERSHIP"]])
+
+  # What strata are there?
+  strata <- unique(c(sub_points@data[["MEMBERSHIP"]], template_points@data[["MEMBERSHIP"]]))
 
   if (!is.null(sub_counts)) {
     if (!all(names(sub_counts) %in% strata)) {
