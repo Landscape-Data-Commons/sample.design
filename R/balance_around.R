@@ -974,7 +974,18 @@ combine_designs <- function(sub_points,
                                 sub_points_stratum <- sub_points[sub_points@data[["MEMBERSHIP"]] == stratum, ]
                                 template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
 
+                                # What if there are no points to sub?????
                                 if (n_keep < 1) {
+                                  return(NULL)
+                                }
+                                if (nrow(sub_points_stratum@data) < 1) {
+                                  warning("No substitution points available in ", stratum,
+                                          ". Making zero substitutions instead of ", n_keep, ".")
+                                  return(NULL)
+                                }
+                                if (nrow(template_points_stratum@data) < 1) {
+                                  warning("No template points available in ", stratum,
+                                          ". Making zero substitutions instead of ", n_keep, ".")
                                   return(NULL)
                                 }
 
