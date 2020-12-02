@@ -970,8 +970,13 @@ combine_designs <- function(sub_points,
                               FUN = function(X, template_points, sub_points, sub_counts){
                                 # Narrow it down to the points in the current stratum
                                 stratum <- X
+                                n_keep <- sub_counts[[stratum]]
                                 sub_points_stratum <- sub_points[sub_points@data[["MEMBERSHIP"]] == stratum, ]
                                 template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
+
+                                if (n_keep < 1) {
+                                  return(NULL)
+                                }
 
                                 # What are their ranking of each other between template and comparison based on distance?
                                 preferences <- find_preferences(template_points = template_points_stratum,
@@ -1020,8 +1025,6 @@ combine_designs <- function(sub_points,
                                                               })
 
                                 pairs <- pairs[order(pairs[["distance"]]), ]
-
-                                n_keep <- sub_counts[[stratum]]
 
                                 if (n_keep > nrow(pairs)) {
                                   stop("Attempting to keep ", n_keep, " points in ", stratum, " but only ", nrow(pairs), " plot pairs are available.")
