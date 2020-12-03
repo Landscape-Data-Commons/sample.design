@@ -567,6 +567,10 @@ balance_around <- function(existing_points,
                            stratafield = NULL,
                            projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
   # TODO: Sanitization (including reprojection)
+  existing_points <- sp::spTransform(existing_points,
+                                     CRSobj = projection)
+  new_points <- sp::spTransform(new_points,
+                                CRSobj = projection)
 
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
   existing_pts_spdf@data[["TYPE"]] <- "EXISTING"
