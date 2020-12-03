@@ -372,12 +372,14 @@ get_closest <- function(existing_points,
 #' @param new_points Spatial points data frame. These are the points that may be included in the output. The number that will be is equal to \code{target - nrow(existing_points)}.
 #' @param target Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points) - nrow(existing_points)}.
 #' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @param verbose Logical value. If \code{TRUE} then additional diagnostic messages will be produced while the function runs. Defaults to \code{FALSE}.
 #' @return A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
 #' @export
 keep_farthest <- function(existing_points,
                           new_points,
                           target = NULL,
-                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"),
+                          verbose = FALSE){
 
   if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
     stop("existing_points must be a spatial points data frame")
@@ -493,11 +495,18 @@ keep_farthest <- function(existing_points,
   index_colnum <- grep(names(distance_df), pattern = "INDEX")
   # So, given the number of points we have and the target
   n_indices_to_remove <- (n_new - target)
-  message("Aiming to drop ", n_indices_to_remove, " points")
+  if (verbose) {
+    message("Aiming to drop ", n_indices_to_remove, " points")
+  }
+
   while (n_removal_indices < n_indices_to_remove) {
-    message("Starting while() iteration with ", n_removal_indices, " indices to remove identified")
+    if (verbose) {
+      message("Starting while() iteration with ", n_removal_indices, " indices to remove identified")
+    }
     current_min <- min(working_distance_df[, -index_colnum])
-    message("Current minimum distance is ", current_min)
+    if (verbose) {
+      message("Current minimum distance is ", current_min)
+    }
     # Get the indices from every column where that min occurs
     # Each column is an existing point, so if we check every column for the value and store that index,
     # those are the new points that are that distance from an existing point
@@ -518,8 +527,9 @@ keep_farthest <- function(existing_points,
                               }))
     # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
     current_indices <- unique(current_indices)
-    message("The current indices are: ", paste(current_indices, collapse = ", "))
-
+    if (verbose) {
+      message("The current indices are: ", paste(current_indices, collapse = ", "))
+    }
     # Remove the NULLs
     # current_indices <- current_indices[!is.na(current_indices)]
 
@@ -530,7 +540,9 @@ keep_farthest <- function(existing_points,
 
     # Out of paranoia
     removal_indices <- unlist(removal_indices)
-    message("The current full set of removal indices is: ", paste(removal_indices, collapse = ", "))
+    if (verbose) {
+      message("The current full set of removal indices is: ", paste(removal_indices, collapse = ", "))
+    }
 
     if (!is.null(removal_indices)) {
       # Make sure we don't overshoot our removal goal
