@@ -573,7 +573,7 @@ balance_around <- function(existing_points,
                                 CRSobj = projection)
 
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
-  existing_pts_spdf@data[["TYPE"]] <- "EXISTING"
+  existing_points@data[["TYPE"]] <- "EXISTING"
   new_points@data[["TYPE"]] <- "NEW"
 
   # Add in the fields that the points don't have for easy combination
