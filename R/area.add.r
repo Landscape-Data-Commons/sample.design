@@ -19,7 +19,7 @@ add_area <- function(polygons,
                      byid = TRUE
 ){
   ## Make sure we have the polygons in Albers equal area projection
-  working_polygons <- sp::spTransform(x = polygons, CRSobj = sp::CRS("+proj=aea"))
+  working_polygons <- sp::spTransform(x = polygons, CRSobj = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
 
   ## Add the area in hectares, using unname() to get an unnamed vector
   polygons@data[["AREA.HA"]] <- unname(rgeos::gArea(working_polygons, byid = byid) * 0.0001)

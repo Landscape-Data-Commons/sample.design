@@ -1,0 +1,30 @@
+---
+title: "balancing_around"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{balancing_around}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  eval = FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(sample.design)
+```
+
+Sometimes a design should be balanced around existing points. This makes it possible to maintain spatial balance even when combining multiple overlapping designs.
+
+The way that this is done is to take existing points, both sampled and rejected, and compare them to a new design. From that new design, only the points with the farthest mean distance from the existing points are kept.
+
+```{r farthest}
+keep_farthest(existing_points = all_visited_points,
+              new_points = new_design,
+              target = 150)
+```

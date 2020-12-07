@@ -1,0 +1,360 @@
+---
+title: "Executing a Simple Sample Design"
+output: html_document
+vignette: >
+  %\VignetteIndexEntry{basic-design}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+# The Basics
+A spatially balanced sample design is a collection of points on a landscape where data will be collected which, if sampled in the correct order, will be evenly distributed spatially while still being randomly placed. This offers the advantages of random sample design while avoiding one of its weaknesses: random distributions are often clumped, which can introduce bias into data where values are dependent on location. The function spsurvey::grts() is an implementation of one approach to generating spatially balanced sample designs and the one used here.
+
+These designs have a few components:
+
+  - **Sample frame:** In broader statistical terms, this is the target population, every location that could potentially be sampled. This is usually a set of polygons that cover exactly the area that will be sampled and nothing more but, much more rarely, may be a set of points that contain every possible sampling location (a "master sample").
+  - **Stratification:** *Optional* subdivisions of the sample frame to divide up sampling efforts to control for heterogeneity. Strata are ideally defined as particular parts of the landscape (*e.g.*, flood basin or hill summit) within which soil type, vegetation, management, current status, and response to disturbance are relatively similar. Strata *do not* need to be sampled with the same intensity and often are not.
+  - **Point allocation:** How many points will be assigned to areas in the sample design. This is used to draw the correct number of points in each stratum and in each panel. Panels are basically temporal groupings of points and can be used to establish the timing of revisits, *e.g.* if you were planning to revisit each point every three years, you could use three panels.
+
+# Input formats
+## Spatial components
+The spatially explicit components are absolutely required. This almost always means a shapefile which is read into R, although as long as you end up with an SPDF in R, the source doesn't matter. Because this package already depends on the package rgdal, these examples will use rgdal::readOGR() to read in shapefiles but if you prefer other options like st::st_read() those will work as well.
+
+If you have no stratification, then a polygon shapefile of the area you're sampling from with a variable containing the sample frame identity is enough, *e.g.* for a Bureau of Land Management monoitoring program for the Slickrock Canyon National Monument the polygons would be BLM-managed land that within the boundaries of the monument and there would be a variable/attribute field called "SAMPLEFRAME" with the value "SlickrockCanyonNM".
+
+If you're stratifying, the easiest approach is to make the polygons both the sample frame and strata. So for the example of Slickrock Canyon, stratifying by ecosystems makes sense and so the input polygons would have the variable "STRATUM" that contains the values "Grassland", "Shrubland", "PinyonJuniper", and "Other" for the appropriate polygons and a variable called "SAMPLEFRAME" with the value "SlickrockCanyonNM" for *all* the polygons.
+
+```{r frame}
+# Read in the polygons, which are stored in the current working directory right now.
+frame <- rgdal::readOGR(dsn = getwd(),
+                        layer = "slickrockcanyon_strata.shp",
+                        # stringsAsFactors defaults to TRUE but factors aren't appropriate for this
+                        stringsAsFactors = FALSE)
+
+# The following are quick checks to confirm that the frame actually has everything expected.
+
+# Every polygon belongs to the "SlickrockCanyonNM" sample frame, so there should be no NA value
+unique(frame@data[["SAMPLEFRAME"]])
+
+# Every polygon represents one of the strata. Again, no NA values
+frame@data[["STRATUM"]]
+
+# And frame is an SPDF. Because these are polygons this should return "Spatial Polygons Data Frame"
+class(frame)
+```
+
+## Point allocation
+Determining point allocation can be done in two different ways, either by using a function to automatically determine how to allocate them proprtionally by area or by creating and reading in a table of exactly how to allocate the points to strata over panels. The former is an easy and recommended way to make a design that minimizes bias, but in some rarer cases manually assigning how effort is distributed is the better choice.
+
+Regardless of approach, the major decisions to make are how many panels, how many base points, and how many oversample points you'll need.
+
+  - **Panels:** Panels are important if the design is going to continue with regular cycles of revisiting and resampling. Each panel is a set of points that will be sampled in the same time interval, *e.g.*, if you plan on resampling the points every three years, you would want three panels called "Year1", "Year2", and "Year3" and each of your points would end up assigned to one of those three panels.
+  - **Base points:** These are the points that you expect to be able to sample. The number to draw therefore depends on factors like length of sampling period, staffpower, and accessibility. If your design will be sampled over three years and you expect that you can sample 50 points per year, then you would need 150 base points.
+  - **Oversample points:** These are the "spare" points for when you can't sample base points. Ideally, every base point would be sampled, but in the real world there are reasons that you might not, for example a base point location is unsafe to sample or inaccessible. The intent of oversample points is that you draw enough to replace the base points that can't be sampled, but not too many extra, which can be a difficult thing to do.
+
+### Automatic point allocation
+The function allocate_panels() will create a design object (a specially-structured list) that describes how many base and oversample points to draw in each stratum for each panel. This is based on the proportional area of the strata so that if in a design with 150 base points there's a stratum that makes up 50% of the sample frame, then 75 of the base points will be allocated to it while a stratum that makes up 10% will only get 15 of the base points.
+
+In order to do this it requires a few inputs.
+
+  - **spdf:** The stratification (or sample frame) polygons
+  - **stratum_field:** The name of the polygons' variable that identifies which stratum they represent, *e.g.* "STRATUM"
+  - **panel_names:** The names of the panels. For a three-year design, these might be "Year1", "Year2", and "Year3"
+  - **panel_sample_size:** How many base points should be in each panel.
+  - **points_min:** The minimum number of points to put in a stratum in a panel. This is important so that even small strata still get points because otherwise a stratum that makes up only a few percentage points of the sample frame area might receive zero points. The function will set aside enough points to meet this and then allocate the remaining proportionally by area, *e.g.* if there are 50 points to allocate to four strata and they points_min is 3, then 12 points will be assigned directly and the remaining 38 will be allocated proportionally by area. The function defaults to 3 as the minimum (originally so that variance could be calculated), but there may be reasons to increase or decrease that value.
+  - **oversample_proportion:** How many oversample points to draw for a stratum as a proportion of its base point count. This is effectively what proportion of base points you expect will be rejected or unsampled and need to be replaced with oversample points. A decent starting point is 0.25, but if you're sampling in remote and rugged areas there may be a much higher rejection rate for accessibility or safety reasons.
+  - **oversample_min:** The minimum number of oversample points to draw per stratum per panel. This acts as a sort of failsafe to make sure that there are enough oversample points in case the number of points determined using oversample_proportion is too small. The default is 3, but allocate_panels() will always use the number calculated from oversample_proportion if it's larger.
+  
+```{r design_generate}
+# Create a design object for a three-year design with 50 base points per year,
+# at least 3 base points per year in each stratum,
+# and either (base * 0.33) or 3 oversample points per stratum per year, whichever is larger, for each stratum
+design <- allocate_panels(spdf = frame,
+                          stratum_field = "STRATUM",
+                          panel_names = c("Year1", "Year2", "Year3"),
+                          panel_sample_size = 50,
+                          points_min = 3,
+                          oversample_proportion = 0.33,
+                          oversample_min = 3)
+```
+  
+### Manual point allocation
+If you don't want proportionally-allocated points or need finer control (like having one stratum with a higher oversample proportion), you can manually allocate the points. The easiest way to do this is to create a .CSV in Excel or some other software with one row per stratum and the following columns:
+
+  - **Stratum:** The name of each stratum, exactly matching how it appears in the stratification polygons.
+  - **One column per panel name:** These contain the numbers of points per stratum for each panel. If you had a three-year, stratified design with the panels "Year1", "Year2", and "Year3" then you would have three columns called "Year1", "Year2", and "Year3". In the column "Year1" you would enter the number of base points for each stratum in that stratum's row, then the same for "Year2" and "Year3". Do not leave any cells empty! If a stratum is not going to be included in a panel, then it should have a 0.
+  - **Oversample:** The *total* number of oversample points for each stratum. These numbers represent how many replacement points you'll need for a stratum across *all* your panels, *e.g.* if you have a stratum sampled across three panels with 10 base points in each, the oversample number for that stratum should represent at least the number of the 30 base points you expect may be rejected or unsampled for various reasons.
+
+```{r design_read}
+# Create a design object by reading in a three-year design in a CSV
+# Note that because dataframe is just a filename, it's read in from the current working directory.
+# You may specify a full filepath to the file
+design <- read_panels(dataframe = "slickrockcanyon_design.csv",
+                      stratum_field = "STRATUM",
+                      panel_names = c("Year1", "Year2", "Year3"),
+                      oversample_field = "Oversample")
+```
+
+
+# Executing a design
+Once all the inputs are set, you can draw points using grts_aim() which uses spsurvey::grts() and provides a standard format output. There are three other required inputs:
+
+  - **design_name:** The name of the design. This should be meaningful and readable for a user, *e.g.* "Slickrock Canyon NM" and not something like an a simple admin code.
+  - **stratum_field:** The name of the field in the frame that contains the stratification information. The values in it need to exactly match the names of the strata in the design object
+  - **seed_number:** Like most implementations of randomness in programming, the randomness in R is dictated by a seed number. By setting a seed number, the results of a random process will always be the same for every execution of that process. So by setting a seed number, the design becomes reproducible while still remaining random.
+
+```{r draw}
+points <- grts_aim(design_object = design,
+                   design_name = "Slickrock Canyon NM",
+                   frame = frame,
+                   stratum_field = "STRATUM",
+                   seed_number = 420)
+```
+
+# In practice
+## Documentation
+As a rule, it's a good idea to document what your sample design is in your script so that it doesn't depend exclusively on an external document. A good place to put that is at the head of the script. As an example, the beginning of a script might look like:
+```{r header_example}
+#---- DESIGN DOCUMENTATION ----
+# Project name: Slickrock Canyon 
+# Purpose: Resource Management Plan (RMP) effectiveness
+# Sample frame: Slickrock Canyon National Monument (Bureau of Land Management land only)
+# Stratification scheme: Grouped Biophysical Setting groups
+# Panels: 3
+# Base points/panel: 50
+# Total base points: 150
+# Points allocation: Proportionally by area (minimum 3)
+# Oversample proportion: 0.667
+# Seed number: 420
+# Date of final draw: 2019-04-04
+```
+
+## Setup
+It's also a good idea to put all the constants for a script at the top where they can be edited readily. This is a good habit to be in for any scripting, but can be particularly useful for sample designs where you may run multiple versions in rapid succession. For any value that will be used as an argument for a function, especially one that will be used more than once (*e.g.* the filepath to a folder containing input files), store that as an object at the beginning after attaching the packages needed. This will let you adjust values without having to find and change multiple references in the script, possibly missing some.
+
+```{r setup_example}
+#---- SETUP ----
+library("sample.design")
+# rgdal is being attached here to use readOGR()
+library("rgdal")
+# dplyr and tidyr are used for creating quality assurance objects
+library("dplyr")
+library("tidyr")
+
+# The project name
+project_name <- "NM_SlickrockCanyon"
+# The date of the draw in ISO-8601. It's a good practice to append this to the filenames of the results
+# This avoids confusing filenames like "NM_SlickrockCanyon_points_final_FINAL3_actualfinal.shp"
+draw_date <- "20190404"
+# The filepath to the source polygons is different from the filepath to write out to (basic data hygiene)
+path_spatial <- "C:/Projects/NewMexico/SlickrockCanyon/data/polygons"
+path_output <- "C:/Projects/NewMexico/SlickrockCanyon/output"
+# The filename of the polygons used here. The date at the end is because this has gone through multiple revisions over time
+frame_filename <- "SlickrockCanyon_sf_20190404"
+# The name of the field in the frame polygons containing stratification identities
+stratum_field <- "STRATUM"
+# Because we're going to allocate proportionally, this is the information required.
+# Otherwise we could include the filepath information for a table of design information to manually allocate using.
+# Note that this is also captured in a more human-readable format in above.
+panel_names <- c("Year1", "Year2", "Year3")
+panel_sample_size <- 50
+base_min <- 3
+oversample_proportion <- 0.667
+oversample_min <- 3
+# The seed number to make sure this is reproducible. Could be any positive integer
+seed_number <- c(420)
+```
+
+## Drawing
+Once the setup is done, it's just the process of reading in the data, generating the design object, and drawing the points. If the design has manually allocated points, you would simply use read_panels() instead of allocate_panels().
+
+```{r generating_example_complicated}
+#---- DRAWING ----
+# Read in the frame (which is also stratification in this case)
+frame  <- readOGR(dsn = path_spatial,
+                  layer = frame_filename,
+                  stringsAsFactors = FALSE)
+
+# Create the design object using the values defined in the SETUP chunk above
+design <- allocate_panels(spdf = frame,
+                          stratum_field = stratum_field,
+                          panel_names = panel_names,
+                          panel_sample_size = panel_sample_size,
+                          points_min = base_min,
+                          oversample_proportion = oversample_proportion,
+                          oversample_min = oversample_min)
+
+# Draw the points using the frame and the design object
+points_draw <- grts_aim(design_object = design,
+                        design_name = project_name,
+                        sp_object = frame,
+                        seed_number = seed_number,
+                        stratum_field = stratum_field)
+```
+
+## Quality Assurance
+At this point, creating summary information for future reference and as a quality assurance measure is a good idea. These are not required, but can be very helpful for troubleshooting and evaluating how true-to-expectations the design created is.
+
+```{r qa}
+#---- QUALITY ASSURANCE ----
+# These steps require the packages dplyr and tidyr
+# Use dplyr::group_by() and dplyr::summarize() to create a data frame with number
+# of base points and over sample points per stratum stratum_summary
+
+# This is an intermediate object that's easier to read if reformatted
+stratum_summary_tall <- dplyr::summarize(dplyr::group_by(points_draw@data,
+                                                         STRATUM, PANEL),
+                                         point_count = n())
+
+# This format is easier and clearer to read
+stratum_summary <- tidyr::spread(stratum_summary_tall,
+                                 key = PANEL,
+                                 value = point_count)
+```
+
+## Writing Outputs
+Once all the outputs have been created (both in the form of any QA information and the final points), the only remaining step is to write them out.
+
+```{r outputs}
+#---- WRITING OUTPUTS ----
+
+# Note that the filenames here are generated using project_name and draw_date, just to keep things clear!
+
+# Write out the points as a shapefile
+writeOGR(obj = points_draw,
+         dsn = path_output,
+         layer = paste(project_name, "points", draw_date, sep = "_"),
+         driver = "ESRI Shapefile",
+         overwrite_layer = TRUE)
+
+# Write out the stratum summary created for QA purposes
+write.csv(stratum_summary,
+          paste(path_output,
+                paste0(paste(project_name, "strata_summary", draw_date, sep = "_"), ".csv"),
+                sep = "/"))
+
+# design_dataframe() converts a design object into the same format used by read_panels()
+# This writes out the design information in a static format and serves as another QA step
+write.csv(design_dataframe(design),
+          paste(path_output,
+                paste0(paste(project_name, "point_allocation", draw_date, sep = "_"), ".csv"),
+                sep = "/"))
+```
+
+# Complete example
+This is the above example as a single chunk instead of broken across multiple. You can use this as a template to create your own sample design script by copying it and modifying the DESIGN DOCUMENTATION and SETUP sections appropriately.
+
+```{r full_example}
+#---- DESIGN DOCUMENTATION ----
+# Project name: Slickrock Canyon 
+# Purpose: Resource Management Plan (RMP) effectiveness
+# Sample frame: Slickrock Canyon National Monument (Bureau of Land Management land only)
+# Stratification scheme: Grouped Biophysical Setting groups
+# Panels: 3
+# Base points/panel: 50
+# Total base points: 150
+# Points allocation: Proportionally by area (minimum 3)
+# Oversample proportion: 0.667
+# Seed number: 420
+# Date of final draw: 2019-04-04
+
+#---- SETUP ----
+library("sample.design")
+# rgdal is being attached here to use readOGR()
+library("rgdal")
+# dplyr and tidyr are used for creating quality assurance objects
+library("dplyr")
+library("tidyr")
+
+# The project name
+project_name <- "NM_SlickrockCanyon"
+# The date of the draw in ISO-8601. It's a good practice to append this to the filenames of the results
+# This avoids confusing filenames like "NM_SlickrockCanyon_points_final_FINAL3_actualfinal.shp"
+draw_date <- "20190404"
+# The filepath to the source polygons is different from the filepath to write out to (basic data hygiene)
+path_spatial <- "C:/Projects/NewMexico/SlickrockCanyon/data/polygons"
+path_output <- "C:/Projects/NewMexico/SlickrockCanyon/output"
+# The filename of the polygons used here. The date at the end is because this has gone through multiple revisions over time
+frame_filename <- "SlickrockCanyon_sf_20190404"
+# The name of the field in the frame polygons containing stratification identities
+stratum_field <- "STRATUM"
+# Because we're going to allocate proportionally, this is the information required.
+# Otherwise we could include the filepath information for a table of design information to manually allocate using.
+# Note that this is also captured in a more human-readable format in above.
+panel_names <- c("Year1", "Year2", "Year3")
+panel_sample_size <- 50
+base_min <- 3
+oversample_proportion <- 0.667
+oversample_min <- 3
+# The seed number to make sure this is reproducible. Could be any positive integer
+seed_number <- c(420)
+
+#---- DRAWING ----
+# Read in the frame (which is also stratification in this case)
+frame  <- readOGR(dsn = path_spatial,
+                  layer = frame_filename,
+                  stringsAsFactors = FALSE)
+
+# Create the design object using the values defined in the SETUP chunk above
+design <- allocate_panels(spdf = frame,
+                          stratum_field = stratum_field,
+                          panel_names = panel_names,
+                          panel_sample_size = panel_sample_size,
+                          points_min = base_min,
+                          oversample_proportion = oversample_proportion,
+                          oversample_min = oversample_min)
+
+# Draw the points using the frame and the design object
+points_draw <- grts_aim(design_object = design,
+                        design_name = project_name,
+                        sp_object = frame,
+                        seed_number = seed_number,
+                        stratum_field = stratum_field)
+
+#---- QUALITY ASSURANCE ----
+# These steps require the packages dplyr and tidyr
+# Use dplyr::group_by() and dplyr::summarize() to create a data frame with number
+# of base points and over sample points per stratum stratum_summary
+
+# This is an intermediate object that's easier to read if reformatted
+stratum_summary_tall <- dplyr::summarize(dplyr::group_by(points_draw@data,
+                                                         STRATUM, PANEL),
+                                         point_count = n())
+
+# This format is easier and clearer to read
+stratum_summary <- tidyr::spread(stratum_summary_tall,
+                                 key = PANEL,
+                                 value = point_count)
+
+#---- WRITING OUTPUTS ----
+
+# Note that the filenames here are generated using project_name and draw_date, just to keep things clear!
+
+# Write out the points as a shapefile
+writeOGR(obj = points_draw,
+         dsn = path_output,
+         layer = paste(project_name, "points", draw_date, sep = "_"),
+         driver = "ESRI Shapefile",
+         overwrite_layer = TRUE)
+
+# Write out the stratum summary created for QA purposes
+write.csv(stratum_summary,
+          paste(path_output,
+                paste0(paste(project_name, "strata_summary", draw_date, sep = "_"), ".csv"),
+                sep = "/"))
+
+# design_dataframe() converts a design object into the same format used by read_panels()
+# This writes out the design information in a static format and serves as another QA step
+write.csv(design_dataframe(design),
+          paste(path_output,
+                paste0(paste(project_name, "point_allocation", draw_date, sep = "_"), ".csv"),
+                sep = "/"))
+```
