@@ -691,7 +691,8 @@ combine_designs <- function(sub_points,
                            polygons_stratavar = "stratum",
                            sub_stratavar = "stratum",
                            template_stratavar = "stratum",
-                           projection = NULL){
+                           projection = NULL,
+                           iteration_limit = NULL){
   # SO MUCH SANITIZATION
   if (is.null(replacement_count) & is.null(sub_counts)) {
     stop("You must supply either a number of points to replace (allocated to strata by proportional area) or a named vector of counts per stratum as sub_counts")
@@ -724,6 +725,12 @@ combine_designs <- function(sub_points,
   } else {
     if (class(projection) != "CRS") {
       stop("projection must be a CRS object")
+    }
+  }
+
+  if (!is.null(iteration_limit)) {
+    if (class(iteration_limit) != "numeric" | length(iteration_limit) > 1) {
+      stop("iteration_limit must be a single numeric value and determines the number of iterations to run while trying to find pairs. It defaults to the number of potential substitution points.")
     }
   }
 
@@ -826,7 +833,8 @@ combine_designs <- function(sub_points,
                               template_points = template_points,
                               sub_points = sub_points,
                               sub_counts = sub_counts,
-                              FUN = function(X, template_points, sub_points, sub_counts){
+                              iteration_limit = iteration_limit,
+                              FUN = function(X, template_points, sub_points, sub_counts, iteration_limit){
                                 # Narrow it down to the points in the current stratum
                                 stratum <- X
                                 n_keep <- sub_counts[[stratum]]
@@ -858,7 +866,8 @@ combine_designs <- function(sub_points,
                                                        match_to_idvar = "template_index",
                                                        match_from_idvar = "comparison_index",
                                                        match_to_rankvar = "rank_by_template",
-                                                       match_from_rankvar = "rank_by_comparison")
+                                                       match_from_rankvar = "rank_by_comparison",
+                                                       iteration_limit = iteration_limit)
 
                                 # Get a data frame of the paired IDs
                                 pairs <- data.frame(sub_id = sub_points_stratum[sorting[["comparison_index"]], sub_idvar],
