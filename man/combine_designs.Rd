@@ -15,7 +15,8 @@ combine_designs(
   polygons_stratavar = "stratum",
   sub_stratavar = "stratum",
   template_stratavar = "stratum",
-  projection = NULL
+  projection = NULL,
+  iteration_limit = NULL
 )
 }
 \arguments{

@@ -9,7 +9,8 @@ keep_farthest(
   new_points,
   target = NULL,
  
-    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ keep_farthest(
 \item{target}{Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points) - nrow(existing_points)}.}
 
 \item{projection}{CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
+
+\item{verbose}{Logical value. If \code{TRUE} then additional diagnostic messages will be produced while the function runs. Defaults to \code{FALSE}.}
 }
 \value{
 A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
