@@ -565,181 +565,170 @@ get_coords <- function(points,
 
 #' Test to see if a set of points are spatially balanced within the polygons used to draw them
 #' @description Given a set of points and the polygons used to draw them, test the spatial balance of the point by comparing them to randomly located points generated within the polygons
-#' @param polygons Spatial polygons data frame. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons. The balance check will be done for the whole frame if \code{by_frame} is \code{TRUE}. The balance check will be done by polygon identity if \code{polygons@@data} has an identity variable and that variable name is provided as the argument \code{stratafield}.
-#' @param points Spatial points data frame. The points to be tested for spatial balance.
+#' @param polygons Polygon sf object. The polygons that were used to draw the points. This can either be the sample frame for the points or stratification polygons.
+#' @param points Point sf object. The points to be tested for spatial balance.
 #' @param reps Numeric. The number of random draws to make to compare against \code{points}. If this is larger than \code{100} then the process can start to take more than a few minutes if \code{points} contains more than a few dozen points. Defaults to \code{100}.
-#' @param stratafield Character string. The name of the variable in \code{polygons@@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.
-#' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons} ignoring polygon identities. Defaults to \code{TRUE}.
+# #' @param stratafield Character string. The name of the variable in \code{polygons@@data} that contains the polygon identities. If \code{NULL} then the point balance won't be checked by polygon ID. Defaults to \code{NULL}.
+# #' @param by_frame Logical. If \code{TRUE} then a balance check for the points will be done with the full extent of \code{polygons} ignoring polygon identities. Defaults to \code{TRUE}.
 #' @param seed_number Numeric. The number to supply to \code{set.seed()} for reproducibility. At multiple steps, this seed number may be used to generate additional seed numbers for function-internal use, but always reproducibly. Defaults to \code{420}.
 #' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
-#' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
-#' @return A data frame with the variables \code{polygon} (The polygon identity, either \code{"Sample Frame"} or the ID from \code{polygons@@data$stratafield} as appropriate), \code{point_count} (Number of points from \code{points} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points} is balanced.
+#' @param projection CRS string or object. The projection to force all spatial objects into to for the purpose of compatibility. Defaults to \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.
+#' @return A data frame with the variables \code{polygon}, \code{point_count} (Number of points from \code{points} occurring in the polygon), \code{reps} (Number of random draws compared against), \code{mean_arithmetic} (The arithmetic mean of the nearest neighbor distances for the points in \code{points}), \code{mean_geometric} (The geometric mean of the nearest neighbor distances for the points in \code{points}), \code{p_arithmetic} (The proportion of random point draws that had larger arithmetic mean neighbor distances than \code{points}), and \code{p_geometric} (The proportion of random point draws that had larger geometric mean neighbor distances than \code{points}). We treat the \code{p_geometric} as the p value for testing the H0 that \code{points} is balanced.
 #' @export
 check_balance <- function(polygons,
                           points,
                           reps = 100,
-                          stratafield = NULL,
-                          by_frame = TRUE,
+                          # stratafield = NULL,
+                          # by_frame = TRUE,
                           seed_number = 420,
-                          method = "sample",
-                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"))
-
+                          # method = "sample",
+                          projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  
 {
-  if (!(method %in% c("sample", "probability"))) {
-    stop("The argument method must either be 'sample' or 'probability'.")
+  # if (!(method %in% c("sample", "probability"))) {
+  #   stop("The argument method must either be 'sample' or 'probability'.")
+  # }
+  
+  if (!("sf" %in% class(polygons))) {
+    stop("polygons must be a polygon sf object.")
   }
-
-
-  if (!(class(polygons) %in% "SpatialPolygonsDataFrame")) {
-    stop("polygons must be a spatial polygons data frame")
+  if (!all(sf::st_geometry_type(polygons) %in% c("POLYGON", "MULTIPOLYGON"))) {
+    stop("polygons must be a polygon sf object.")
   }
-  if (nrow(polygons@data) < 1) {
+  if (nrow(polygons) < 1) {
     stop("There are no data in polygons")
   }
-  if (!(class(points) %in% "SpatialPointsDataFrame")) {
-    stop("points must be a spatial points data frame")
+  if (!("sf" %in% class(points))) {
+    stop("polygons must be a point sf object.")
   }
-  if (nrow(points@data) < 1) {
+  if (!all(sf::st_geometry_type(points) %in% c("POINT"))) {
+    stop("polygons must be a point sf object.")
+  }
+  if (nrow(points) < 1) {
     stop("There are no data in points")
   }
-  if (!is.null(stratafield)) {
-    if (!is.character(stratafield)) {
-      stop("stratafield must be a single character string or NULL")
-    }
-    if (length(stratafield) > 1) {
-      stop("stratafield must be a single character string or NULL")
-    }
-    if (!(stratafield %in% names(polygons@data))) {
-      stop(stratafield, " is not a variable in polygons@data or NULL")
-    }
-  }
-
+  
   if (reps < 1) {
     stop("reps must be a positive integer")
   }
   if (floor(reps) != ceiling(reps)) {
     stop("reps must be a positive integer")
   }
-
-  if (is.null(stratafield) & !by_frame) {
-    stop("stratafield = NULL and by_frame = FALSE, so no check will be performed.")
-  }
+  
   # Reproject if necessary
-  if (!identical(projection, polygons@proj4string)) {
-    polygons <- sp::spTransform(polygons,
-                                     projection)
+  if (!identical(sf::st_crs(projection), sf::st_crs(polygons))) {
+    polygons <- sf::st_transform(x = polygons,
+                                 crs = projection)
   }
-  if (!identical(projection, points@proj4string)) {
-    points <- sp::spTransform(points,
-                                   projection)
+  if (!identical(sf::st_crs(projection), sf::st_crs(points))) {
+    points <- sf::st_transform(x = points,
+                               crs = projection)
   }
-
-
+  
+  
   # Add the coordinates so that we can do nearest neighbor calculations
   points <- get_coords(points)
-
+  
   # The frame output is assumed to be NULL
   output_frame <- NULL
-
+  
   # If requested, first analyze entire frame
-  if(by_frame) {
-    # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
-    nn_means_all <- NN_mean(points@data,
-                            x_var = "XMETERS",
-                            y_var = "YMETERS")
-
-    ## Do randomization test
-    proportions_frame <- test_points(number = reps,
-                                     points = points,
-                                     polygons = polygons,
-                                     method = method,
-                                     seed_number = seed_number)
-
-    # Build the output data frame for the sample frame
-    output_frame <- data.frame("polygon" = "Sample Frame",
-                               "point_count" = nrow(points),
-                               "reps" = reps,
-                               "mean_arithmetic" = nn_means_all["arith_mean"],
-                               "mean_geometric" = nn_means_all["geo_mean"],
-                               "p_arithmetic" = proportions_frame["p_arith"],
-                               "p_geometric" = proportions_frame["p_geom"])
-
-  }
-
-  ######### Analyze by strata if requested
-
-  # Assume that there aren't strata analyses happening by default
-  output_strata <- NULL
-
-  # If there's a stratification field and it exists in the spdf, get to work
-  if(!is.null(stratafield)) {
-    if (!(stratafield %in% names(polygons@data))) {
-      stop(paste("The variable", stratafield, "does not appear in polygons@data."))
-    }
-
-    # Just to simplify things, make a STRATUM variable
-    polygons@data[["STRATUM"]] <- polygons@data[[stratafield]]
-    strata <- as.character(unique(polygons@data[["STRATUM"]]))
-
-    output_strata <- do.call(rbind,
-                             lapply(X = strata,
-                                    strata_polygons = polygons,
-                                    points = points,
-                                    seed_number = seed_number,
-                                    method = method,
-                                    FUN = function(X, strata_polygons, points, seed_number, method){
-                                      # For clarity
-                                      stratum <- X
-                                      message(stratum)
-
-                                      # Get just the relevant polygons
-                                      stratum_polygons <- strata_polygons[strata_polygons[["STRATUM"]] == stratum, ]
-
-                                      # Get just the points that fall in this stratum
-                                      current_points <- points
-                                      current_points@data[["STRATUM"]] <- sp::over(points,
-                                                                                   stratum_polygons)[["STRATUM"]]
-                                      current_points <- points[!is.na(current_points@data[["STRATUM"]]), ]
-
-                                      # If there are in fact points in the stratum, do the randomization test
-                                      if (nrow(current_points) > 0) {
-
-                                        # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
-                                        nn_means_stratum <- NN_mean(current_points@data,
-                                                                    x_var = "XMETERS",
-                                                                    y_var = "YMETERS")
-
-                                        ## Do randomization test
-                                        proportions_stratum <- test_points(number = reps,
-                                                                           points = current_points,
-                                                                           polygons = stratum_polygons,
-                                                                           method = method,
-                                                                           seed_number = seed_number)
-
-                                        # Build the output data frame for the sample frame
-                                        output <- data.frame("polygon" = stratum,
-                                                             "point_count" = nrow(current_points),
-                                                             "reps" = reps,
-                                                             "mean_arithmetic" = nn_means_stratum[["arith_mean"]],
-                                                             "mean_geometric" = nn_means_stratum[["geo_mean"]],
-                                                             "p_arithmetic" = proportions_stratum["p_arith"],
-                                                             "p_geometric" = proportions_stratum["p_geom"])
-
-                                      } else {
-                                        # If there weren't points in the stratum, just give us the empty output
-                                        output <- data.frame("polygon" = stratum,
-                                                             "point_count" = 0,
-                                                             "reps" = NA,
-                                                             "mean_arithmetic" = NA,
-                                                             "mean_geometric" = NA,
-                                                             "p_arithmetic" = NA,
-                                                             "p_geometric" = NA)
-                                      }
-                                    })
-    )
-  }
+  # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
+  nn_means_all <- NN_mean(sf::st_drop_geometry(points),
+                          x_var = "XMETERS",
+                          y_var = "YMETERS")
+  
+  ## Do randomization test
+  proportions_frame <- test_points(number = reps,
+                                   points = points,
+                                   polygons = polygons,
+                                   # method = method,
+                                   seed_number = seed_number)
+  
+  # Build the output data frame for the sample frame
+  output_frame <- data.frame("polygon" = "Sample Frame",
+                             "point_count" = nrow(points),
+                             "reps" = reps,
+                             "mean_arithmetic" = nn_means_all["arith_mean"],
+                             "mean_geometric" = nn_means_all["geo_mean"],
+                             "p_arithmetic" = proportions_frame["p_arith"],
+                             "p_geometric" = proportions_frame["p_geom"])
+  
+  
+  # ######### Analyze by strata if requested
+  # 
+  # # Assume that there aren't strata analyses happening by default
+  # output_strata <- NULL
+  # 
+  # # If there's a stratification field and it exists in the spdf, get to work
+  # if(!is.null(stratafield)) {
+  #   if (!(stratafield %in% names(polygons@data))) {
+  #     stop(paste("The variable", stratafield, "does not appear in polygons@data."))
+  #   }
+  #   
+  #   # Just to simplify things, make a STRATUM variable
+  #   polygons@data[["STRATUM"]] <- polygons@data[[stratafield]]
+  #   strata <- as.character(unique(polygons@data[["STRATUM"]]))
+  #   
+  #   output_strata <- do.call(rbind,
+  #                            lapply(X = strata,
+  #                                   strata_polygons = polygons,
+  #                                   points = points,
+  #                                   seed_number = seed_number,
+  #                                   method = method,
+  #                                   FUN = function(X, strata_polygons, points, seed_number, method){
+  #                                     # For clarity
+  #                                     stratum <- X
+  #                                     message(stratum)
+  #                                     
+  #                                     # Get just the relevant polygons
+  #                                     stratum_polygons <- strata_polygons[strata_polygons[["STRATUM"]] == stratum, ]
+  #                                     
+  #                                     # Get just the points that fall in this stratum
+  #                                     current_points <- points
+  #                                     current_points@data[["STRATUM"]] <- sp::over(points,
+  #                                                                                  stratum_polygons)[["STRATUM"]]
+  #                                     current_points <- points[!is.na(current_points@data[["STRATUM"]]), ]
+  #                                     
+  #                                     # If there are in fact points in the stratum, do the randomization test
+  #                                     if (nrow(current_points) > 0) {
+  #                                       
+  #                                       # Derive the arithmetic and geometric mean distance to nearest neighbor for the points
+  #                                       nn_means_stratum <- NN_mean(current_points@data,
+  #                                                                   x_var = "XMETERS",
+  #                                                                   y_var = "YMETERS")
+  #                                       
+  #                                       ## Do randomization test
+  #                                       proportions_stratum <- test_points(number = reps,
+  #                                                                          points = current_points,
+  #                                                                          polygons = stratum_polygons,
+  #                                                                          method = method,
+  #                                                                          seed_number = seed_number)
+  #                                       
+  #                                       # Build the output data frame for the sample frame
+  #                                       output <- data.frame("polygon" = stratum,
+  #                                                            "point_count" = nrow(current_points),
+  #                                                            "reps" = reps,
+  #                                                            "mean_arithmetic" = nn_means_stratum[["arith_mean"]],
+  #                                                            "mean_geometric" = nn_means_stratum[["geo_mean"]],
+  #                                                            "p_arithmetic" = proportions_stratum["p_arith"],
+  #                                                            "p_geometric" = proportions_stratum["p_geom"])
+  #                                       
+  #                                     } else {
+  #                                       # If there weren't points in the stratum, just give us the empty output
+  #                                       output <- data.frame("polygon" = stratum,
+  #                                                            "point_count" = 0,
+  #                                                            "reps" = NA,
+  #                                                            "mean_arithmetic" = NA,
+  #                                                            "mean_geometric" = NA,
+  #                                                            "p_arithmetic" = NA,
+  #                                                            "p_geometric" = NA)
+  #                                     }
+  #                                   })
+  #   )
+  # }
   # Combine the outputs
-  output <- rbind(output_frame, output_strata)
-
-  return(output)
+  # output <- rbind(output_frame, output_strata)
+  
+  return(output_frame)
 }
