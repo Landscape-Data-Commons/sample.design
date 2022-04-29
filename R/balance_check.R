@@ -149,17 +149,17 @@ gm_mean <- function(x,
   if (!is.numeric(x)) {
     stop("x must be numeric")
   }
-
+  
   if (na.rm) {
     x <- x[!is.na(x)]
   }
   if (any(is.na(x))) {
     warning("One or more values in x was NA")
   }
-
+  
   # Here's the math for a geometric mean, I guess
   output <- exp(sum(log(x[x > 0])) / length(x))
-
+  
   return(output)
 }
 
@@ -189,7 +189,7 @@ dist_matrix <- function(dataframe,
   if (!is.numeric(dataframe[[y_var]])) {
     stop("y_var must correspond to the name of a numeric variable in dataframe")
   }
-
+  
   # Calculate Euclidean distance between all points!
   a <- dataframe[[x_var]]
   b <- dataframe[[y_var]]
@@ -197,15 +197,15 @@ dist_matrix <- function(dataframe,
   a_sq <- a * a
   b <- outer(b, b, '-')
   b_sq <- b * b
-
+  
   # h is for hypotenuse!
   h <- a_sq + b_sq
-
+  
   # Euclidean distance is the square root of a^2 + b^2
   h <- sqrt(h)
-
+  
   return(h)
-
+  
 }
 
 
@@ -234,26 +234,26 @@ NN <- function(dataframe,
   if (!is.numeric(dataframe[[y_var]])) {
     stop("y_var must correspond to the name of a numeric variable in dataframe")
   }
-
+  
   # Get a distance matrix
   distance_matrix <- dist_matrix(dataframe = dataframe,
                                  x_var = x_var,
                                  y_var = y_var)
-
+  
   # How many points are there?
   point_count <- nrow(dataframe)
-
+  
   # This just "gets rid of" the difference between a point and itself
   # Enables min() function to find the true nearest neighbor of the point
   distance_matrix[distance_matrix == 0] <- Inf
-
+  
   # Get the distance to the nearest neighbor for each point
   nearest_dists <- sapply(1:point_count,
                           distances = distance_matrix,
                           FUN = function(X, distances) {
                             min(distances[, X])
                           })
-
+  
   return(nearest_dists)
 }
 
@@ -282,19 +282,19 @@ NN_mean <- function(dataframe,
   if (!is.numeric(dataframe[[y_var]])) {
     stop("y_var must correspond to the name of a numeric variable in dataframe")
   }
-
+  
   # Get the vector of nearest neighbor distances
   nearest_dists <- NN(dataframe,
                       x_var,
                       y_var)
-
+  
   # Calculate arithmetic mean
   arith_mean <- mean(nearest_dists)
-
+  
   # Calculate the geometric mean
   geo_mean <- gm_mean(nearest_dists,
                       na.rm = TRUE)
-
+  
   # Return the two values
   return(c(arith_mean = arith_mean, geo_mean = geo_mean))
 }
