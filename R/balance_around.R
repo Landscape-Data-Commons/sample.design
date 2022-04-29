@@ -211,23 +211,23 @@ ranked_sort <- function(match_to,
         }
       }
     }
-
+    
     # Increment the iterations
     iterations <- iterations + 1
     # Update the numbers of matches made
     matchfrom_matched_n <- sum(!is.na(matchfrom_pairs[["paired"]]))
     matchto_matched_n <- sum(!is.na(matchto_pairs[["paired"]]))
   }
-
-
+  
+  
   # If we hit the iteration limit, something is wrong!!!!!!!!!!!
   if (iterations >= iteration_limit) {
     message("The iteration limit of ", iteration_limit, " has been reached without reaching an optimal solution. Check your rankings to make sure they make sense or use another method.")
   }
-
+  
   names(matchfrom_pairs) <- c("match_from_id", "match_to_id")
   names(matchto_pairs) <- c("match_to_id", "match_from_id")
-
+  
   # Return the complete set of pairs (so, not the one that had more points)
   if (!any(is.na(matchfrom_pairs[["match_to_id"]]))) {
     output <- matchfrom_pairs[, c("match_from_id", "match_to_id")]
@@ -236,9 +236,9 @@ ranked_sort <- function(match_to,
   } else {
     stop("Something went wrong and there are still points in both match_to and match_from without partners. I don't know what to tell you?")
   }
-
+  
   names(output) <- c(match_from_idvar, match_to_idvar)
-
+  
   return(output)
 }
 
