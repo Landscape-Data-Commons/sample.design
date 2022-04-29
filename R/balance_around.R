@@ -95,6 +95,7 @@ find_preferences <- function(template_points,
 #' @param match_from_idvar Character string. The name of the variable in both \code{match_to} and \code{match_from} that contains the identities of the members in the set to match from. Defaults to \code{"match_from_id"}.
 #' @param match_to_rankvar Character string. The name of the variable in \code{match_to} that contains the rank preference of the match to members for the match from members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_to_rank"}.
 #' @param match_from_rankvar Character string. The name of the variable in \code{match_from} that contains the rank preference of the match from members for the match to members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_from_rank"}.
+#' @param iteration_limit Numeric. The maximum number of iterations to attempt to sort before giving up. Defaults to \code{5000}.
 #' @return A data frame with the variables \code{match_to_id} and \code{match_from_id} containing the paired members of the two sets.
 #' @export
 ranked_sort <- function(match_to,
@@ -103,11 +104,11 @@ ranked_sort <- function(match_to,
                         match_from_idvar = "match_from_id",
                         match_to_rankvar = "match_to_rank",
                         match_from_rankvar = "match_from_rank",
-                        iteration_limit = NULL){
+                        iteration_limit = 5000){
   # Just as a heads up, I am not proud of the variable names in this function, particularly inside the while().
   # They're definitely on the confusing side, but I promise this is an improvement over
   # what I called them at first.
-
+  
   if (class(match_to) != "data.frame") {
     stop("match_to must be a data frame.")
   }
@@ -116,7 +117,7 @@ ranked_sort <- function(match_to,
     stop("match_from must be a data frame.")
   }
   match_from_names <- names(match_from)
-
+  
   if (!all(match_to_idvar %in% match_to_names, match_to_idvar %in% match_from_names)) {
     stop("The match_to_idvar, ", match_to_idvar, ", must appear in both match_to and match_from.")
   }
@@ -129,12 +130,12 @@ ranked_sort <- function(match_to,
   if (!(match_from_rankvar %in% match_from_names)) {
     stop("The match_from_rankvar, ", match_from_rankvar, ", must appear in match_from.")
   }
-
+  
   # How many to match from and to?
   # We care because we'll reference to see if the looping is done
   n_matchfrom <- length(unique(match_from[[match_from_idvar]]))
   n_matchto <- length(unique(match_to[[match_to_idvar]]))
-
+  
   # For if we get in an endless loop, we'll have a way to hit the brakes
   if (is.null(iteration_limit)) {
     iteration_limit <- max(n_matchfrom, n_matchto)
@@ -146,24 +147,28 @@ ranked_sort <- function(match_to,
       stop("The maximum number of iterations given as iteration_limit must be positive")
     }
   }
-
+  
   # Here are the two data frames of pairs
   # Since nothing is paired yet, their partners are NA rather than id values
   matchfrom_pairs <- data.frame(id = unique(match_from[[match_from_idvar]]),
                                 paired = NA,
                                 stringsAsFactors = FALSE)
+  # For some reason it's carrying over the variable name from match_from_idvar
+  # so this corrects the variable names
+  names(matchfrom_pairs) <- c("id", "paired")
   matchto_pairs <- data.frame(id = unique(match_to[[match_to_idvar]]),
                               paired = NA,
                               stringsAsFactors = FALSE)
-
+  names(matchto_pairs) <- c("id", "paired")
+  
   # Initializing these. Each pass through the while() will update these two values
   # It stops once the number of points matched from one of these groups is the same as the number of points in that group
   matchfrom_matched_n <- sum(!is.na(matchfrom_pairs[["paired"]]))
   matchto_matched_n <- sum(!is.na(matchto_pairs[["paired"]]))
-
+  
   # This is just a panic option. If somehow the while() wouldn't exit otherwise, we set a limit on iterations
   iterations <- 0
-
+  
   # This while() will keep the process running as long as not all the points have been paired
   # and we haven't hit the iteration limit.
   while ((n_matchfrom > matchfrom_matched_n & n_matchto > matchto_matched_n) & iterations < iteration_limit) {
@@ -171,12 +176,12 @@ ranked_sort <- function(match_to,
     current_matchfrom_id <- matchfrom_pairs[is.na(matchfrom_pairs[["paired"]]), "id"][1]
     # It's unpaired. We use this so that once it finds a suitable partner the loop will stop searching
     current_unassigned <- TRUE
-
+    
     # Find out how it feels about the other set of points
     current_preferences <- match_from[match_from[[match_from_idvar]] == current_matchfrom_id, ]
     # And get those other point IDs in order of preference to work through
     current_preferred_order <- current_preferences[current_preferences[[match_from_rankvar]], match_to_idvar]
-
+    
     # Work through the potential pairings
     for (current_matchto_id in current_preferred_order) {
       # Only bother to even compare if it doesn't have a more preferred partner yet
