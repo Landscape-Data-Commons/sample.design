@@ -1,53 +1,59 @@
 #' Determine the preference of two sets of points for each other based on distance
-#' @description Given two spatial points data frames, compare the members of each against all the members of the other, ranking their "preference" for the compared points based on distance. By default this assigns higher preference for points that are closer.
-#' @param template_points Spatial points data frame. The first set of points to be used in the comparison.
-#' @param comparison_points Spatial points data frame. The second set of points to be used in the comparison.
+#' @description Given two sf point objects, compare the members of each against all the members of the other, ranking their "preference" for the compared points based on distance. By default this assigns higher preference for points that are closer.
+#' @param template_points An sf point object. The first set of points to be used in the comparison.
+#' @param comparison_points An sf point object. The second set of points to be used in the comparison.
 #' @return A named list of two data frames: \code{"template"} and \code{"comparison"}. Both data frames contain \code{template_index} (the indices of points in \code{template_points}) and \code{comparison_index} (the indices of points in \code{template_points}). Both data frames contain all unique combinations of the two sets of points. \code{"template"} contains a variable named \code{"rank_by_template"} which is the relative preference of the template point at that index for the comparison point at that index (lower values representing higher preference). \code{"comparison"} likewise has \code{"rank_by_comparison"} which is the preference of the comparison point for the template point.
 #' @export
 find_preferences <- function(template_points,
                              comparison_points){
-  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
-    stop("template_points must be a data frame.")
+  if (!("sf" %in% class(template_points))) {
+    stop("template_points must be an sf point object.")
   }
-  if (!(class(comparison_points) %in% "SpatialPointsDataFrame")) {
-    stop("comparison_points must be a data frame.")
+  if (!all(sf::st_geometry_type(template_points) %in% c("POINT"))) {
+    stop("template_points must be an sf point object.")
   }
-
-  n_template <- nrow(template_points@data)
-  n_comparison <- nrow(comparison_points@data)
-
+  if (!("sf" %in% class(comparison_points))) {
+    stop("comparison_points must be an sf point object.")
+  }
+  if (!all(sf::st_geometry_type(comparison_points) %in% c("POINT"))) {
+    stop("comparison_points must be an sf point object.")
+  }
+  
+  n_template <- nrow(template_points)
+  n_comparison <- nrow(comparison_points)
+  
   if (n_template < 1) {
     stop("There are no points in template_points")
   }
   if (n_comparison < 1) {
     stop("There are no points in comparison_points")
   }
-
-  if (!identical(template_points@proj4string, comparison_points@proj4string)) {
+  
+  if (!identical(sf::st_crs(template_points), sf::st_crs(comparison_points))) {
     warning("comparison_points and template_points aren't in the same projection. Reprojecting comparison_points to match.")
-    comparison_points <- sp::spTransform(comparison_points,
-                                         CRSobj = template_points@proj4string)
+    comparison_points <- sf::st_transform(x = comparison_points,
+                                          crs = sf::st_crs(template_points))
   }
-
-  template_points@data[["source"]] <- "template"
+  
+  template_points[["source"]] <- "template"
   template_points <- get_coords(points = template_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
-                                projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
-  comparison_points@data[["source"]] <- "comparison"
+                                projection = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  comparison_points[["source"]] <- "comparison"
   comparison_points <- get_coords(points = comparison_points,
                                   x_var = "XMETERS",
                                   y_var = "YMETERS",
-                                  projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
-
-  distance_matrix <- dist_matrix(dataframe = rbind(template_points@data[, c("XMETERS", "YMETERS")],
-                                      comparison_points@data[, c("XMETERS", "YMETERS")]),
-                     x_var = "XMETERS",
-                     y_var = "YMETERS")
-
+                                  projection = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  
+  distance_matrix <- dist_matrix(dataframe = rbind(sf::st_drop_geometry(template_points[, c("XMETERS", "YMETERS")]),
+                                                   sf::st_drop_geometry(comparison_points[, c("XMETERS", "YMETERS")])),
+                                 x_var = "XMETERS",
+                                 y_var = "YMETERS")
+  
   template_indices <- 1:n_template
   comparison_indices <- (n_template + 1):(n_template + n_comparison)
-
+  
   template_df <- do.call(rbind,
                          lapply(X = template_indices,
                                 distance_matrix = distance_matrix,
@@ -61,7 +67,7 @@ find_preferences <- function(template_points,
                                   output[["rank_by_template"]] <- 1:nrow(output)
                                   return(output)
                                 }))
-
+  
   comparison_df <- do.call(rbind,
                            lapply(X = comparison_indices,
                                   distance_matrix = distance_matrix,
@@ -75,7 +81,7 @@ find_preferences <- function(template_points,
                                     output[["rank_by_comparison"]] <- 1:nrow(output)
                                     return(output)
                                   }))
-
+  
   output <- list(template = template_df,
                  comparison = comparison_df)
   return(output)
