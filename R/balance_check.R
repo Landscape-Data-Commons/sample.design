@@ -1,141 +1,141 @@
-#' Dissolve polygons in an SPDF by an identity variable
-#' @description Dissolve polygons together on an identity variable to produce an SPDF with one observation per identity.
-#' @param polygons Spatial Polygons Data Frame. The polygons to dissolve. Must have an identity variable with a name patching \code{dissolve_field}.
-#' @param dissolve_field Character string. The name of the variable in \code{polygons@@data} containing the polygon identities
-#' @return A spatial polygons data frame with one observation per unique identity in the original \code{polygons}. The associated data frame contains only the identities in a variable named using \code{dissolve_field}.
-#' @export
-dissolve_polygons <- function(polygons, dissolve_field){
-  if (!grepl(class(polygons), pattern = "^SpatialPolygonsDataFrame")) {
-    stop("polygons must be a spatial polygons data frame")
-  }
-  if (!is.character(dissolve_field)) {
-    stop("dissolve field must be a character string")
-  }
-  if (length(dissolve_field) > 1) {
-    stop("dissolve field must be a character string")
-  }
-  if (!(dissolve_field %in% names(polygons@data))) {
-    stop(dissolve_field, " does not occur in the names of polygons@data")
-  }
-  unique_ids <- as.character(unique(polygons@data[[dissolve_field]]))
-  poly_list <- lapply(X = unique_ids,
-                      polygons = polygons,
-                      dissolve_field = dissolve_field,
-                      FUN = function(X, polygons, dissolve_field){
-                        polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
-                        polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
-                        df <- data.frame(id = X,
-                                         stringsAsFactors = FALSE)
-                        names(df) <- dissolve_field
-                        rownames(df) <- polygons_current@polygons[[1]]@ID
-                        polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
-                                                                     data = df)
-                        return(polygons_current)
-                      })
-  output <- do.call(rbind,
-                    poly_list)
-  return(output)
-}
-
-
-#' Get the areas of polygons
-#' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
-#' @param polygons Spatial Polygons or Spatial Polygons Data Frame. The polygons to be summarized.
-#' @param cum_freq Logical. If \code{TRUE} then the output data frame will include the variable \code{"cum_freq"} with the cumulative frequencies of the polygon identities. Note that it sorts the polygons from smallest to largest area before doing this. Defaults to \code{TRUE}.
-#' @return A data frame containing the polygon index within \code{polygons@@polygons[[1]]@@Polygons}, and if asked for, the proportional area (\code{"area_prop"}) and the cumulative frequency (\code{"cum_freq"}).
-#' @export
-extract_poly_area <- function(polygons,
-                              cum_freq = TRUE) {
-  if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
-    stop("polygons must be a spatial polygons data frame")
-  }
-
-  # We need to handle what to do if the geometry is empty
-  if (length(polygons@polygons) < 1) {
-    stop("There's no geometry in polygons")
-  }
-
-  # And if it's not dissolved, we'll do that!
-  if (length(polygons@polygons) > 1) {
-    message("The polygons need to be dissolved. Dissolving now.")
-    polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
-  }
-
-  # Get the areas of the polygons
-  areas_df <- data.frame(id = 1:length(polygons@polygons[[1]]@Polygons),
-                         area = sapply(X = polygons@polygons[[1]]@Polygons,
-                                       FUN = function(X){
-                                         X@area
-                                       }),
-                         stringsAsFactors = FALSE)
-
-
-  # Sort from largest to smallest area
-  # (This can help speed up selecting from the probability distribution elsewhere)
-  areas_df <- areas_df[order(-areas_df[["area"]]), ]
-
-  # Get the total area
-  total_area <- sum(areas_df[["area"]])
-
-  # Add proportional area to the data frame
-  # if (area_prop) {
-  areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
-  # }
-
-  # Add cumulative frequency distribution, which can be treated as a probability distribution
-  if (cum_freq) {
-    areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
-  }
-
-  # Return this data frame!
-  return(areas_df)
-}
-
-
-#' Select polygon from a probability distribution
-#' @description Given a data frame of IDs with associated probabilities and a number, select the ID with the smallest probability value greater than than the number given.
-#' @param dataframe A data frame. Must contain an identity variable with a name matching \code{id_var} and a probability variable with a name matching \code{prob_var}. Will be sorted by ascending probability.
-#' @param value Numeric. A single numeric value to compare against the probabilities in \code{dataframe}.
-#' @param prob_var Character string. Must match the name of the variable in \code{dataframe} that contains the probability values. Defaults to \code{"cum_freq"}.
-#' @param id_var Character string. Must match the name of the variable in \code{dataframe} that contains the identities. Defaults to \code{"id"}.
-#' @return The identity value from \code{dataframe} with the smallest probabilty value greater than \code{value} OR the first identity value if none were greater than \code{value}.
-#' @export
-select_from_distribution <- function(dataframe,
-                                     value,
-                                     prob_var = "cum_freq",
-                                     id_var = "id") {
-  if (class(dataframe) != "data.frame") {
-    stop("dataframe must be a data frame")
-  }
-  if (!(prob_var %in% names(dataframe))) {
-    stop("prob_var must correspond to the name of a variable in dataframe")
-  }
-  if (!(id_var %in% names(dataframe))) {
-    stop("id_var must correspond to the name of a variable in dataframe")
-  }
-  if (!is.numeric(dataframe[[prob_var]])) {
-    stop("prob_var must correspond to the name of a numeric variable in dataframe")
-  }
-  if (!is.numeric(value)) {
-    stop("value must be numeric")
-  }
-  if (length(value) > 1) {
-    stop("value must be a single numeric value")
-  }
-
-  # Make sure that they're ordered!
-  dataframe <- dataframe[order(dataframe[[prob_var]]), ]
-
-  # Check to see if any of the values in prob_var are greater than value
-  # If so, return the ID of the first, else return 1
-  check <- value < dataframe[[prob_var]]
-
-  if (any(check)) {
-    return(dataframe[check, id_var][1])
-  } else {
-    return(1)
-  }
-}
+# #' Dissolve polygons in an SPDF by an identity variable
+# #' @description Dissolve polygons together on an identity variable to produce an SPDF with one observation per identity.
+# #' @param polygons Spatial Polygons Data Frame. The polygons to dissolve. Must have an identity variable with a name patching \code{dissolve_field}.
+# #' @param dissolve_field Character string. The name of the variable in \code{polygons@@data} containing the polygon identities
+# #' @return A spatial polygons data frame with one observation per unique identity in the original \code{polygons}. The associated data frame contains only the identities in a variable named using \code{dissolve_field}.
+# #' @export
+# dissolve_polygons <- function(polygons, dissolve_field){
+#   if (!grepl(class(polygons), pattern = "^SpatialPolygonsDataFrame")) {
+#     stop("polygons must be a spatial polygons data frame")
+#   }
+#   if (!is.character(dissolve_field)) {
+#     stop("dissolve field must be a character string")
+#   }
+#   if (length(dissolve_field) > 1) {
+#     stop("dissolve field must be a character string")
+#   }
+#   if (!(dissolve_field %in% names(polygons@data))) {
+#     stop(dissolve_field, " does not occur in the names of polygons@data")
+#   }
+#   unique_ids <- as.character(unique(polygons@data[[dissolve_field]]))
+#   poly_list <- lapply(X = unique_ids,
+#                       polygons = polygons,
+#                       dissolve_field = dissolve_field,
+#                       FUN = function(X, polygons, dissolve_field){
+#                         polygons_current <- polygons[polygons@data[[dissolve_field]] == X, ]
+#                         polygons_current <- methods::as(sf::st_combine(sf::st_as_sf(polygons_current)), "Spatial")
+#                         df <- data.frame(id = X,
+#                                          stringsAsFactors = FALSE)
+#                         names(df) <- dissolve_field
+#                         rownames(df) <- polygons_current@polygons[[1]]@ID
+#                         polygons_current <- sp::SpatialPolygonsDataFrame(Sr = polygons_current,
+#                                                                          data = df)
+#                         return(polygons_current)
+#                       })
+#   output <- do.call(rbind,
+#                     poly_list)
+#   return(output)
+# }
+# 
+# 
+# #' Get the areas of polygons
+# #' @description Given a Spatial Polygons Data Frame, produce a data frame summarizing the areas of polygons sharing an identity
+# #' @param polygons Spatial Polygons or Spatial Polygons Data Frame. The polygons to be summarized.
+# #' @param cum_freq Logical. If \code{TRUE} then the output data frame will include the variable \code{"cum_freq"} with the cumulative frequencies of the polygon identities. Note that it sorts the polygons from smallest to largest area before doing this. Defaults to \code{TRUE}.
+# #' @return A data frame containing the polygon index within \code{polygons@@polygons[[1]]@@Polygons}, and if asked for, the proportional area (\code{"area_prop"}) and the cumulative frequency (\code{"cum_freq"}).
+# #' @export
+# extract_poly_area <- function(polygons,
+#                               cum_freq = TRUE) {
+#   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
+#     stop("polygons must be a spatial polygons data frame")
+#   }
+#   
+#   # We need to handle what to do if the geometry is empty
+#   if (length(polygons@polygons) < 1) {
+#     stop("There's no geometry in polygons")
+#   }
+#   
+#   # And if it's not dissolved, we'll do that!
+#   if (length(polygons@polygons) > 1) {
+#     message("The polygons need to be dissolved. Dissolving now.")
+#     polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
+#   }
+#   
+#   # Get the areas of the polygons
+#   areas_df <- data.frame(id = 1:length(polygons@polygons[[1]]@Polygons),
+#                          area = sapply(X = polygons@polygons[[1]]@Polygons,
+#                                        FUN = function(X){
+#                                          X@area
+#                                        }),
+#                          stringsAsFactors = FALSE)
+#   
+#   
+#   # Sort from largest to smallest area
+#   # (This can help speed up selecting from the probability distribution elsewhere)
+#   areas_df <- areas_df[order(-areas_df[["area"]]), ]
+#   
+#   # Get the total area
+#   total_area <- sum(areas_df[["area"]])
+#   
+#   # Add proportional area to the data frame
+#   # if (area_prop) {
+#   areas_df[["area_prop"]] <- areas_df[["area"]] / total_area
+#   # }
+#   
+#   # Add cumulative frequency distribution, which can be treated as a probability distribution
+#   if (cum_freq) {
+#     areas_df[["cum_freq"]] <- cumsum(areas_df[["area_prop"]])
+#   }
+#   
+#   # Return this data frame!
+#   return(areas_df)
+# }
+# 
+# 
+# #' Select polygon from a probability distribution
+# #' @description Given a data frame of IDs with associated probabilities and a number, select the ID with the smallest probability value greater than than the number given.
+# #' @param dataframe A data frame. Must contain an identity variable with a name matching \code{id_var} and a probability variable with a name matching \code{prob_var}. Will be sorted by ascending probability.
+# #' @param value Numeric. A single numeric value to compare against the probabilities in \code{dataframe}.
+# #' @param prob_var Character string. Must match the name of the variable in \code{dataframe} that contains the probability values. Defaults to \code{"cum_freq"}.
+# #' @param id_var Character string. Must match the name of the variable in \code{dataframe} that contains the identities. Defaults to \code{"id"}.
+# #' @return The identity value from \code{dataframe} with the smallest probabilty value greater than \code{value} OR the first identity value if none were greater than \code{value}.
+# #' @export
+# select_from_distribution <- function(dataframe,
+#                                      value,
+#                                      prob_var = "cum_freq",
+#                                      id_var = "id") {
+#   if (class(dataframe) != "data.frame") {
+#     stop("dataframe must be a data frame")
+#   }
+#   if (!(prob_var %in% names(dataframe))) {
+#     stop("prob_var must correspond to the name of a variable in dataframe")
+#   }
+#   if (!(id_var %in% names(dataframe))) {
+#     stop("id_var must correspond to the name of a variable in dataframe")
+#   }
+#   if (!is.numeric(dataframe[[prob_var]])) {
+#     stop("prob_var must correspond to the name of a numeric variable in dataframe")
+#   }
+#   if (!is.numeric(value)) {
+#     stop("value must be numeric")
+#   }
+#   if (length(value) > 1) {
+#     stop("value must be a single numeric value")
+#   }
+#   
+#   # Make sure that they're ordered!
+#   dataframe <- dataframe[order(dataframe[[prob_var]]), ]
+#   
+#   # Check to see if any of the values in prob_var are greater than value
+#   # If so, return the ID of the first, else return 1
+#   check <- value < dataframe[[prob_var]]
+#   
+#   if (any(check)) {
+#     return(dataframe[check, id_var][1])
+#   } else {
+#     return(1)
+#   }
+# }
 
 
 #' Calculate the geometric mean of a numeric vector
