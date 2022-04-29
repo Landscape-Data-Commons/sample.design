@@ -305,214 +305,217 @@ NN_mean <- function(dataframe,
 #' @param number Numeric. The number of sets to generate to compare. Defaults to \code{100}.
 #' @param points Spatial Points Data Frame. The points that are being compared against.
 #' @param polygons Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.
-#' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
+# #' @param method Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.
 #' @param seed_number Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.
-#' @param projection CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @param projection Character string. The projection to force all spatial objects into to for the purpose of compatibility. Defaults to \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.
 #' @return Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.
 #' @export
 
 test_points <- function(number = 100,
                         points,
                         polygons,
-                        method = "sample",
+                        # method = "sample",
                         seed_number = 420,
-                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
+                        projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"){
   if (number < 0) {
     stop("number must be a positive integer")
   }
-
-  if (!(method %in% c("sample", "probability"))) {
-    stop("The argument method must either be 'sample' or 'probability'.")
+  
+  # if (!(method %in% c("sample", "probability"))) {
+  #   stop("The argument method must either be 'sample' or 'probability'.")
+  # }
+  
+  if (!("sf" %in% class(points))) {
+    stop("points must be a point sf object.")
   }
-
-  if (!grepl(class(points), pattern = "^SpatialPoints")) {
-    stop("points must be a spatial points data frame")
+  if (!all(sf::st_geometry_type(points) %in% c("POINT"))) {
+    stop("points must be a point sf object.")
   }
-
+  
   # We need to handle what to do if the geometry is empty
   if (nrow(points) < 1) {
     stop("There's no geometry in points")
   }
-
-  if (!identical(projection, points@proj4string)) {
-    points <- sp::spTransform(points,
-                              projection)
+  
+  if (!identical(sf::st_crs(projection), sf::st_crs(points))) {
+    points <- sf::st_transform(x = points,
+                               crs = projection)
   }
-
-  if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
-    stop("polygons must be a spatial polygons data frame")
+  
+  if (!("sf" %in% class(polygons))) {
+    stop("polygons must be a polygon sf object.")
   }
-
+  if (!all(sf::st_geometry_type(polygons) %in% c("POLYGON", "MULTIPOLYGON"))) {
+    stop("polygons must be a polygon sf object.")
+  }
+  
   # We need to handle what to do if the geometry is empty
-  if (length(polygons@polygons) < 1) {
+  if (length(nrow(polygons)) < 1) {
     stop("There's no geometry in polygons")
   }
-  if (!identical(projection, polygons@proj4string)) {
-    polygons <- sp::spTransform(polygons,
-                                projection)
+  if (!identical(sf::st_crs(projection), sf::st_crs(polygons))) {
+    polygons <- sf::st_transform(x = polygons,
+                                 crs = projection)
   }
-
+  
   # And if it's not dissolved, we'll do that!
-  if (length(polygons@polygons) > 1) {
+  if (nrow(polygons) > 1) {
     message("The polygons in polygons need to be dissolved. Dissolving now.")
-    polygons <- methods::as(sf::st_combine(sf::st_as_sf(polygons)), "Spatial")
+    polygons <- sf::st_combine(polygons)
   }
-
-
+  
+  
   # NAD83 CRS for projecting
-  projectionNAD83 <- sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  projectionNAD83 <- "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"
   # Alber's equal area CRS for projecting
-  projectionAL <- sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
-
+  projectionAL <- "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
+  
   # Grab the point coordinates to calculate the mean nearest neighbor
-  pts_coords <- get_coords(points,
-                           x_var = "XMETERS",
-                           y_var = "YMETERS",
-                           projection = projectionAL)@data
-
+  pts_coords <- sf::st_drop_geometry(get_coords(points,
+                                                x_var = "XMETERS",
+                                                y_var = "YMETERS",
+                                                projection = projectionAL))
+  
   # Calculate the mean nearest neighbor
   nn_means <- NN_mean(pts_coords,
                       x_var = "XMETERS",
                       y_var = "YMETERS")
-
+  
   # Just splitting them out for clarity later
   design_nn_am <- nn_means[["arith_mean"]]
   design_nn_gm <- nn_means[["geo_mean"]]
-
-
-  # Generate the cumulative Prob Distribution!
-  if (method == "probability") {
-    if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
-      stop("polygons must be a spatial polygons data frame")
-    }
-
-    probability_distribution <- extract_poly_area(polygons)
-  }
-
-  if (method == "sample") {
-    # This is so we can generate random points with sf::st_sample()
-    # An approach that stands to be like an order of magnitude faster
-    probability_distribution <- NULL
-    polygons <- sf::st_as_sf(x = polygons)
-  }
-
+  
+  
+  # # Generate the cumulative Prob Distribution!
+  # if (method == "probability") {
+  #   if (!grepl(class(polygons), pattern = "^SpatialPolygons")) {
+  #     stop("polygons must be a spatial polygons data frame")
+  #   }
+  #   
+  #   probability_distribution <- extract_poly_area(polygons)
+  # }
+  # 
+  # if (method == "sample") {
+  #   # This is so we can generate random points with sf::st_sample()
+  #   # An approach that stands to be like an order of magnitude faster
+  #   probability_distribution <- NULL
+  #   polygons <- sf::st_as_sf(x = polygons)
+  # }
+  
   # How many points we want.
   point_count <- nrow(points)
-
+  
   # Generate the sets of points. We're doing it over a vector of seed numbers with length = number.
   # That means that each set of generated points has their own starting seed and are therefore unique
   means <- do.call(rbind,
                    lapply(X = seed_number + 1:number,
                           point_count = point_count,
-                          probability_distribution = probability_distribution,
+                          # probability_distribution = probability_distribution,
                           nn_means = nn_means,
                           polygons = polygons,
                           projection = projection,
-                          FUN = function(X, point_count, probability_distribution, nn_means, polygons, projection){
+                          FUN = function(X, point_count,
+                                         # probability_distribution,
+                                         nn_means, polygons, projection){
                             message("MASTER SEED NUMBER ", X)
-
+                            
                             # OKAY. So, we're going to implement NOT using a probability distribution
                             # This could be like a billion times more efficient
-                            if (is.null(probability_distribution)) {
-                              set.seed(X)
-                              # Generate a random set of points within the polygons
-                              # quiet = TRUE doesn't seem to have an effect here, so I'm using suppressMessages()
-                              # Otherwise there are constant messages that "although coordinates are longitude/latitude, st_intersects assumes that they are planar"
-                              # I'm just noting in the documentation that working in polar regions or with truly huge polygons are the only times that's relevant
-                              rand_sf <- suppressMessages({sf::st_sample(x = polygons,
-                                                                         size = point_count,
-                                                                         type = "random",
-                                                                         exact = TRUE,
-                                                                         quiet = TRUE)})
-                              rand_spdf <- methods::as(rand_sf, "Spatial")
-                              # Translate from SpatialPoints to SpatialPointsDataFrame
-                              # The ID number is just the order in which they were generated
-                              rand_spdf <- sp::SpatialPointsDataFrame(coords = rand_spdf@coords,
-                                                                      data = data.frame(id = 1:nrow(rand_spdf@coords)))
-                              sp::proj4string(rand_spdf) <- projection
-                            } else {
-                              # Pick up point_count * 2 points then check them out.
-                              # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
-                              # The extra pointcount helps to account for those non-overlapping points.
-                              # We drop any excess points anyway
-                              iterations <- round(point_count * 2)
-
-                              # Get our seed numbers for these iterations
-                              set.seed(X)
-                              current_seeds <- sample(1:99999,
-                                                      size = iterations)
-
-                              # Generate the random points
-                              # Frankly, I'm not sure why Steve did it this way instead of like sf::st_sample()
-                              rand_points <- do.call(rbind,
-                                                     lapply(X = current_seeds,
-                                                            probability_distribution = probability_distribution,
-                                                            polygons = polygons,
-                                                            FUN = function(X, probability_distribution, polygons){
-                                                              # We set the seed number any time it might get triggered
-                                                              # Use the seed number we generated for this iteration
-                                                              set.seed(X)
-
-                                                              # Get a uniform random variate for selecting a polygon. This gets compared against the cumulative frequency
-                                                              urv <- runif(1)
-
-                                                              # Using the urv, determine the polygon number (opt) from the cumulative freq distribution
-                                                              poly_index <- select_from_distribution(dataframe = probability_distribution,
-                                                                                                     prob_var = "cum_freq",
-                                                                                                     id_var = "id",
-                                                                                                     value = urv)
-
-                                                              # If dissolved (as it should be for polygons), then always access polygons[[1]].
-                                                              poly <- polygons@polygons[[1]]@Polygons[[poly_index]]
-
-                                                              # MAKE IT REPRODUCIBLE!!!!
-                                                              set.seed(X)
-
-                                                              # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
-                                                              rand_point <- sp::spsample(poly,
-                                                                                         n = 1,
-                                                                                         type = "random"#,
-                                                                                         #bb = sp::bbox(poly)
-                                                              )
-
-                                                              return(rand_point)
-                                                            }))
-
-                              # Translate from SpatialPoints to SpatialPointsDataFrame
-                              # The ID number is just the order in which they were generated
-                              rand_points <- sp::SpatialPointsDataFrame(coords = rand_points,
-                                                                             data = data.frame(id = 1:nrow(rand_points@coords)))
-                              sp::proj4string(rand_points) <- polygons@proj4string
-
-                              # Find overlap!
-                              overlap <- sp::over(rand_points,
-                                                  polygons)
-
-                              # Only keep the points where there was spatial overlap
-                              rand_points <- rand_points[!is.na(overlap[[1]]), ]
-
-                              # In case we have more random points than needed, just pick the first nrow(points) points.
-                              # We still have a fully random sample since we effectively store the random points by accession
-                              # and we elimiinate points from the bottom up.
-                              rand_spdf <- rand_points[1:point_count, ]
-                            }
-
+                            # if (is.null(probability_distribution)) {
+                            set.seed(X)
+                            # Generate a random set of points within the polygons
+                            # quiet = TRUE doesn't seem to have an effect here, so I'm using suppressMessages()
+                            # Otherwise there are constant messages that "although coordinates are longitude/latitude, st_intersects assumes that they are planar"
+                            # I'm just noting in the documentation that working in polar regions or with truly huge polygons are the only times that's relevant
+                            rand_sf <- suppressMessages({sf::st_as_sf(sf::st_sample(x = polygons,
+                                                                                    size = point_count,
+                                                                                    type = "random",
+                                                                                    exact = TRUE,
+                                                                                    quiet = TRUE))})
+                            rand_sf[["id"]] <- 1:nrow(rand_sf)
+                            # } else {
+                            #   # Pick up point_count * 2 points then check them out.
+                            #   # Because we use the polygon bounding box and not the polygon later, we may select points outside of polygon area.
+                            #   # The extra pointcount helps to account for those non-overlapping points.
+                            #   # We drop any excess points anyway
+                            #   iterations <- round(point_count * 2)
+                            #   
+                            #   # Get our seed numbers for these iterations
+                            #   set.seed(X)
+                            #   current_seeds <- sample(1:99999,
+                            #                           size = iterations)
+                            #   
+                            #   # Generate the random points
+                            #   # Frankly, I'm not sure why Steve did it this way instead of like sf::st_sample()
+                            #   rand_points <- do.call(rbind,
+                            #                          lapply(X = current_seeds,
+                            #                                 probability_distribution = probability_distribution,
+                            #                                 polygons = polygons,
+                            #                                 FUN = function(X, probability_distribution, polygons){
+                            #                                   # We set the seed number any time it might get triggered
+                            #                                   # Use the seed number we generated for this iteration
+                            #                                   set.seed(X)
+                            #                                   
+                            #                                   # Get a uniform random variate for selecting a polygon. This gets compared against the cumulative frequency
+                            #                                   urv <- runif(1)
+                            #                                   
+                            #                                   # Using the urv, determine the polygon number (opt) from the cumulative freq distribution
+                            #                                   poly_index <- select_from_distribution(dataframe = probability_distribution,
+                            #                                                                          prob_var = "cum_freq",
+                            #                                                                          id_var = "id",
+                            #                                                                          value = urv)
+                            #                                   
+                            #                                   # If dissolved (as it should be for polygons), then always access polygons[[1]].
+                            #                                   poly <- polygons@polygons[[1]]@Polygons[[poly_index]]
+                            #                                   
+                            #                                   # MAKE IT REPRODUCIBLE!!!!
+                            #                                   set.seed(X)
+                            #                                   
+                            #                                   # Use the bounding box of the polygon and sp:spsample() to select just 1 random point.
+                            #                                   rand_point <- sp::spsample(poly,
+                            #                                                              n = 1,
+                            #                                                              type = "random"#,
+                            #                                                              #bb = sp::bbox(poly)
+                            #                                   )
+                            #                                   
+                            #                                   return(rand_point)
+                            #                                 }))
+                            # 
+                            #                               # Translate from SpatialPoints to SpatialPointsDataFrame
+                            #                               # The ID number is just the order in which they were generated
+                            #                               rand_points <- sp::SpatialPointsDataFrame(coords = rand_points,
+                            #                                                                         data = data.frame(id = 1:nrow(rand_points@coords)))
+                            #                               sp::proj4string(rand_points) <- polygons@proj4string
+                            # 
+                            #                               # Find overlap!
+                            #                               overlap <- sp::over(rand_points,
+                            #                                                   polygons)
+                            # 
+                            #                               # Only keep the points where there was spatial overlap
+                            #                               rand_points <- rand_points[!is.na(overlap[[1]]), ]
+                            # 
+                            #                               # In case we have more random points than needed, just pick the first nrow(points) points.
+                            #                               # We still have a fully random sample since we effectively store the random points by accession
+                            #                               # and we elimiinate points from the bottom up.
+                            #                               rand_spdf <- rand_points[1:point_count, ]
+                            #                             }
+                            
                             # Add the x and y meters now
-                            rand_spdf <- get_coords(points = rand_spdf,
-                                                    x_var = "XMETERS",
-                                                    y_var = "YMETERS",
-                                                    projection = projectionAL)
-
+                            rand_sf <- get_coords(points = rand_sf,
+                                                  x_var = "XMETERS",
+                                                  y_var = "YMETERS",
+                                                  projection = projectionAL)
+                            
                             # Get the distance to nearest neighbor for each point in the random set
-                            rand_nn <- NN_mean(dataframe = rand_spdf@data,
+                            rand_nn <- NN_mean(dataframe = sf::st_drop_geometry(rand_sf),
                                                x_var = "XMETERS",
                                                y_var = "YMETERS")
-
+                            
                             return(data.frame("am" = rand_nn["arith_mean"],
                                               "gm" = rand_nn["geo_mean"]))
                           })
   )
-
+  
   # This is the whole damn goal:
   # What proportion of our comparison draws had a HIGHER mean nearest neighbor distance than the points?
   # We assume that a higher mean nearest neighbor distance means more spatially balanced
@@ -520,7 +523,7 @@ test_points <- function(number = 100,
   # Which means that they're basically a P value for the H0 "The points provided are spatially balanced"
   nn_am_greater_prop <- sum(means[["am"]] > design_nn_am) / number
   nn_gm_greater_prop <- sum(means[["gm"]] > design_nn_gm) / number
-
+  
   output <- c(p_arith = nn_am_greater_prop, p_geom = nn_gm_greater_prop)
   rownames(output) <- NULL
   return(output)
