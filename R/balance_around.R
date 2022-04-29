@@ -597,100 +597,121 @@ keep_farthest <- function(existing_points,
 
 
 #' Combine existing and new points to create a spatially balanced design
-#' @param existing_points Spatial points data frame. The existing points that will be balanced around.
-#' @param new_points Spatial points data frame. The points that will be compared against the existing points and selected from to create a balanced design.
+#' @param existing_points Point sf object. The existing points that will be balanced around.
+#' @param new_points Point sf object. The points that will be compared against the existing points and selected from to create a balanced design.
 #' @param stratafield Character string. The name of the variable in common between \code{existing_points} and \code{new_points} that contains stratum identities. This is used to balance by stratum. If \code{NULL} then balancing will not take strata into account. Defaults to \code{NULL}.
-#' @param projection CRS object. The projection to force on the spatial objects. Defaults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
-#' @return A spatial points data frame containing all the points from \code{existing_points} and the selected points from \code{new_points}. The projection will match \code{projection}.
+#' @param id_var Character string. The name of the variable common between \code{existing_points} and \code{new_points} that contains point identities. This assumes that the format of plot IDs is "character-number".
+#' @param projection CRS object or character string. The projection to force on the spatial objects. Defaults to \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.
+#' @return A point sf object containing all the points from \code{existing_points} and the selected points from \code{new_points}. The projection will match \code{projection}.
 #' @export
 balance_around <- function(existing_points,
                            new_points,
                            stratafield = NULL,
-                           projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
-  # TODO: Sanitization (including reprojection)
-  existing_points <- sp::spTransform(existing_points,
-                                     CRSobj = projection)
-  new_points <- sp::spTransform(new_points,
-                                CRSobj = projection)
-
+                           id_var,
+                           projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"){
+  if (!("sf" %in% class(existing_points))) {
+    stop("existing_points must be a point sf object.")
+  }
+  if (!all(sf::st_geometry_type(existing_points) %in% c("POINT"))) {
+    stop("existing_points must be a point sf object.")
+  }
+  if (!(id_var %in% names(existing_points))) {
+    stop("id_var must correspond to a variable in existing_points.")
+  }
+  if (!identical(sf::st_crs(projection), sf::st_crs(existing_points))) {
+    existing_points <- sf::st_transform(x = existing_points,
+                                        crs = projection)
+  }
+  
+  if (!("sf" %in% class(new_points))) {
+    stop("new_points must be a point sf object.")
+  }
+  if (!all(sf::st_geometry_type(new_points) %in% c("POINT"))) {
+    stop("new_points must be a point sf object.")
+  }
+  if (!(id_var %in% names(existing_points))) {
+    stop("id_var must correspond to a variable in new_points.")
+  }
+  if (!identical(sf::st_crs(projection), sf::st_crs(new_points))) {
+    new_points <- sf::st_transform(x = new_points,
+                                   crs = projection)
+  }
+  
+  
   # Assign the codes that indicate if they're existing plots or freshly-drawn ones
-  existing_points@data[["TYPE"]] <- "EXISTING"
-  new_points@data[["TYPE"]] <- "NEW"
-
+  existing_points[["TYPE"]] <- "EXISTING"
+  new_points[["TYPE"]] <- "NEW"
+  
   # Add in the fields that the points don't have for easy combination
-  missing_vars_new <- names(existing_points@data)[!(names(existing_points@data) %in% names(new_points@data))]
-  new_points@data[, missing_vars_new] <- NA
-  missing_vars_existing <- names(new_points@data)[!(names(new_points@data) %in% names(existing_points@data))]
-  existing_points@data[, missing_vars_existing] <- NA
-
+  missing_vars_new <- names(existing_points)[!(names(existing_points) %in% names(new_points))]
+  new_points[, missing_vars_new] <- NA
+  missing_vars_existing <- names(new_points)[!(names(new_points) %in% names(existing_points))]
+  existing_points[, missing_vars_existing] <- NA
+  
   # Bind the 2 point files together
   pts <- rbind(existing_points, new_points)
-
+  
   # What are the existing points' indices?
-  extant_indices <- 1:nrow(existing_points@data)
+  extant_indices <- 1:nrow(existing_points)
   # Which are the new points' indices?
-  new_indices <- (nrow(existing_points@data) + 1):(nrow(existing_points@data) + nrow(new_points@data))
-
+  new_indices <- (nrow(existing_points) + 1):(nrow(existing_points) + nrow(new_points))
+  
   # Rename the date that the plot was sampled to "PREVDATE"
-  pts@data[["PREVDATE"]] <- pts@data[["DATEVISITE"]]
-
+  # pts@data[["PREVDATE"]] <- pts@data[["DATEVISITE"]]
+  
   # Restrict to only relevant fields
-  pts <- pts[ , c("TYPE",
-                  stratafield,
-                  "PLOTID",
-                  "PLOTKEY",
-                  "PRIMARYKEY",
-                  "PANEL",
-                  "PROJECTNAM",
-                  "PREVDATE")]
-
+  # pts <- pts[ , c("TYPE",
+  #                 stratafield,
+  #                 "PLOTID",
+  #                 "PLOTKEY",
+  #                 "PRIMARYKEY",
+  #                 "PANEL",
+  #                 "PROJECTNAM")]
+  
   # Make these all NA for the new points
-  new_points@data[new_indices, "PLOTID"] <- NA
-  new_points@data[new_indices, "PLOTKEY"] <- NA
-  new_points@data[new_indices, "PRIMARYKEY"] <- NA
-  new_points@data[new_indices, "PROJECTNAM"] <- NA
-  new_points@data[new_indices, "PREVDATE"] <- NA
-
+  # new_points@data[new_indices, "PLOTID"] <- NA
+  # new_points@data[new_indices, "PLOTKEY"] <- NA
+  # new_points@data[new_indices, "PRIMARYKEY"] <- NA
+  # new_points@data[new_indices, "PROJECTNAM"] <- NA
+  # new_points@data[new_indices, "PREVDATE"] <- NA
+  
   # Determine the number of existing points
-  extant <- nrow(existing_points@data)
-
+  extant <- nrow(existing_points)
+  
   # Add coordinates to the combined points for distance calculations
   pts <- get_coords(pts,
                     x_var = "XMETERS",
                     y_var = "YMETERS",
-                    projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
-
+                    projection = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  
   # This determines the number of New points to eliminate, and eliminates the points
   pts <- keep_farthest(existing_points = existing_points,
                        new_points = new_points)
-
+  
   # Time to tweak the new points that were kept
-  new_indices_remaining <- pts@data[["TYPE"]] == "NEW"
-
+  new_indices_remaining <- pts[["TYPE"]] == "NEW"
+  
   # Get the existing plot ids and renumber them
   if (any(new_indices_remaining)) {
-    plotids <- pts@data[new_indices_remaining, "PLOTID"]
+    plotids <- pts[new_indices_remaining, id_var]
     plotids <- gsub(plotids,
                     pattern = "\\d*$",
                     replacement = "")
-    pts@data[new_indices_remaining, "PLOTID"] <- paste0(plotids, 1:length(new_indices_remaining))
+    pts[new_indices_remaining, id_var] <- paste0(plotids, 1:length(new_indices_remaining))
   }
-
-  # TODO: Rename within strata.
-  # Does this mean using over() with stratification polygons to determine new stratification assignments for old points?
-
-
+  
+  
   # None of the points are considered visited now!
-  pts@data[["DATEVIS"]] <- ""
-  pts@data[["EVALSTA"]] <- "NotEval"
-  pts@data[["FINAL_DESI"]] <- ""
-
+  # pts@data[["DATEVIS"]] <- ""
+  # pts@data[["EVALSTA"]] <- "NotEval"
+  # pts@data[["FINAL_DESI"]] <- ""
+  
   # Add coordinates!
   pts <- get_coords(pts,
                     x_var = "LAT",
                     y_var = "LONG",
                     projection = projection)
-
+  
   return(pts)
 }
 
