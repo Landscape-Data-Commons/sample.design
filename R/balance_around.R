@@ -392,110 +392,115 @@ get_closest <- function(existing_points,
 
 #' Find and keep the points farthest from each other
 #' @description This will take a set of existing points and new points and combine them to create a set consisting of the existing points and the farthest new points. The original intended use case was to take a collection of sampling locations from one or more sample designs (\code{existing_points}) and use them as part of a new, spatially balanced sample design. The function takes a set of new, random, spatially balanced points (\code{new_points}) and determines the distance between each of them and each of the existing points. It then sequentially eliminates the new point closest to any existing point until the combined number of existing points and remaining points is equal to \code{target}.
-#' @param existing_points Spatial points data frame. These are the points that will all be included in the output points and the points against which \code{new_points} will be compared against.
-#' @param new_points Spatial points data frame. These are the points that may be included in the output. The number that will be is equal to \code{target - nrow(existing_points)}.
+#' @param existing_points Point sf object. These are the points that will all be included in the output points and the points against which \code{new_points} will be compared against.
+#' @param new_points Point sf object. These are the points that may be included in the output. The number that will be is equal to \code{target - nrow(existing_points)}.
 #' @param target Numeric value. The total number of points to include in the output. Defaults to \code{nrow(new_points) - nrow(existing_points)}.
-#' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @param projection Character string. The projection to force all spatial objects into. Defaults to NAD83, \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.
 #' @param verbose Logical value. If \code{TRUE} then additional diagnostic messages will be produced while the function runs. Defaults to \code{FALSE}.
-#' @return A spatial points data frame containing all the points from existing points and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
+#' @return A point sf object containing all the points from \code{existing_points} and \code{target - nrow(existing_points)} points from \code{new_points} using the CRS specified in \code{projection}. It will only have those variables that were in common between both \code{existing_points} and \code{new_points}.
 #' @export
 keep_farthest <- function(existing_points,
                           new_points,
                           target = NULL,
-                          projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"),
+                          projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0",
                           verbose = FALSE){
-
-  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
-    stop("existing_points must be a spatial points data frame")
+  
+  if (!("sf" %in% class(existing_points))) {
+    stop("existing_points must be a point sf object.")
   }
-
-  if (nrow(existing_points@data) < 1) {
+  if (!all(sf::st_geometry_type(existing_points) %in% c("POINT"))) {
+    stop("existing_points must be a point sf object.")
+  }
+  if (nrow(existing_points) < 1) {
     stop("There are no points in existing_points")
   }
-  if (!(class(new_points) %in% "SpatialPointsDataFrame")) {
-    stop("new_points must be a spatial points data frame")
+  if (!("sf" %in% class(new_points))) {
+    stop("existing_points must be a point sf object.")
   }
-  if (nrow(new_points@data) < 1) {
+  if (!all(sf::st_geometry_type(new_points) %in% c("POINT"))) {
+    stop("existing_points must be a point sf object.")
+  }
+  if (nrow(new_points) < 1) {
     stop("There are no points in new_points")
   }
-
-  if (!identical(projection, existing_points@proj4string)) {
-    existing_points <- sp::spTransform(existing_points,
-                                       projection)
+  
+  if (!identical(sf::st_crs(projection), sf::st_crs(existing_points))) {
+    existing_points <- sf::st_transform(x = existing_points,
+                                        crs = projection)
   }
-
+  
   # Putting aside the input new_points so we can
-  if (!identical(projection, new_points@proj4string)) {
-    new_points <- sp::spTransform(new_points,
-                                  projection)
+  if (!identical(sf::st_crs(projection), sf::st_crs(new_points))) {
+    new_points <- sf::st_transform(x = new_points,
+                                   crs = projection)
   }
-
+  
   # How many of each point type are there? We'll use these for the loops
-  n_existing <- nrow(existing_points@data)
+  n_existing <- nrow(existing_points)
   n_new <- nrow(new_points)
-
+  
   # Just in cae we're deciding the target count right now
   count_difference <- n_new - n_existing
   if (is.null(target)) {
     target <- count_difference
   }
-  if (target > nrow(new_points@data)) {
+  if (target > nrow(new_points)) {
     stop("The target number of points to return is greater than the number of points available")
   }
   if (target < 1) {
     stop("The target number of points to return is less than 1")
   }
-
+  
   # I don't think this matters????
   # if (target <= nrow(existing_points@data)) {
   #   stop("The target number of points is less than or equal to the number of existing points.")
   # }
-
-  existing_point_vars <- names(existing_points@data)
-  new_point_vars <- names(new_points@data)
+  
+  existing_point_vars <- names(existing_points)
+  new_point_vars <- names(new_points)
   if (!all(new_point_vars %in% existing_point_vars) | !all(existing_point_vars %in% new_point_vars)) {
     message("existing_points and new_points must have all the same variables as each other")
-  } else if (ncol(existing_points@data) > 1) {
-    existing_points@data <- existing_points@data[, new_point_vars]
+  } else if (ncol(existing_points) > 1) {
+    existing_points <- existing_points[, new_point_vars]
   }
-
-
-
+  
+  
+  
   # Get some common info added to these
-  existing_points@data[["TYPE"]] <- "EXISTING"
-  existing_points@data[["INDEX"]] <- 1:n_existing
-  new_points@data[["TYPE"]] <- "NEW"
-  new_points@data[["INDEX"]] <- 1:n_new
-
+  existing_points[["TYPE"]] <- "EXISTING"
+  existing_points[["INDEX"]] <- 1:n_existing
+  new_points[["TYPE"]] <- "NEW"
+  new_points[["INDEX"]] <- 1:n_new
+  
   # Combine the two sets of points, making sure the existing points come first!!!
   combined_points <- rbind(existing_points[, c("INDEX", "TYPE")],
                            new_points[, c("INDEX", "TYPE")])
-
+  
   # Add the coordinates
   combined_points <- get_coords(combined_points,
                                 x_var = "XMETERS",
                                 y_var = "YMETERS",
-                                projection = sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"))
-
+                                projection = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  
   # Get a distance matrix
-  distance_matrix <- dist_matrix(dataframe = combined_points@data,
+  distance_matrix <- dist_matrix(dataframe = sf::st_drop_geometry(combined_points),
                                  x_var = "XMETERS",
                                  y_var = "YMETERS")
-
+  
   # Remove the columns for new points
   distance_matrix <- distance_matrix[, -((n_existing + 1):(n_existing + n_new))]
   # Remove the rows for existing points
   distance_matrix <- distance_matrix[-(1:n_existing), ]
-
+  
   # Convert to a data frame
   # SO!!!! Each row should represent a new point and each column represents an existing point
   # That means that to find the new point closest to an existing point, you look for the minimum value in a column
   distance_df <- as.data.frame(distance_matrix,
                                stringsAsFactors = FALSE)
-
+  
   # Add the new points indices
   distance_df[["INDEX"]] <- 1:n_new
-
+  
   # And now we loop to remove all the closest new points
   # The looping is so that we don't get hung up on the same minimum distance
   # and can remove progressively more distant points until we reach our goal
@@ -507,8 +512,8 @@ keep_farthest <- function(existing_points,
   # If the number to remove is overshot because the final pass through the loop identifies multiple indices,
   # we only take the first however-many-we-need
   # The observations at the identified indices in the new points will be removed!
-
-
+  
+  
   # A vector to store the indices to chuck
   removal_indices <- NULL
   n_removal_indices <- 0
@@ -522,7 +527,7 @@ keep_farthest <- function(existing_points,
   if (verbose) {
     message("Aiming to drop ", n_indices_to_remove, " points")
   }
-
+  
   while (n_removal_indices < n_indices_to_remove) {
     if (verbose) {
       message("Starting while() iteration with ", n_removal_indices, " indices to remove identified")
@@ -535,20 +540,20 @@ keep_farthest <- function(existing_points,
     # Each column is an existing point, so if we check every column for the value and store that index,
     # those are the new points that are that distance from an existing point
     current_indices <- unlist(sapply(X = 1:(ncol(working_distance_df) - 1),
-                              value = current_min,
-                              distance_df = working_distance_df,
-                              FUN = function(X, value, distance_df){
-                                # Grab the column as a vector
-                                distances <- distance_df[[X]]
-                                if (value %in% distances) {
-                                  # Get the values from INDEX that correspond to the places where the value is found
-                                  # We're returning from INDEX because they won't change when we remove rows from working_distance_df
-                                  indices <- distance_df[which(value == distances), "INDEX"]
-                                  return(indices)
-                                } else {
-                                  return(NULL)
-                                }
-                              }))
+                                     value = current_min,
+                                     distance_df = working_distance_df,
+                                     FUN = function(X, value, distance_df){
+                                       # Grab the column as a vector
+                                       distances <- distance_df[[X]]
+                                       if (value %in% distances) {
+                                         # Get the values from INDEX that correspond to the places where the value is found
+                                         # We're returning from INDEX because they won't change when we remove rows from working_distance_df
+                                         indices <- distance_df[which(value == distances), "INDEX"]
+                                         return(indices)
+                                       } else {
+                                         return(NULL)
+                                       }
+                                     }))
     # Make sure we have the uniques, in case a new point was equidistant from multiple existing points
     current_indices <- unique(current_indices)
     if (verbose) {
@@ -556,37 +561,37 @@ keep_farthest <- function(existing_points,
     }
     # Remove the NULLs
     # current_indices <- current_indices[!is.na(current_indices)]
-
+    
     # Add those to the ones we're going to remove
     removal_indices <- unique(c(removal_indices, current_indices))
     # Drop any NULLs
     # removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
-
+    
     # Out of paranoia
     removal_indices <- unlist(removal_indices)
     if (verbose) {
       message("The current full set of removal indices is: ", paste(removal_indices, collapse = ", "))
     }
-
+    
     if (!is.null(removal_indices)) {
       # Make sure we don't overshoot our removal goal
       removal_indices <- removal_indices[1:min(length(removal_indices), n_indices_to_remove)]
-
+      
       # Removing that point so that we can identify a new minimum in the next pass
       working_distance_df <- working_distance_df[!(working_distance_df[[index_colnum]] %in% removal_indices), ]
-
+      
       # Update our tracking value
       n_removal_indices <- length(removal_indices)
     }
   }
-
-
+  
+  
   # removal_indices <- removal_indices[!sapply(removal_indices, is.null)]
-
+  
   # Now that we have our indices to remove, let's do it
   # The as.numeric() is because due to the NULL that's in there from the pre-loop setup removal_indices is a list, not a vector
   output <- new_points[-as.numeric(removal_indices), new_point_vars]
-
+  
   return(output)
 }
 
