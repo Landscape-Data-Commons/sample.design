@@ -244,45 +244,53 @@ ranked_sort <- function(match_to,
 
 #' Select points that most closely approximate the distribution of another set of points
 #' @description Sometimes you have a large collection of points which are not randomly distributed or spatially balanced and you would like a subset that more or less do. Given a template of points that are distributed the way you would like, this will return the closest existing point to each. This can be done taking into account membership in a group, either by having assigned it as a variable in both sets of points or by providing polygons that can be used to assign membership. By default, no stratification/membership is taken into account.
-#' @param existing_points Spatial Points Data Frame. The points you would like to select from by comparing against \code{template_points}.
-#' @param template_points  Spatial Points Data Frame. The points you would like to compare against \code{existing_points} in order to select a subset of those that most closely resemble the distribution of the template points.
-#' @param strata_polygons Spatial Polygons Data Frame. Polygons assigned a variable with a name \code{stratafield} that contains the membership information (e.g. strata) to assign to \code{existing_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.
-#' @param stratafield Character string. If \code{strata_polygons} is not \code{NULL}, the name of the variable in \code{strata_polygons@@data} that contains the membership information. Otherwise, the name of the variable in both \code{template_points@@data} and \code{existing_points@@data} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{NULL}.
-#' @param projection CRS object. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @param existing_points Point sf object. The points you would like to select from by comparing against \code{template_points}.
+#' @param template_points  Point sf object. The points you would like to compare against \code{existing_points} in order to select a subset of those that most closely resemble the distribution of the template points.
+#' @param strata_polygons Optional polygon sf object. Polygons assigned a variable with a name \code{stratafield} that contains the membership information (e.g. strata) to assign to \code{existing_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.
+#' @param stratafield Character string. If \code{strata_polygons} is not \code{NULL}, the name of the variable in \code{strata_polygons} that contains the membership information. Otherwise, the name of the variable in both \code{template_points} and \code{existing_points} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{NULL}.
+#' @param projection Character string. The projection to force all spatial objects into. Defaults to NAD83, \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.
+#' @param iteration_limit Numeric. The maximum number of iterations to attempt to sort before giving up. Defaults to \code{5000}.
 #' @return A spatial points data frame made by trimming \code{existing_points} down to the points that most closely approximate the distribution of \code{template_points} while also containing the same number of points as \code{template_points}. It will be in the projection specified by \code{projection}.
 #' @export
 get_closest <- function(existing_points,
                         template_points,
                         strata_polygons = NULL,
                         stratafield = NULL,
-                        projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")){
-
-
-  if (!(class(existing_points) %in% "SpatialPointsDataFrame")) {
-    stop("existing_points must be a spatial points data frame")
+                        projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0",
+                        iteration_limit = 5000){
+  
+  if (!("sf" %in% class(existing_points))) {
+    stop("existing_points must be a point sf object")
   }
-
-  if (!(class(template_points) %in% "SpatialPointsDataFrame")) {
-    stop("template_points must be a spatial points data frame")
+  if (!all(sf::st_geometry_type(existing_points) %in% c("POINT"))) {
+    stop("existing_points must be a point sf object")
   }
-  if (nrow(template_points@data) < 1) {
+  if (!("sf" %in% class(template_points))) {
+    stop("template_points must be a point sf object")
+  }
+  if (!all(sf::st_geometry_type(template_points) %in% c("POINT"))) {
+    stop("template_points must be a point sf object")
+  }
+  if (nrow(template_points) < 1) {
     stop("There are no points in template_points.")
   }
-  if (nrow(existing_points@data) < 1) {
+  if (nrow(existing_points) < 1) {
     stop("There are no points in existing_points.")
   }
-
+  
   # Reproject if necessary
-  if (!identical(projection, template_points@proj4string)) {
-    template_points <- sp::spTransform(template_points,
-                                       projection)
+  if (!identical(sf::st_crs(projection),
+                 sf::st_crs(template_points))) {
+    template_points <- sf::st_transform(x = template_points,
+                                        crs = projection)
   }
-  if (!identical(projection, existing_points@proj4string)) {
-    existing_points <- sp::spTransform(existing_points,
-                                       projection)
+  if (!identical(sf::st_crs(projection),
+                 sf::st_crs(existing_points))) {
+    existing_points <- sf::st_transform(x = existing_points,
+                                        crs = projection)
   }
-
-
+  
+  
   # What to do about stratafield
   if (!is.null(stratafield)) {
     if (!is.character(stratafield)) {
