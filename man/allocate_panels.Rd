@@ -5,7 +5,7 @@
 \title{Create a design object programmatically to use with \code{spsurvey::grts()}.}
 \usage{
 allocate_panels(
-  spdf,
+  polygons,
   stratum_field = "stratum",
   panel_names = c("1", "2", "3", "4", "5"),
   panel_sample_size = 50,
@@ -15,9 +15,9 @@ allocate_panels(
 )
 }
 \arguments{
-\item{spdf}{SpatialPointsDataFrame or data frame containing the possible sampling points being used or a SpatialPolygonsDataFrame of polygons describing the strata boundaries.}
+\item{polygons}{Polygon sf object. The polygons describing the strata boundaries. Must contain a variable containing the stratum identities.}
 
-\item{stratum_field}{A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.}
+\item{stratum_field}{A character string of the name of the variable in \code{points} containing the stratum identities of the polygons. Defaults to \code{"stratum"}.}
 
 \item{panel_names}{A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("1", "2", "3", "4", "5")}.}
 

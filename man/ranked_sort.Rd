@@ -11,7 +11,7 @@ ranked_sort(
   match_from_idvar = "match_from_id",
   match_to_rankvar = "match_to_rank",
   match_from_rankvar = "match_from_rank",
-  iteration_limit = NULL
+  iteration_limit = 5000
 )
 }
 \arguments{
@@ -26,6 +26,8 @@ ranked_sort(
 \item{match_to_rankvar}{Character string. The name of the variable in \code{match_to} that contains the rank preference of the match to members for the match from members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_to_rank"}.}
 
 \item{match_from_rankvar}{Character string. The name of the variable in \code{match_from} that contains the rank preference of the match from members for the match to members as a relative numeric value (lower values are more preferred). Defaults to \code{"match_from_rank"}.}
+
+\item{iteration_limit}{Numeric. The maximum number of iterations to attempt to sort before giving up. Defaults to \code{5000}.}
 }
 \value{
 A data frame with the variables \code{match_to_id} and \code{match_from_id} containing the paired members of the two sets.

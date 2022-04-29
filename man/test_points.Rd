@@ -8,10 +8,8 @@ test_points(
   number = 100,
   points,
   polygons,
-  method = "sample",
   seed_number = 420,
- 
-    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"
 )
 }
 \arguments{
@@ -21,11 +19,9 @@ test_points(
 
 \item{polygons}{Spatial Polygons Data Frame. Polygons describing the boundaries of the area of interest that corresponds to \code{points}.}
 
-\item{method}{Character string. Which method to use for generating random sets of points to compare against. Either \code{"sample"} to use \code{sf::st_sample()} which is the much faster option or \code{"probability"} which uses a legacy approach that depends on cumulative proportional areas of subpolygons as probability of selection for random points. Defaults to \code{"sample"}.}
-
 \item{seed_number}{Numeric. The number to use in \code{set.seed()} for reproducibility. Defaults to \code{420}.}
 
-\item{projection}{CRS object. The projection to force all spatial objects into to for the purpose of compatibility. Defatults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
+\item{projection}{Character string. The projection to force all spatial objects into to for the purpose of compatibility. Defaults to \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.}
 }
 \value{
 Named numeric vector. The value for \code{"p_arith"} is the proportion of comparisons that had a higher arithmetic mean nearest neighbor distance than \code{points} and \code{"p_geom"} is the proportion of comparisons that had a higher geometric mean nearest neighbor distance.

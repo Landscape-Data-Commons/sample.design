@@ -4,27 +4,19 @@
 \alias{add_area}
 \title{Add areas to a Spatial Polygons Data Frame}
 \usage{
-add_area(
-  polygons,
-  area_ha = TRUE,
-  area_sqkm = TRUE,
-  area_acres = TRUE,
-  byid = TRUE
-)
+add_area(polygons, area_ha = TRUE, area_sqkm = TRUE, area_acres = TRUE)
 }
 \arguments{
-\item{polygons}{Spatial Polygons Data Frame to calculate areas for}
+\item{polygons}{An sf polygon object to calculate areas for}
 
 \item{area_ha}{Logical. If \code{TRUE}, areas will be calculated and added in hectares. Default is \code{TRUE}.}
 
 \item{area_sqkm}{Logical. If \code{TRUE}, areas will be calculated and added in square kilometers. Default is \code{TRUE}.}
 
 \item{area_acres}{Logical. If \code{TRUE}, areas will be calculated and added in acres. Default is \code{TRUE}.}
-
-\item{byid}{Logical. If \code{TRUE}, areas will be calculated and added for each polygon by ID. If \code{FALSE} the area of the whole SPDF will be calculated and added, so every value for that field will be the same, regardless of polygon ID. Default is \code{TRUE}.}
 }
 \value{
-The original Spatial Polygons Data Frame with an additional field for each area unit calculated.
+The original sf object with an additional field for each area unit calculated.
 }
 \description{
 This function takes a Spatial Polygons Data Frame and calculates and adds area fields to the data frame. Areas can be calculated either treating the whole SPDF as a unit or for each polygon individually.

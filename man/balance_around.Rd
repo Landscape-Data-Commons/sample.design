@@ -8,21 +8,23 @@ balance_around(
   existing_points,
   new_points,
   stratafield = NULL,
- 
-    projection = sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")
+  id_var,
+  projection = "+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"
 )
 }
 \arguments{
-\item{existing_points}{Spatial points data frame. The existing points that will be balanced around.}
+\item{existing_points}{Point sf object. The existing points that will be balanced around.}
 
-\item{new_points}{Spatial points data frame. The points that will be compared against the existing points and selected from to create a balanced design.}
+\item{new_points}{Point sf object. The points that will be compared against the existing points and selected from to create a balanced design.}
 
 \item{stratafield}{Character string. The name of the variable in common between \code{existing_points} and \code{new_points} that contains stratum identities. This is used to balance by stratum. If \code{NULL} then balancing will not take strata into account. Defaults to \code{NULL}.}
 
-\item{projection}{CRS object. The projection to force on the spatial objects. Defaults to \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}.}
+\item{id_var}{Character string. The name of the variable common between \code{existing_points} and \code{new_points} that contains point identities. This assumes that the format of plot IDs is "character-number".}
+
+\item{projection}{CRS object or character string. The projection to force on the spatial objects. Defaults to \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}.}
 }
 \value{
-A spatial points data frame containing all the points from \code{existing_points} and the selected points from \code{new_points}. The projection will match \code{projection}.
+A point sf object containing all the points from \code{existing_points} and the selected points from \code{new_points}. The projection will match \code{projection}.
 }
 \description{
 Combine existing and new points to create a spatially balanced design

@@ -9,38 +9,37 @@ combine_designs(
   template_points,
   sub_idvar = "plotid",
   template_idvar = "plotid",
-  replacement_count = NULL,
   sub_counts = NULL,
   strata_polygons = NULL,
   polygons_stratavar = "stratum",
   sub_stratavar = "stratum",
   template_stratavar = "stratum",
   projection = NULL,
-  iteration_limit = NULL
+  iteration_limit = 5000
 )
 }
 \arguments{
-\item{sub_points}{Spatial Points Data Frame. The points you would like to substitute from by comparing against \code{template_points}.}
+\item{sub_points}{Point sf object. The points you would like to substitute from by comparing against \code{template_points}.}
 
-\item{template_points}{Spatial Points Data Frame. The points you would like to compare against \code{sub_points} in order to select a subset of those that most closely resemble the distribution of the template points.}
+\item{template_points}{Point sf object. The points you would like to compare against \code{sub_points} in order to select a subset of those that most closely resemble the distribution of the template points.}
 
-\item{sub_idvar}{Character string. The name of the variable in \code{sub_points@data} that contains the unique identifiers. Defaults to \code{"plotid"}.}
+\item{sub_idvar}{Character string. The name of the variable in \code{sub_points} that contains the unique identifiers. Defaults to \code{"plotid"}.}
 
-\item{template_idvar}{Character string. The name of the variable in \code{template_points@data} that contains the unique identifiers. Defaults to \code{"plotid"}.}
-
-\item{replacement_count}{Optional integer. The number of template points to replace with the closest approximation from the existing points. At least one point in each stratum will be replaced and the rest of the remain replacements will be made proportionally to the weight of the strata (e.g. a stratum that makes up 1/2 of the area or contains 1/2 of the template points will also contain 1/2 of the replacements). If \code{NULL} then points will be allocated according to the vector \code{sub_counts}. Defaults to \code{NULL}.}
+\item{template_idvar}{Character string. The name of the variable in \code{template_points} that contains the unique identifiers. Defaults to \code{"plotid"}.}
 
 \item{sub_counts}{Optional named numeric vector. A vector of the number of template points to replace with the closest approximation from the existing points in each stratum. Only use if there is more than one stratum. The names of the vector must exactly match the strata of the points. If \code{NULL} then points will be allocated proportionally by area using the value in \code{replacement_count}. Defaults to \code{NULL}.}
 
-\item{strata_polygons}{Optional Spatial Polygons Data Frame. Polygons assigned a variable with a name \code{polygons_stratavar} that contains the membership information (e.g. strata) to assign to \code{sub_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.}
+\item{strata_polygons}{Optional polygon sf object. Polygons assigned a variable with a name \code{polygons_stratavar} that contains the membership information (e.g. strata) to assign to \code{sub_points} and \code{template_points}. If \code{NULL} then no assignment will be attempted. Defaults to \code{NULL}.}
 
-\item{polygons_stratavar}{Optional character string. If \code{strata_polygons} is not \code{NULL}, the name of the variable in \code{strata_polygons@data} that contains the membership information. Otherwise, the name of the variable in both \code{template_points@data} and \code{sub_points@data} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{"stratum"}.}
+\item{polygons_stratavar}{Optional character string. If \code{strata_polygons} is not \code{NULL}, the name of the variable in \code{strata_polygons} that contains the membership information. Otherwise, the name of the variable in both \code{template_points} and \code{sub_points} that contains the membership information. If \code{NULL} then the points will be considered to belong to a single group. Defaults to \code{"stratum"}.}
 
-\item{sub_stratavar}{Optional character string. The name of the variable in \code{sub_points@data} that contains the membership information. If both \code{sub_stratavar} and \code{template_stratavar} are \code{NULL} then all the points in both will be considered to belong to a single group. Defaults to \code{"stratum"}.}
+\item{sub_stratavar}{Optional character string. The name of the variable in \code{sub_points} that contains the membership information. If both \code{sub_stratavar} and \code{template_stratavar} are \code{NULL} then all the points in both will be considered to belong to a single group. Defaults to \code{"stratum"}.}
 
-\item{template_stratavar}{Optional character string. The name of the variable in \code{template_points@data} that contains the membership information. If both \code{sub_stratavar} and \code{template_stratavar} are \code{NULL} then all the points in both will be considered to belong to a single group. Defaults to \code{"stratum"}.}
+\item{template_stratavar}{Optional character string. The name of the variable in \code{template_points} that contains the membership information. If both \code{sub_stratavar} and \code{template_stratavar} are \code{NULL} then all the points in both will be considered to belong to a single group. Defaults to \code{"stratum"}.}
 
-\item{projection}{Optional CRS object. The projection to force all spatial objects into, e.g. \code{sp::CRS("+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0")}. If \code{NULL} then the projection from \code{template_points@proj4string} will be used. Defaults to \code{NULL}.}
+\item{projection}{Optional character string or CRS object. The projection to force all spatial objects into, e.g. \code{"+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0"}. If \code{NULL} then the projection from \code{template_points@proj4string} will be used. Defaults to \code{NULL}.}
+
+\item{iteration_limit}{Numeric. The upper limit on the number of iterations to try to match points in \code{sub_points} to their best-fitting mates in \code{template_points}. Defaults to \code{5000}.}
 }
 \value{
 A spatial points data frame of the \code{template_points} with points from \code{sub_points} substituted in. It will be in the projection specified by \code{projection}.

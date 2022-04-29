@@ -7,13 +7,13 @@
 find_preferences(template_points, comparison_points)
 }
 \arguments{
-\item{template_points}{Spatial points data frame. The first set of points to be used in the comparison.}
+\item{template_points}{An sf point object. The first set of points to be used in the comparison.}
 
-\item{comparison_points}{Spatial points data frame. The second set of points to be used in the comparison.}
+\item{comparison_points}{An sf point object. The second set of points to be used in the comparison.}
 }
 \value{
 A named list of two data frames: \code{"template"} and \code{"comparison"}. Both data frames contain \code{template_index} (the indices of points in \code{template_points}) and \code{comparison_index} (the indices of points in \code{template_points}). Both data frames contain all unique combinations of the two sets of points. \code{"template"} contains a variable named \code{"rank_by_template"} which is the relative preference of the template point at that index for the comparison point at that index (lower values representing higher preference). \code{"comparison"} likewise has \code{"rank_by_comparison"} which is the preference of the comparison point for the template point.
 }
 \description{
-Given two spatial points data frames, compare the members of each against all the members of the other, ranking their "preference" for the compared points based on distance. By default this assigns higher preference for points that are closer.
+Given two sf point objects, compare the members of each against all the members of the other, ranking their "preference" for the compared points based on distance. By default this assigns higher preference for points that are closer.
 }

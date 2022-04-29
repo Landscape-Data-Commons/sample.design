@@ -5,29 +5,32 @@
 \title{Draw spatially balanced points with \code{spsurvey::grts()}, output in AIM format}
 \usage{
 grts_aim(
-  design_object,
-  design_name = "Design name",
-  source_frame = "sp.object",
-  frame = NULL,
-  in_shape = NULL,
-  stratum_field = "STRATUM",
-  seed_number = NULL
+  design_object = NULL,
+  n_base = NULL,
+  n_over = NULL,
+  project_name = "Design name",
+  frame,
+  stratum_var = "STRATUM",
+  seed_number = NULL,
+  projection = NULL
 )
 }
 \arguments{
-\item{design_object}{A list of lists structured and named according to the requirements of \code{spsurvey::grts()}. Can be automatically constructed with \code{allocate.panels()}.}
+\item{design_object}{Optional if not providing \code{n_base} and \code{n_over}. A list of lists structured and named according to the requirements of \code{spsurvey::grts()} prior to version 5.3.0. Can be automatically constructed with \code{allocate.panels()}.}
 
-\item{design_name}{A character string of the name to use for the design, often the name of the project.}
+\item{n_base}{Optional if not providing \code{design_object}. A named numeric value for the numbers of base points to draw in each stratum in the design. Names must match the values in \code{frame} in the variable specified by \code{stratum_field}.}
 
-\item{source_frame}{Character string. To be passed to \code{spsurvey::grts()} as the argument \code{src.frame}; see that function's documentation for further details. Defaults to \code{"sp.object"}.}
+\item{n_over}{Optional if not providing \code{design_object}. A named numeric value for the numbers of oversample (spare) points to draw  in each stratum in the design. Names must match the values in \code{frame} in the variable specified by \code{stratum_field}.}
 
-\item{frame}{If using an SPDF instead of a shapefile, an SPDF with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object}. Defaults to \code{NULL}.}
+\item{project_name}{A character string of the name to use for the design, often the name of the project.}
 
-\item{in_shape}{If using a shapefile instead of an SPDF, a string representing the filepath to a shapefile (without file extension) to pass to \code{spsurvey::grts()} as its argument \code{in_shape}. Defaults to \code{NULL}.}
+\item{frame}{Polygon sf object with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object} OR in \code{n_base} and \code{n_over}.}
 
-\item{stratum_field}{A character string representing the name of the variable in either \code{sp_object} or \code{in_shape} containing the strata names matching those in \code{design_object}. Defaults to \code{"STRATUM"}.}
+\item{stratum_var}{A character string representing the name of the variable in \code{frame} containing the strata names matching those in \code{design_object} OR in \code{n_base} and \code{n_over}. Defaults to \code{"STRATUM"}.}
 
-\item{seed_number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. Defaults to \code{NULL}.}
+\item{seed_number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. If \code{NULL} then a random seed will be used. Defaults to \code{NULL}.}
+
+\item{projection}{Optional character string or CRS object. The projection to reproject the frame into if no \code{NULL}. Defaults to \code{NULL}.}
 }
 \value{
 A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
