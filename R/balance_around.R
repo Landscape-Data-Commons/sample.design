@@ -300,87 +300,92 @@ get_closest <- function(existing_points,
       stop("stratafield must be a character string")
     }
     if (is.null(strata_polygons)) {
-      if (!(stratafield %in% names(template_points@data))) {
-        stop("The variable ", stratafield, " does not appear in template_points@data.")
+      if (!(stratafield %in% names(template_points))) {
+        stop("The variable ", stratafield, " does not appear in template_points.")
       }
-      if (!(stratafield %in% names(existing_points@data))) {
-        stop("The variable ", stratafield, " does not appear in existing_points@data.")
+      if (!(stratafield %in% names(existing_points))) {
+        stop("The variable ", stratafield, " does not appear in existing_points.")
       }
       # Sorry for the inconsistencies but "MEMBERSHIP" is trying to get away from the assumption that these will be stratifications
       # And I'm so, so tired. I'll come back to clean this up later, or so I'm currently telling myself at the end of a ten hour day
-      template_points@data[["MEMBERSHIP"]] <- template_points@data[[stratafield]]
-      existing_points@data[["MEMBERSHIP"]] <- existing_points@data[[stratafield]]
+      template_points[["MEMBERSHIP"]] <- template_points[[stratafield]]
+      existing_points[["MEMBERSHIP"]] <- existing_points[[stratafield]]
     }
-
+    
   } else {
-    template_points@data[["MEMBERSHIP"]] <- "frame"
-    existing_points@data[["MEMBERSHIP"]] <- "frame"
+    template_points[["MEMBERSHIP"]] <- "frame"
+    existing_points[["MEMBERSHIP"]] <- "frame"
   }
-
+  
   # If there is a set of stratification polygons, use them!
   if (!is.null(strata_polygons)) {
-    if (!(class(strata_polygons) %in% "SpatialPolygonsDataFrame")) {
-      stop("strata_polygons must be a spatial polygons data frame.")
+    if (!("sf" %in% class(strata_polygons))) {
+      stop("strata_polygons must be a polygon sf object.")
     }
-    if (!identical(projection, strata_polygons@proj4string)) {
-      strata_polygons <- sp::spTransform(strata_polygons,
-                                     projection)
+    if (!all(sf::st_geometry_type(strata_polygons) %in% c("POLYGON", "MULTIPOLYGON"))) {
+      stop("strata_polygons must be a polygon sf object.")
     }
-    if (!(stratafield %in% names(strata_polygons@data))) {
+    if (!identical(sf::st_crs(projection), sf::st_crs(strata_polygons))) {
+      strata_polygons <- sf::st_transform(x = strata_polygons,
+                                          crs = projection)
+    }
+    if (!(stratafield %in% names(strata_polygons))) {
       stop("The variable ", stratafield, " does not appear in strata_polygons.")
     }
-
+    
     # This just puts the strata into the points
-    existing_points@data[["MEMBERSHIP"]] <- sp::over(x = existing_points,
-                                                     y = strata_polygons)[[stratafield]]
-    template_points@data[["MEMBERSHIP"]] <- sp::over(x = template_points,
-                                                     y = strata_polygons)[[stratafield]]
+    existing_points[["MEMBERSHIP"]] <- sf::st_intersection(x = existing_points,
+                                                           y = strata_polygons)[[stratafield]]
+    template_points[["MEMBERSHIP"]] <- sf::st_intersection(x = template_points,
+                                                           y = strata_polygons)[[stratafield]]
   }
-
-
+  
+  
   # What strata are there?
-  strata <- unique(c(existing_points@data[["MEMBERSHIP"]], template_points@data[["MEMBERSHIP"]]))
-
+  strata <- unique(c(existing_points[["MEMBERSHIP"]], template_points[["MEMBERSHIP"]]))
+  
   # By stratum!
-  stata_selections <- lapply(X = strata,
-                             template_points = template_points,
-                             existing_points = existing_points,
-                             FUN = function(X, template_points, existing_points){
-                               # Narrow it down to the points in the current stratum
-                               stratum <- X
-                               existing_points_stratum <- existing_points[existing_points@data[["MEMBERSHIP"]] == stratum, ]
-                               template_points_stratum <- template_points[template_points@data[["MEMBERSHIP"]] == stratum, ]
-
-                               # What are their ranking of each other between template and comparison based on distance?
-                               preferences <- find_preferences(template_points = template_points_stratum,
-                                                               comparison_points = existing_points_stratum)
-
-                               # What's the optimal solution for minimizing distances for pairing?
-                               sorting <- ranked_sort(match_to = preferences[["template"]],
-                                                      match_from = preferences[["comparison"]],
-                                                      match_to_idvar = "template_index",
-                                                      match_from_idvar = "comparison_index",
-                                                      match_to_rankvar = "rank_by_template",
-                                                      match_from_rankvar = "rank_by_comparison")
-
-                               # Only keep the points that got paired with the template points
-                               output <- existing_points_stratum[sorting[["comparison_index"]], ]
-
-                               return(output)
-                             })
-
+  strata_selections <- lapply(X = strata,
+                              template_points = template_points,
+                              existing_points = existing_points,
+                              iteration_limit = iteration_limit,
+                              FUN = function(X, template_points, existing_points, iteration_limit){
+                                # Narrow it down to the points in the current stratum
+                                stratum <- X
+                                existing_points_stratum <- existing_points[existing_points[["MEMBERSHIP"]] == stratum, ]
+                                template_points_stratum <- template_points[template_points[["MEMBERSHIP"]] == stratum, ]
+                                
+                                # What are their ranking of each other between template and comparison based on distance?
+                                preferences <- find_preferences(template_points = template_points_stratum,
+                                                                comparison_points = existing_points_stratum)
+                                
+                                # What's the optimal solution for minimizing distances for pairing?
+                                sorting <- ranked_sort(match_to = preferences[["template"]],
+                                                       match_from = preferences[["comparison"]],
+                                                       match_to_idvar = "template_index",
+                                                       match_from_idvar = "comparison_index",
+                                                       match_to_rankvar = "rank_by_template",
+                                                       match_from_rankvar = "rank_by_comparison",
+                                                       iteration_limit = iteration_limit)
+                                
+                                # Only keep the points that got paired with the template points
+                                output <- existing_points_stratum[sorting[["comparison_index"]], ]
+                                
+                                return(output)
+                              })
+  
   # Each stratum's points are a separate SPDF in the list, so let's mash 'em together
   output <- do.call(rbind,
                     strata_selections)
-
+  
   # If we just had to add an identity, hide that fact
   if (is.null(stratafield)) {
-    output@data[["MEMBERSHIP"]] <- NULL
+    output[["MEMBERSHIP"]] <- NULL
   } else {
     # Otherwise name that membership field according to what the user called it
-    names(output@data)[names(output@data) == "MEMBERSHIP"] <- stratafield
+    names(output)[names(output) == "MEMBERSHIP"] <- stratafield
   }
-
+  
   return(output)
 }
 
