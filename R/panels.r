@@ -1,8 +1,8 @@
 #' Create a design object programmatically to use with \code{spsurvey::grts()}.
 #'
 #' @description Creates a structured list that meets the requirements for a design object for \code{spsurvey::grts()} distributing points proportionally to strata based on their relative areas/abundances.
-#' @param spdf SpatialPointsDataFrame or data frame containing the possible sampling points being used or a SpatialPolygonsDataFrame of polygons describing the strata boundaries.
-#' @param stratum_field A character string of the name of the variable in \code{points} containing the stratum identities of the points. Defaults to \code{"stratum"}.
+#' @param polygons Polygon sf object. The polygons describing the strata boundaries. Must contain a variable containing the stratum identities.
+#' @param stratum_field A character string of the name of the variable in \code{points} containing the stratum identities of the polygons. Defaults to \code{"stratum"}.
 #' @param panel_names A character vector of the names to assign to the panels. All values must be unique. This must be the same length and in the same order as \code{panel_sample_size}. Defaults to \code{c("1", "2", "3", "4", "5")}.
 #' @param panel_sample_size A numeric vector of the number of base points to be drawn in each panel. This must be the same length and in the same order as \code{panel_names} UNLESS all panels have the same number of base points in which case \code{panel_sample_size} optionally may be a single numeric value despite \code{panel_names} containing more than one value. Defaults to \code{c(50)}.
 #' @param points_min A numeric value of the minimum number of base points to allocate to a stratum within a panel regardless of its relative size. Defaults to \code{3}.
@@ -11,7 +11,7 @@
 #' @return A named list of named lists conforming to the requirements for the design object for \code{spsurvey::grts()}.
 #' @export
 
-allocate_panels <- function(spdf,
+allocate_panels <- function(polygons,
                             stratum_field = "stratum",
                             panel_names = c("1", "2", "3", "4", "5"),
                             panel_sample_size = 50,
@@ -25,14 +25,18 @@ allocate_panels <- function(spdf,
   }
 
   ## Sanitization
-  if (class(spdf) == "SpatialPolygonsDataFrame") {
-    df <- sample.design::add_area(polygons = spdf)@data
-    df[["AREA"]] <- df[["AREA.HA"]]
-  } else if (class(spdf) == "SpatialPointsDataFrame") {
-    df <- spdf@data
-  } else {
-    df <- spdf
+  if (!("sf") %in% class(polygons)) {
+    stop("polygons must be a polygon sf object.")
   }
+  if (!all(sf::st_geometry_type(polygons) %in% c("POLYGON", "MULTIPOLYGON"))) {
+    stop("polygons must be a polygon sf object.")
+  }
+  
+  # Make sure that there's area information!
+  polygons <- add_area(polygons)
+  polygons[["AREA"]] <- polygons[["AREA.HA"]]
+  
+  df <- sf::st_drop_geometry(polygons)
 
   if (!(stratum_field %in% names(df))) {
     stop("Error: Couldn't find the specified stratum field in the supplied points or polygons. Check spelling and case.")
@@ -40,7 +44,7 @@ allocate_panels <- function(spdf,
     df[["STRATUM"]] <- df[, stratum_field]
   }
 
-  ## Remove all points or areas without strata assigned
+  ## Remove all polygons without strata assigned
   df <- df[!is.na(df[["STRATUM"]]), ]
 
   # How many points minimum will be needed?
@@ -48,18 +52,8 @@ allocate_panels <- function(spdf,
   required_oversample <- round(max(required_base * oversample_proportion, oversample_min * length(unique(df[["STRATUM"]]))))
 
   ## Create a data frame of strata and "area"
-  ## The presence/absence of df[["AREA"]] is tied to whether these were polys or points
-  if ("AREA" %in% names(df)) {
-    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
-                                     AREA = sum(AREA))
-  } else {
-    workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
-                                     AREA = dplyr::n())
-    # What if there aren't enough points???
-    if (sum(workingframe[["AREA"]]) < required_base) {
-      stop(paste0("There aren't enough points available (", sum(workingframe[["AREA"]]),") to meet the minimum number of base points requested (", required_base,")."))
-    }
-  }
+  workingframe <- dplyr::summarize(dplyr::group_by(df, STRATUM),
+                                   AREA = sum(AREA))
 
   # After the minimum points are allocated, how many remain to be allocated?
   remainder <- panel_sample_size - nrow(workingframe) * points_min
