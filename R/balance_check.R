@@ -531,32 +531,35 @@ test_points <- function(number = 100,
 
 
 #' Add coordinates to the data slot of a SpatialPointsDataFrame
-#' @param points A SpatialPointsDataFrame.
+#' @param points A point sf object. The coordinates will be extracted for these points. Note: a multipoint sf object will not work.
 #' @param x_var Character string. The name of the variable to add the x component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"XMETERS"}.
 #' @param y_var Character string. The name of the variable to add the y component of the coordinates to in \code{points@@data}. If the variable already exists, it will be overwritten. Defaults to \code{"YMETERS"}.
-#' @param projection CRS object. The projection to use when determining the coordinates. Defaults to \code{sp::CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")}, Albers equal area.
-#' @return The SPDF provided as \code{points} with the coordinates added to \code{@@data$x_var} and \code{@@data$y_var}.
+#' @param projection Character string. The projection to use when determining the coordinates. Defaults to \code{+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"}, Albers equal area.
+#' @return The sf object provided as \code{points} with the coordinates added to the variables defined with \code{x_var} and \code{y_var}.
 #' @export
 get_coords <- function(points,
                        x_var = "XMETERS",
                        y_var = "YMETERS",
-                       projection = CRS("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")){
-  if (!grepl(class(points), pattern = "^SpatialPointsDataFrame")) {
-    stop("points must be a spatial points data frame")
+                       projection = "+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=37.5 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"){
+  if (!("sf" %in% class(points))) {
+    stop("points must be an sf points object.")
+  }
+  if (!all(sf::st_geometry_type(points) %in% c("POINT"))) {
+    stop("points must be an sf points object.")
   }
   # Create a reprojected spdf to grab coords from
-  if (!identical(points@proj4string, projection)) {
-    temp_points <- sp::spTransform(points,
-                                   projection)
+  if (!identical(sf::st_crs(points), sf::st_crs(projection))) {
+    temp_points <- sf::st_transform(x = points,
+                                    crs = projection)
     # Write them into the original points
-    points@data[[x_var]] <- temp_points@coords[, 1]
-    points@data[[y_var]] <- temp_points@coords[, 2]
+    points[[x_var]] <- sf::st_coordinates(temp_points)[, "X"]
+    points[[y_var]] <- sf::st_coordinates(temp_points)[, "Y"]
   } else {
     # Write them into the original points
-    points@data[[x_var]] <- points@coords[, 1]
-    points@data[[y_var]] <- points@coords[, 2]
+    points[[x_var]] <- sf::st_coordinates(points)[, "X"]
+    points[[y_var]] <- sf::st_coordinates(points)[, "Y"]
   }
-
+  
   return(points)
 }
 
