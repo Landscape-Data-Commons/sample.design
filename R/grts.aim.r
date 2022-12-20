@@ -8,7 +8,7 @@
 #' @param frame Polygon sf object with a variable name matching \code{stratum_field} which contains values matching the strata names in \code{design_object} OR in \code{n_base} and \code{n_over}.
 #' @param stratum_var A character string representing the name of the variable in \code{frame} containing the strata names matching those in \code{design_object} OR in \code{n_base} and \code{n_over}. Defaults to \code{"STRATUM"}.
 #' @param seed_number An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. If \code{NULL} then a random seed will be used. Defaults to \code{NULL}.
-#' @param projection Optional character string or CRS object. The projection to reproject the frame into if no \code{NULL}. Defaults to \code{NULL}.
+# #' @param projection Optional character string or CRS object. The projection to reproject the frame into if not \code{NULL}. Defaults to \code{NULL}.
 #' @return A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
 #' @export
 grts_aim <- function(design_object = NULL,
@@ -17,8 +17,8 @@ grts_aim <- function(design_object = NULL,
                      project_name = "Design name",
                      frame,
                      stratum_var = "STRATUM",
-                     seed_number = NULL,
-                     projection = NULL
+                     seed_number = NULL#,
+                     #projection = NULL
 ){
   if (!("sf" %in% class(frame))) {
     stop("frame must be a polygon sf object")
@@ -28,10 +28,10 @@ grts_aim <- function(design_object = NULL,
   }
   
   ## Reproject the frame
-  if (!is.null(projection)) {
-    frame <- sf::st_transform(x = frame,
-                              crs = projection)
-  }
+  # if (!is.null(projection)) {
+  #   frame <- sf::st_transform(x = frame,
+  #                             crs = projection)
+  # }
   
   if (!(stratum_var %in% names(frame))) {
     stop(paste0("The variable ", stratum_var, " does not appear in frame."))
@@ -95,14 +95,29 @@ grts_aim <- function(design_object = NULL,
     }
   }
   
-  ## Invoke spsurvey::grts() first
-  sample_design <- spsurvey::grts(sframe = frame,
-                                  n_base = n_base,
-                                  stratum_var = stratum_var,
-                                  seltype = "equal",
-                                  n_over = n_over,
-                                  DesignID = "Site",
-                                  sep = "-")
+  # Contrary to the documentation, you can't provide 0 as a value for n_over
+  if (0 %in% n_over) {
+    warning("At least one stratum has 0 requested oversample points. It is not currently possible to draw a stratum without oversample if other strata do have oversamples requested. Drawing no oversamples.")
+    ## Invoke spsurvey::grts() first
+    sample_design <- spsurvey::grts(sframe = frame[, stratum_var],
+                                    n_base = n_base,
+                                    stratum_var = stratum_var,
+                                    seltype = "equal",
+                                    n_over = NULL,
+                                    DesignID = "Site",
+                                    sep = "-")
+  } else {
+    ## Invoke spsurvey::grts() first
+    sample_design <- spsurvey::grts(sframe = frame[, stratum_var],
+                                    n_base = n_base,
+                                    stratum_var = stratum_var,
+                                    seltype = "equal",
+                                    n_over = n_over,
+                                    DesignID = "Site",
+                                    sep = "-")
+  }
+  
+
   
   sample_points_list <- lapply(X = names(n_base),
                                base_points = sample_design$sites_base,
