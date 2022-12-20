@@ -11,8 +11,7 @@ grts_aim(
   project_name = "Design name",
   frame,
   stratum_var = "STRATUM",
-  seed_number = NULL,
-  projection = NULL
+  seed_number = NULL
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ grts_aim(
 \item{stratum_var}{A character string representing the name of the variable in \code{frame} containing the strata names matching those in \code{design_object} OR in \code{n_base} and \code{n_over}. Defaults to \code{"STRATUM"}.}
 
 \item{seed_number}{An optional numeric value to be passed to \code{set.seed()} to make the output reproducible. If \code{NULL} then a random seed will be used. Defaults to \code{NULL}.}
-
-\item{projection}{Optional character string or CRS object. The projection to reproject the frame into if no \code{NULL}. Defaults to \code{NULL}.}
 }
 \value{
 A Spatial Points Data Frame of the sampling locations with the fields \code{PLOTID}, \code{STRATUM}, \code{PANEL}, \code{IntPtWt} (initial point weight), \code{xcoord}, and \code{ycoord}
