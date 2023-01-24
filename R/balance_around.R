@@ -903,8 +903,8 @@ combine_designs <- function(sub_points,
                                 # We specifically remove any existing xcoord and ycoord variables
                                 # in case they're from a different projection
                                 template_points_stratum <- cbind(dplyr::select(template_points_stratum,
-                                                                               -xcoord,
-                                                                               -ycoord),
+                                                                               -dplyr::matches("xcoord"),
+                                                                               -dplyr::matches("ycoord")),
                                                                  template_points_stratum_coords)
                                 
                                 # What are their ranking of each other between template and comparison based on distance?
@@ -973,8 +973,8 @@ combine_designs <- function(sub_points,
   template_points_coords <- as.data.frame(sf::st_coordinates(template_points))
   names(template_points_coords) <- c("xcoord", "ycoord")
   template_df <- cbind(dplyr::select(sf::st_drop_geometry(template_points),
-                                     -xcoord,
-                                     -ycoord),
+                                     -dplyr::matches("xcoord"),
+                                     -dplyr::matches("ycoord")),
                        template_points_coords)
   template_df[["order_number"]] <- 1:nrow(template_df)
   template_df <- template_df[, c("order_number", template_idvar, "xcoord", "ycoord")]
