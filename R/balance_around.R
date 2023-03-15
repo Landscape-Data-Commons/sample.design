@@ -171,40 +171,41 @@ ranked_sort <- function(match_to,
   
   # This while() will keep the process running as long as not all the points have been paired
   # and we haven't hit the iteration limit.
-  while ((n_matchfrom > matchfrom_matched_n & n_matchto > matchto_matched_n) & iterations < iteration_limit) {
+  # while ((n_matchfrom > matchfrom_matched_n & n_matchto > matchto_matched_n) & iterations < iteration_limit) {
+  while (any(is.na(matchto_pairs$paired)) & iterations < iteration_limit) {
     # Get the match_from ID that we'll work on. It's the first one that isn't already paired
-    current_matchfrom_id <- matchfrom_pairs[is.na(matchfrom_pairs[["paired"]]), "id"][1]
+    current_matchto_id <- matchto_pairs[is.na(matchto_pairs[["paired"]]), "id"][1]
     # It's unpaired. We use this so that once it finds a suitable partner the loop will stop searching
     current_unassigned <- TRUE
     
     # Find out how it feels about the other set of points
-    current_preferences <- match_from[match_from[[match_from_idvar]] == current_matchfrom_id, ]
+    current_preferences <- match_to[match_to[[match_to_idvar]] == current_matchto_id, ]
     # And get those other point IDs in order of preference to work through
-    current_preferred_order <- current_preferences[current_preferences[[match_from_rankvar]], match_to_idvar]
+    current_preferred_order <- current_preferences[current_preferences[[match_to_rankvar]], match_from_idvar]
     
     # Work through the potential pairings
-    for (current_matchto_id in current_preferred_order) {
+    for (current_matchfrom_id in current_preferred_order) {
       # Only bother to even compare if it doesn't have a more preferred partner yet
       if (current_unassigned) {
         # Does the potential partner already have a point?
-        current_matchto_id_pair <- matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"]
+        current_matchfrom_id_pair <- matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"]
         # If no, pair them off
-        if (is.na(current_matchto_id_pair)) {
-          matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
+        if (is.na(current_matchfrom_id_pair)) {
           matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"] <- current_matchto_id
+          matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
           # It's no longer unassigned
           current_unassigned <- FALSE
         } else {
           # If yes, find out how much it prefers the pair it's a part of
-          matchto_preference_already <- match_to[match_to[[match_to_idvar]] == current_matchto_id & match_to[[match_from_idvar]] == current_matchto_id_pair, match_to_rankvar]
+          matchfrom_preference_already <- match_from[match_from[[match_from_idvar]] == current_matchfrom_id & match_from[[match_to_idvar]] == current_matchfrom_id_pair, match_from_rankvar]
           # And how much it prefers the point we're working on
-          matchto_preference_current <- match_to[match_to[[match_to_idvar]] == current_matchto_id & match_to[[match_from_idvar]] == current_matchfrom_id, match_to_rankvar]
+          matchfrom_preference_current <- match_from[match_from[[match_from_idvar]] == current_matchfrom_id & match_from[[match_to_idvar]] == current_matchto_id, match_from_rankvar]
           # If it likes the point we're asking about more, then pair them
-          if (matchto_preference_current < matchto_preference_already) {
-            matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
+          if (matchfrom_preference_current < matchfrom_preference_already) {
             matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchfrom_id, "paired"] <- current_matchto_id
+            matchto_pairs[matchto_pairs[["id"]] == current_matchto_id, "paired"] <- current_matchfrom_id
             # Make sure that its previous partner is flagged as unpaired!
-            matchfrom_pairs[matchfrom_pairs[["id"]] == current_matchto_id_pair, "paired"] <- NA
+            matchto_pairs[matchto_pairs[["id"]] == current_matchfrom_id_pair, "paired"] <- NA
             # It's no longer unassigned
             current_unassigned <- FALSE
           }
